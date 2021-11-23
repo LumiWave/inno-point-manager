@@ -1,0 +1,476 @@
+# API Spec
+swagger: '2.0'
+info:
+  title: IPBlock Server External API
+  description: |
+    IPBlock Server - External API
+
+    ## Response Code
+    
+    | Result  | Message |
+    | :------------ | :-----------  |
+    | 0 | success |
+    | 400 | Bad Request |
+    | 500 | Internal Server Error |
+    | 12000 | Wallet address is required |
+    | 12001 | Item title is required |
+    | 12002 | Token type is required |
+    | 12003 | Thumbnail url is required |
+    | 12004 | Valid token price is required |
+    | 12005 | Valid expire date is required |
+    | 12006 | Creator is required |
+    | 12007 | Valid item id is required |
+    | 12008 | Valid page offset is required |
+    | 12009 | Valid page size is required |
+
+        
+  version: "1.0.0"
+# the domain of the service
+host: 52.231.50.92:20284
+#host: 127.0.0.1:20284
+# array of all schemes that your API supports
+schemes:
+  - https
+# will be prefixed to all paths
+basePath: /
+consumes:
+  - application/x-www-form-urlencoded
+produces:
+  - application/json
+paths:
+  /healthcheck/_check:
+    get:
+      summary: 서버 상태 체크
+      tags:
+        - HealthCheck
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: 상태(ok)
+          schema:
+            type: string
+  /{apiver}/version:
+    get:
+      summary: API 버전 조회
+      tags:
+        - GetVersion
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          default: "v1.0"
+          type: string
+          required: true
+      responses:
+        200:
+          description: 서버빌드정보와 API 버전정보
+          schema:
+            $ref: '#/definitions/Version'
+  /{apiver}/login:
+    post:
+      summary: 최초 로그인
+      description: |
+        로그인을 요청한다.
+      consumes:
+        - application/json
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: JSON Object
+          in: body
+          type: object
+          schema:
+            type: object
+            properties:
+              wallet_address:
+                type: string
+                default: "0x9Ec7EDE9204E17dfa34e1d381ED5f49A0D578e96"
+      tags:
+        - POST Login
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/POSTLogin'
+  /{apiver}/item/register:
+    post:
+      summary: 판매 Item 등록
+      description: |
+        판매할 재품 Item 정보를 등록한다.
+      consumes:
+        - application/json
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: JSON Object
+          in: body
+          type: object
+          schema:
+            type: object
+            properties:
+              wallet_address:
+                type: string
+              title:
+                type: string
+              token_type:
+                type: string
+              thumbnail_url:
+                type: string
+              token_price:
+                type: number
+              expire_date:
+                type: number
+              creator:
+                type: string
+              description:
+                type: string
+      tags:
+        - POST Item Register
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/POSTItemRegister'
+  /{apiver}/item/unregister:
+    delete:
+      summary: 등록된 Item 삭제
+      consumes:
+        - application/json
+      description: |
+        등록된 Item을 삭제 한다.
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: wallet_address
+          in: query
+          description: 유저 지갑 address 정보
+          type: string
+          required: true
+          default: "0x9Ec7EDE9204E17dfa34e1d381ED5f49A0D578e96"
+        - name: item_id
+          in: query
+          description: 등록된 item 인덱스 정보
+          type: number
+          required: true
+          default: 1
+      tags:
+        - Delete Item Unregister
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/Response'   
+  /{apiver}/item/list:
+    get:
+      summary: 등록된 Item 리스트 조회
+      description: |
+        등록된 Item 리스트를 조회한다.
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: page_offset
+          in: query
+          description: 조회할 페이지 번호
+          type: number
+          required: true
+          default: 0
+        - name: page_size
+          in: query
+          description: 조회할 페이지의 item 개수
+          type: number
+          required: true
+          default: 0
+      tags:
+        - GetItemList
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/GetItemList' 
+  /{apiver}/item/purchase:
+    post:
+      summary: Item 구매
+      description: |
+        원하는 Item을 구매한다.
+      consumes:
+        - application/json
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: JSON Object
+          in: body
+          type: object
+          schema:
+            type: object
+            properties:
+              wallet_address:
+                type: string
+              item_id:
+                type: number
+      tags:
+        - PostItemPurchase
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/PostItemPurchase' 
+  /{apiver}/history/transfer/me:
+    get:
+      summary: 내 Item 거래 내역 조회
+      description: |
+        거래된 Item 정보를 조회한다.
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: page_offset
+          in: query
+          description: 조회할 페이지 번호
+          type: number
+          required: true
+          default: 0
+        - name: page_size
+          in: query
+          description: 조회할 페이지의 item 개수
+          type: number
+          required: true
+          default: 10
+        - name: wallet_address
+          in: query
+          description: 내 지갑 주소
+          type: string
+          required: true
+          default: '0x9Ec7EDE9204E17dfa34e1d381ED5f49A0D578e96'
+      tags:
+        - GetHistoryTransferByMe
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/GetHistoryTransferByMe' 
+  /{apiver}/history/transfer/item:
+    get:
+      summary: Item 기준 거래 내역 조회
+      description: |
+        거래된 Item 정보를 조회한다.
+      parameters:
+        - name: apiver
+          in: path
+          description: api version
+          type: string
+          default: "v1.0"
+          required: true
+        - name: page_offset
+          in: query
+          description: 조회할 페이지 번호
+          type: number
+          required: true
+          default: 0
+        - name: page_size
+          in: query
+          description: 조회할 페이지의 item 개수
+          type: number
+          required: true
+          default: 10
+        - name: item_id
+          in: query
+          description: item 인덱스
+          type: number
+          required: true
+          default: 80
+      tags:
+        - GetHistoryTransferByItem
+      responses:
+        200:
+          description: 결과
+          schema:
+            $ref: '#/definitions/GetHistoryTransferByMe' 
+definitions:
+  Message:
+    type: string
+    description: 응답메세지
+  Return:
+    type: number
+    description: 응답코드
+  Response:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+  Version:
+    type: object
+    required:
+      - message
+      - return
+      - value
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      data:
+        type: object
+        properties:
+          revision:
+            type: string
+            description: git리비전.빌드일시
+          version:
+            type: string
+            description: API 버전
+  POSTLogin:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      value:
+        type: object
+        properties:
+          auth_token:
+            type: string
+            description: 발급 받은 인증 토큰
+          expire_date:
+            type: number
+            description: 인증 토큰 만료 기간
+  POSTItemRegister:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      value:
+        type: object
+        properties:
+          item_id:
+            type: number
+            description: 생성된 item 인덱스
+          expire_date:
+            type: number
+            description: 생성한 NFT 토콘의 hash 정보
+  GetItemList:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      value:
+        type: object
+        properties:
+          items:
+            type: array
+            description: 아이템 배열
+          page_offset:
+            type: number
+            description: 조회된 페이지 정보
+          page_size:
+            type: number
+            description: 조회된 페이지의 Item 개수
+          total_size:
+            type: number
+            description: 전체 Item 개수
+  PostItemPurchase:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      value:
+        type: object
+        properties:
+          item_id:
+            type: number
+            description: 구매한 item 인덱스
+          tx_hash:
+            type: string
+            description: 구매한 NFT 토큰 hash 정보
+  GetHistoryTransferByMe:
+    type: object
+    required:
+      - message
+      - return
+    properties:
+      message:
+        $ref: '#/definitions/Message'
+      return:
+        $ref: '#/definitions/Return'
+      value:
+        type: object
+        properties:
+          page_info:
+            type: object
+            properties:
+              page_offset:
+                type: number
+                description: 조회된 페이지 정보
+              page_size:
+                type: number
+                description: 조회된 페이지의 Item 개수
+              total_size:
+                type: number
+                description: 전체 Item 개수
+          historys:
+            type: object
+            properties:
+              idx:
+                type: number
+              item_id:
+                type: number
+              from_wallet_address:
+                type: string
+              to_wallet_address:
+                type: string
+              token_id:
+                type: number
+              state:
+                type: string
+              hash:
+                type: string
+              timestamp:
+                type: number
+  
+    
