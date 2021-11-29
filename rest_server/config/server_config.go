@@ -44,7 +44,7 @@ type Azure struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	IPServer    PointManager    `yaml:"point_manager"`
+	PManager    PointManager    `yaml:"point_manager"`
 	MssqlDBAuth baseconf.DBAuth `yaml:"mssql_db_auth"`
 	Token       TokenInfo       `yaml:"token_info"`
 	Auth        ApiAuth         `yaml:"api_auth"`
