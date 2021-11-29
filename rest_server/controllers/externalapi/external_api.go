@@ -92,7 +92,7 @@ func (o *ExternalAPI) Init(e *echo.Echo) error {
 	}
 
 	// serving documents for RESTful APIs
-	if o.conf.IPServer.APIDocs {
+	if o.conf.PManager.APIDocs {
 		e.Static("/docs", "docs/ext")
 	}
 

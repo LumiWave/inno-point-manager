@@ -9,7 +9,7 @@ import (
 var once sync.Once
 var currentConfig *ServerConfig
 
-type IpblockServer struct {
+type PointManager struct {
 	ApplicationName string `json:"application_name" yaml:"application_name"`
 	APIDocs         bool   `json:"api_docs" yaml:"api_docs"`
 }
@@ -44,7 +44,7 @@ type Azure struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	IPServer    IpblockServer   `yaml:"ipblock_server"`
+	IPServer    PointManager    `yaml:"point_manager"`
 	MssqlDBAuth baseconf.DBAuth `yaml:"mssql_db_auth"`
 	Token       TokenInfo       `yaml:"token_info"`
 	Auth        ApiAuth         `yaml:"api_auth"`

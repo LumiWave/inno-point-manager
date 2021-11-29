@@ -55,7 +55,7 @@ func (o *SystemMonitor) CheckMetricInfo() *context.NodeMetric {
 	conf := config.GetInstance()
 
 	// host
-	o.NodeMetric.Host = conf.IPServer.ApplicationName
+	o.NodeMetric.Host = conf.PManager.ApplicationName
 	// 버전
 	o.NodeMetric.Version = TagVersion
 	// 정상여부
