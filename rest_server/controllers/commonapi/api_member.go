@@ -9,13 +9,11 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
 )
 
-func PostPointMemberRegister(params *context.PointMemberInfo, ctx *context.PointManagerContext) error {
+func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	context.MakeAt(&params.CreateAt)
-
-	if err := model.GetDB().InsertPointMember(params); err != nil {
+	if err := model.GetDB().InsertPointMember(req); err != nil {
 		resp.SetReturn(resultcode.Result_DBError)
 	}
 

@@ -17,7 +17,7 @@ func (o *DB) InsertPointTokenSwapHistory(params *context.PointMemberTokenSwapHis
 		params.TxnHash, params.SwapState, params.CreateAt)
 
 	var lastInsertId int64
-	err := o.Mssql.QueryRow(sqlQuery, &lastInsertId)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &lastInsertId)
 
 	if err != nil {
 		log.Error(err)
@@ -32,7 +32,7 @@ func (o *DB) InsertPointTokenSwapHistory(params *context.PointMemberTokenSwapHis
 func (o *DB) SelectPointTokenSwapHistory(params *context.PointMemberTokenSwapHistory) (*[]context.PointMemberTokenSwapHistory, int64, error) {
 	var totalCount int64
 	sqlQuery := fmt.Sprintf("SELECT COUNT(*) FROM onbuff_inno.dbo.point_swap_history WHERE cp_member_idx=%v", params.CpMemberIdx)
-	err := o.Mssql.QueryRow(sqlQuery, &totalCount)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &totalCount)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err
@@ -43,7 +43,7 @@ func (o *DB) SelectPointTokenSwapHistory(params *context.PointMemberTokenSwapHis
 
 	sqlQuery = fmt.Sprintf("SELECT * from onbuff_inno.dbo.point_swap_history WHERE cp_member_idx=%v ORDER BY idx DESC OFFSET %v ROW FETCH NEXT %v ROW ONLY ",
 		params.CpMemberIdx, pageSize*pageOffset, pageSize)
-	rows, err := o.Mssql.Query(sqlQuery)
+	rows, err := o.MssqlAccount.Query(sqlQuery)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err

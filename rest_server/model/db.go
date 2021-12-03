@@ -5,17 +5,20 @@ import (
 )
 
 type DB struct {
-	Mysql *basedb.Mysql
-	Mssql *basedb.Mssql
-	Cache *basedb.Cache
+	Mysql        *basedb.Mysql
+	MssqlAccount *basedb.Mssql
+	Cache        *basedb.Cache
+
+	MssqlPoints map[int]*basedb.Mssql
 }
 
 var gDB *DB
 
-func SetDB(db *basedb.Mssql, cache *basedb.Cache) {
+func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int]*basedb.Mssql) {
 	gDB = &DB{
-		Mssql: db,
-		Cache: cache,
+		MssqlAccount: db,
+		Cache:        cache,
+		MssqlPoints:  pointdbs,
 	}
 }
 

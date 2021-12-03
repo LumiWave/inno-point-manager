@@ -8,58 +8,16 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
 )
 
-func (o *DB) InsertPointMember(params *context.PointMemberInfo) error {
-	// sqlQuery := fmt.Sprintf("EXEC @return_value=onbuff_inno.dbo.proc_point_member_insert @cp_member_idx=?,@point_amount=?," +
-	// 	"@private_token_amount=?,@private_wallet_address=?,@public_token_amount=?,@public_wallet_address=?," +
-	// 	"@create_at=? SELECT Return Value=@return_value")
+func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 
-	// result, err := o.Mssql.PrepareAndExec(sqlQuery, params.CpMemberIdx, params.PointAmount,
-	// 	params.PrivateTokenAmount, params.PrivateWalletAddr, params.PublicTokenAmount, params.PublicWalletAddr, params.CreateAt)
-
-	// sqlQuery := fmt.Sprintf("DECLARE @return_value int; EXEC @return_value=onbuff_inno.dbo.proc_point_member_insert @cp_member_idx=%v,@point_amount=N'%v',"+
-	// 	"@private_token_amount=N'%v',@private_wallet_address=N'%v',@public_token_amount=N'%v',@public_wallet_address=N'%v',"+
-	// 	"@create_at=%v;  SELECT 'Return Value'=@return_value", params.CpMemberIdx, params.PointAmount,
-	// 	params.PrivateTokenAmount, params.PrivateWalletAddr, params.PublicTokenAmount, params.PublicWalletAddr, params.CreateAt)
-
-	// rows, err := o.Mssql.Query(sqlQuery)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-	// }
-
-	// ret := 0
-	// for rows.Next() {
-
-	// 	err := rows.Scan(&ret)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 		return err
-	// 	} else {
-	// 		fmt.Println("ret : ", ret)
-	// 	}
-	// }
-
-	sqlQuery := fmt.Sprintf("INSERT INTO onbuff_inno.dbo.point_member(cp_member_idx, point_amount, "+
-		"private_token_amount, private_wallet_address, public_token_amount, public_wallet_address, create_at) output inserted.idx "+
-		"VALUES(%v,N'%v',N'%v',N'%v',N'%v',N'%v',%v)",
-		params.CpMemberIdx, params.PointAmount, params.PrivateTokenAmount, params.PrivateWalletAddr, params.PublicTokenAmount, params.PublicWalletAddr, params.CreateAt)
-
-	var lastInsertId int64
-	err := o.Mssql.QueryRow(sqlQuery, &lastInsertId)
-
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
-	log.Debug("InsertPointMember idx:", lastInsertId)
+	//	log.Debug("InsertPointMember idx:", lastInsertId)
 
 	return nil
 }
 
 func (o *DB) UpdatePointMember(params *context.PointMemberInfo) error {
 	sqlQuery := makeUpdateString(params)
-	result, err := o.Mssql.PrepareAndExec(sqlQuery)
+	result, err := o.MssqlAccount.PrepareAndExec(sqlQuery)
 
 	if err != nil {
 		log.Error(err)
@@ -77,7 +35,7 @@ func (o *DB) UpdatePointMember(params *context.PointMemberInfo) error {
 
 func (o *DB) SelectPointMember(cpMemberIdx int64) (*context.PointMemberInfo, error) {
 	sqlQuery := fmt.Sprintf("SELECT * from onbuff_inno.dbo.point_member WHERE cp_member_idx=%v", cpMemberIdx)
-	rows, err := o.Mssql.Query(sqlQuery)
+	rows, err := o.MssqlAccount.Query(sqlQuery)
 	if err != nil {
 		log.Error(err)
 		return nil, err

@@ -15,7 +15,7 @@ func (o *DB) InsertPointAppHistory(params *context.PointMemberAppUpdate) error {
 		params.CpMemberIdx, params.Type, params.LatestPointAmount, params.ChangePointAmount, params.CreateAt)
 
 	var lastInsertId int64
-	err := o.Mssql.QueryRow(sqlQuery, &lastInsertId)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &lastInsertId)
 
 	if err != nil {
 		log.Error(err)
@@ -31,7 +31,7 @@ func (o *DB) SelectPointAppHistory(params *context.PointMemberHistoryReq) (*[]co
 
 	var totalCount int64
 	sqlQuery := fmt.Sprintf("SELECT COUNT(*) FROM onbuff_inno.dbo.point_history WHERE cp_member_idx=%v", params.CpMemberIdx)
-	err := o.Mssql.QueryRow(sqlQuery, &totalCount)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &totalCount)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err
@@ -42,7 +42,7 @@ func (o *DB) SelectPointAppHistory(params *context.PointMemberHistoryReq) (*[]co
 
 	sqlQuery = fmt.Sprintf("SELECT * from onbuff_inno.dbo.point_history WHERE cp_member_idx=%v ORDER BY idx DESC OFFSET %v ROW FETCH NEXT %v ROW ONLY ",
 		params.CpMemberIdx, pageSize*pageOffset, pageSize)
-	rows, err := o.Mssql.Query(sqlQuery)
+	rows, err := o.MssqlAccount.Query(sqlQuery)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err
@@ -71,7 +71,7 @@ func (o *DB) InsertPointAppExchangeHistory(params *context.PointMemberExchangeHi
 		params.TxnHash, params.ExchangeState, params.CreateAt)
 
 	var lastInsertId int64
-	err := o.Mssql.QueryRow(sqlQuery, &lastInsertId)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &lastInsertId)
 
 	if err != nil {
 		log.Error(err)
@@ -86,7 +86,7 @@ func (o *DB) InsertPointAppExchangeHistory(params *context.PointMemberExchangeHi
 func (o *DB) SelectPointAppExchangeHistory(params *context.PointMemberExchangeHistory) (*[]context.PointMemberExchangeHistory, int64, error) {
 	var totalCount int64
 	sqlQuery := fmt.Sprintf("SELECT COUNT(*) FROM onbuff_inno.dbo.point_exchange_history WHERE cp_member_idx=%v", params.CpMemberIdx)
-	err := o.Mssql.QueryRow(sqlQuery, &totalCount)
+	err := o.MssqlAccount.QueryRow(sqlQuery, &totalCount)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err
@@ -97,7 +97,7 @@ func (o *DB) SelectPointAppExchangeHistory(params *context.PointMemberExchangeHi
 
 	sqlQuery = fmt.Sprintf("SELECT * from onbuff_inno.dbo.point_exchange_history WHERE cp_member_idx=%v ORDER BY idx DESC OFFSET %v ROW FETCH NEXT %v ROW ONLY ",
 		params.CpMemberIdx, pageSize*pageOffset, pageSize)
-	rows, err := o.Mssql.Query(sqlQuery)
+	rows, err := o.MssqlAccount.Query(sqlQuery)
 	if err != nil {
 		log.Error(err)
 		return nil, 0, err

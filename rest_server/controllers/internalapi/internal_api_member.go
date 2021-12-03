@@ -14,13 +14,13 @@ import (
 func (o *InternalAPI) PostPointMemberRegister(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewPointMemberInfo()
+	params := context.NewReqPointMemberRegister()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(true); err != nil {
+	if err := params.CheckValidate(); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 

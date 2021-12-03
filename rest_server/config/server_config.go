@@ -33,21 +33,27 @@ type ApiAuth struct {
 	ApiAuthVerify     string `json:"api_auth_verify" yaml:"api_auth_verify"`
 }
 
-type Azure struct {
-	AzureStorageAccount   string `yaml:"azure_storage_account"`
-	AzureStorageAccessKey string `yaml:"azure_storage_access_key"`
-	Domain                string `yaml:"azure_storage_domain"`
-	ContainerNft          string `yaml:"azure_container_nft_folder"`
-	ContainerProduct      string `yaml:"azure_container_product_folder"`
+type MssqlPoint struct {
+	DBID     int    `json:"db_id" yaml:"db_id"`
+	Host     string `json:"host" yaml:"host"`
+	Port     string `json:"port" yaml:"port"`
+	ID       string `json:"id" yaml:"id"`
+	Password string `json:"password" yaml:"password"`
+	Database string `json:"database" yaml:"database"`
+	PoolSize string `json:"poolsize" yaml:"poolsize"`
+	IdleSize string `json:"idlesize" yaml:"idlesize"`
+	Timeout  string `json:"timeout" yaml:"timeout"`
+	ReadPref string `json:"readpref" yaml:"readpref"`
 }
 
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager    PointManager    `yaml:"point_manager"`
-	MssqlDBAuth baseconf.DBAuth `yaml:"mssql_db_auth"`
-	Token       TokenInfo       `yaml:"token_info"`
-	Auth        ApiAuth         `yaml:"api_auth"`
+	PManager       PointManager    `yaml:"point_manager"`
+	MssqlDBAccount baseconf.DBAuth `yaml:"mssql_db_account"`
+	MssqlDBPoint   []MssqlPoint    `yaml:"mssql_db_points"`
+	Token          TokenInfo       `yaml:"token_info"`
+	Auth           ApiAuth         `yaml:"api_auth"`
 }
 
 func GetInstance(filepath ...string) *ServerConfig {

@@ -64,22 +64,35 @@ func NewApp() (*ServerApp, error) {
 }
 
 func (o *ServerApp) NewDB(conf *config.ServerConfig) error {
-	auth := conf.MssqlDBAuth
-	port, err := strconv.ParseInt(auth.Port, 10, 32)
+	account := conf.MssqlDBAccount
+	port, err := strconv.ParseInt(account.Port, 10, 32)
 	if err != nil {
 		log.Errorf("db port error : %v", port)
 		return err
 	}
-	mysqlDB, err := basedb.GetMssql(" ", auth.ID, auth.Password, auth.Host, int(port))
+	mssqlDB, err := basedb.GetMssql(account.Database, "", account.ID, account.Password, account.Host, int(port))
 	if err != nil {
 		log.Errorf("err: %v, val: %v, %v, %v, %v, %v, %v",
-			err, auth.Host, auth.ID, auth.Password, auth.Database, auth.PoolSize, auth.IdleSize)
+			err, account.Host, account.ID, account.Password, account.Database, account.PoolSize, account.IdleSize)
 		return err
 	}
 
 	gCache := basedb.GetCache(&conf.Cache)
 
-	model.SetDB(mysqlDB, gCache)
+	// point db create
+	pointDBs := make(map[int]*basedb.Mssql)
+	for _, pointDB := range conf.MssqlDBPoint {
+		mssqlDBP, err := basedb.GetMssql(pointDB.Database, "", pointDB.ID, pointDB.Password, pointDB.Host, int(port))
+		if err != nil {
+			log.Errorf("err: %v, val: %v, %v, %v, %v, %v, %v",
+				err, pointDB.Host, pointDB.ID, pointDB.Password, pointDB.Database, pointDB.PoolSize, pointDB.IdleSize)
+			return err
+		}
+
+		pointDBs[pointDB.DBID] = mssqlDBP
+	}
+
+	model.SetDB(mssqlDB, gCache, pointDBs)
 
 	return nil
 }

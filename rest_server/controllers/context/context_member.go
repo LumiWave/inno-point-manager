@@ -54,3 +54,43 @@ func (o *PointMemberInfo) CheckValidate(bPost bool) *base.BaseResponse {
 }
 
 ////////////////////////////////////////
+
+type Point struct {
+	PointID  int64
+	Quantity int64
+}
+
+// 회원 추가
+type ReqPointMemberRegister struct {
+	AUID       int64  `json:"au_id"`
+	CUID       string `json:"cu_id"`
+	AppID      int64  `json:"app_id"`
+	DatabaseID int64  `json:"database_id"`
+}
+
+func NewReqPointMemberRegister() *ReqPointMemberRegister {
+	return new(ReqPointMemberRegister)
+}
+
+func (o *ReqPointMemberRegister) CheckValidate() *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
+	if len(o.CUID) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
+	}
+	if o.AppID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
+	}
+	if o.DatabaseID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
+	}
+
+	return nil
+}
+
+type ResPointMemberRegister struct {
+	CUID   string  `json:"cu_id"`
+	AppID  int64   `json:"app_id"`
+	Points []Point `json:"points"`
+}

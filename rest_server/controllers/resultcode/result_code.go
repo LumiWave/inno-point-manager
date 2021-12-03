@@ -17,7 +17,12 @@ const (
 	Result_Error_NotExistMember              = 11101 // 존재하지 않는 member
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
 
-	Result_DBError = 12000 // db 에러
+	Result_Require_AUID       = 12000 // 유효한 au_id 정보 필요
+	Result_Require_CUID       = 12001 // 유효한 cu_id 정보 필요
+	Result_Require_AppID      = 12002 // 유효한 app_id 정보 필요
+	Result_Require_DatabaseID = 12003 // 유효한 database_id 정보 필요
+
+	Result_DBError = 19000 // db 에러
 
 	Result_Auth_RequireMessage    = 20000
 	Result_Auth_RequireSign       = 20001
@@ -45,6 +50,11 @@ var ResultCodeText = map[int]string{
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
 
 	Result_DBError: "Internal DB error",
+
+	Result_Require_AUID:       "Requires valid 'au_id' information.",
+	Result_Require_CUID:       "Requires valid 'cu_id' information.",
+	Result_Require_AppID:      "Requires valid 'app_id' information.",
+	Result_Require_DatabaseID: "Requires valid 'database_id' information.",
 
 	Result_Auth_RequireMessage:    "Message is required",
 	Result_Auth_RequireSign:       "Sign info is required",
