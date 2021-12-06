@@ -4,7 +4,6 @@ import (
 	originCtx "context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
@@ -14,10 +13,12 @@ import (
 )
 
 const (
-	USPPO_Rgstr_Members    = "[dbo].[USPPO_Rgstr_Members]"
-	USPPO_Mod_MemberPoints = "[dbo].[USPPO_Mod_MemberPoints]"
+	USPPO_Rgstr_Members        = "[dbo].[USPPO_Rgstr_Members]"
+	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
+	USPAU_GetList_MemberPoints = "[dbo].[USPAU_GetList_MemberPoints]"
 )
 
+// 포인트 맴버 등록
 func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 
 	mssql, ok := o.MssqlPoints[params.DatabaseID]
@@ -36,90 +37,101 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 	}
 
 	if rs == resultcode.Result_Error_duplicate_auid {
+		log.Error("returnStatus Result_Error_duplicate_auid : ", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
+		log.Error("returnStatus Result_DBError_Unknown : ", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
 	return nil
 }
 
-func (o *DB) UpdatePointMember(params *context.PointMemberInfo) error {
-	sqlQuery := makeUpdateString(params)
-	result, err := o.MssqlAccount.PrepareAndExec(sqlQuery)
-
-	if err != nil {
-		log.Error(err)
-		return err
+// 맴버의 포인트 정보 조회
+func (o *DB) SelectPointMember(CUID string, databaseId, AppID int64) (*[]context.Point, error) {
+	mssql, ok := o.MssqlPoints[databaseId]
+	if !ok {
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
-	cnt, err := result.RowsAffected()
+	var rs orginMssql.ReturnStatus
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
+		sql.Named("CUID", CUID),
+		sql.Named("AppID", AppID),
+		&rs)
 	if err != nil {
-		log.Error(err)
-		return err
-	}
-	log.Debug("UpdatePointMember Affected Count: ", cnt)
-	return nil
-}
-
-func (o *DB) SelectPointMember(cpMemberIdx int64) (*context.PointMemberInfo, error) {
-	sqlQuery := fmt.Sprintf("SELECT * from onbuff_inno.dbo.point_member WHERE cp_member_idx=%v", cpMemberIdx)
-	rows, err := o.MssqlAccount.Query(sqlQuery)
-	if err != nil {
-		log.Error(err)
+		log.Error("QueryContext err : ", err)
 		return nil, err
 	}
-	defer rows.Close()
 
-	var pointAmount, privateTokenAmount, privateWalletAddr sql.NullString
-	var publicTokenAmount, publicWalletAddress sql.NullString
+	if rs == resultcode.Result_Error_Invalid_data {
+		log.Error("returnStatus Result_Error_Invalid_data : ", rs)
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Invalid_data])
+	} else if rs != 1 {
+		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
 
-	member := new(context.PointMemberInfo)
+	points := new([]context.Point)
 
+	point := context.Point{}
 	for rows.Next() {
-		if err := rows.Scan(&member.Idx, &member.CpMemberIdx, &pointAmount,
-			&privateTokenAmount, &privateWalletAddr, &publicTokenAmount, &publicWalletAddress, &member.CreateAt); err != nil {
-			log.Error(err)
+		point.PointID = 0
+		point.Quantity = 0
+		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
 			return nil, err
 		}
-
-		member.PointAmount = pointAmount.String
-		member.PrivateTokenAmount = privateTokenAmount.String
-		member.PrivateWalletAddr = privateWalletAddr.String
-		member.PublicTokenAmount = publicTokenAmount.String
-		member.PublicWalletAddr = publicWalletAddress.String
+		*points = append(*points, point)
 	}
 
-	return member, nil
+	return points, nil
 }
 
-func makeUpdateString(params *context.PointMemberInfo) string {
-	sqlQuery := "UPDATE onbuff_inno.dbo.point_member set"
+// func (o *DB) UpdatePointMember(params *context.PointMemberInfo) error {
+// 	sqlQuery := makeUpdateString(params)
+// 	result, err := o.MssqlAccount.PrepareAndExec(sqlQuery)
 
-	bValid := false
-	if len(params.PointAmount) != 0 {
-		sqlQuery += " point_amount=" + params.PointAmount
-		bValid = true
-	}
-	if len(params.PrivateTokenAmount) != 0 {
-		getString(&sqlQuery, &bValid)
-		sqlQuery += fmt.Sprintf("private_token_amount=N'%v'", params.PrivateTokenAmount)
-	}
-	if len(params.PrivateWalletAddr) != 0 {
-		getString(&sqlQuery, &bValid)
-		sqlQuery += fmt.Sprintf("private_wallet_address=N'%v'", params.PrivateWalletAddr)
-	}
-	if len(params.PublicTokenAmount) != 0 {
-		getString(&sqlQuery, &bValid)
-		sqlQuery += fmt.Sprintf("public_token_amount=N'%v'", params.PublicTokenAmount)
-	}
-	if len(params.PublicWalletAddr) != 0 {
-		getString(&sqlQuery, &bValid)
-		sqlQuery += fmt.Sprintf("public_wallet_address=N'%v'", params.PublicWalletAddr)
-	}
-	sqlQuery += fmt.Sprintf(" WHERE cp_member_idx=%v", params.CpMemberIdx)
-	return sqlQuery
-}
+// 	if err != nil {
+// 		log.Error(err)
+// 		return err
+// 	}
+
+// 	cnt, err := result.RowsAffected()
+// 	if err != nil {
+// 		log.Error(err)
+// 		return err
+// 	}
+// 	log.Debug("UpdatePointMember Affected Count: ", cnt)
+// 	return nil
+// }
+
+// func makeUpdateString(params *context.PointMemberInfo) string {
+// 	sqlQuery := "UPDATE onbuff_inno.dbo.point_member set"
+
+// 	bValid := false
+// 	if len(params.PointAmount) != 0 {
+// 		sqlQuery += " point_amount=" + params.PointAmount
+// 		bValid = true
+// 	}
+// 	if len(params.PrivateTokenAmount) != 0 {
+// 		getString(&sqlQuery, &bValid)
+// 		sqlQuery += fmt.Sprintf("private_token_amount=N'%v'", params.PrivateTokenAmount)
+// 	}
+// 	if len(params.PrivateWalletAddr) != 0 {
+// 		getString(&sqlQuery, &bValid)
+// 		sqlQuery += fmt.Sprintf("private_wallet_address=N'%v'", params.PrivateWalletAddr)
+// 	}
+// 	if len(params.PublicTokenAmount) != 0 {
+// 		getString(&sqlQuery, &bValid)
+// 		sqlQuery += fmt.Sprintf("public_token_amount=N'%v'", params.PublicTokenAmount)
+// 	}
+// 	if len(params.PublicWalletAddr) != 0 {
+// 		getString(&sqlQuery, &bValid)
+// 		sqlQuery += fmt.Sprintf("public_wallet_address=N'%v'", params.PublicWalletAddr)
+// 	}
+// 	sqlQuery += fmt.Sprintf(" WHERE cp_member_idx=%v", params.CpMemberIdx)
+// 	return sqlQuery
+// }
 
 func getString(sqlQuery *string, existValid *bool) {
 	if *existValid {

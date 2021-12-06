@@ -1,0 +1,5 @@
+package inner
+
+func LoadPoint() {
+
+}

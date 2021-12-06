@@ -8,7 +8,6 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/util"
 )
 
 func PutPointAppUpdate(params *context.ReqPointMemberAppUpdate, ctx *context.PointManagerContext) error {
@@ -79,53 +78,53 @@ func PostPointAppExchange(params *context.PostPointAppExchange, ctx *context.Poi
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	// 1. app point 잔량 check
-	if value, err := model.GetDB().SelectPointMember(params.CpMemberIdx); err != nil {
-		resp.SetReturn(resultcode.Result_DBError)
-	} else {
-		if value.CpMemberIdx <= 0 {
-			// 존재하지 않는 member
-			resp.SetReturn(resultcode.Result_Error_NotExistMember)
-		} else {
-			// 보유 포인트 수량보다 많은 전환 량을 요청시 에러
-			if util.CompareString(value.PointAmount, params.PointAmount) < 1 {
-				resp.SetReturn(resultcode.Result_Require_ValidPointAmount)
-			} else {
-				// 2. private token 전환 요청 = 임시로 성공 처리  todo
-				{
-					// block chain 네트워크에 전환 요청
-					// 전환 성공여부 확인
-					// private token 보유량 확인
-				}
+	// // 1. app point 잔량 check
+	// if value, err := model.GetDB().SelectPointMember(params.CpMemberIdx); err != nil {
+	// 	resp.SetReturn(resultcode.Result_DBError)
+	// } else {
+	// 	if value.CpMemberIdx <= 0 {
+	// 		// 존재하지 않는 member
+	// 		resp.SetReturn(resultcode.Result_Error_NotExistMember)
+	// 	} else {
+	// 		// 보유 포인트 수량보다 많은 전환 량을 요청시 에러
+	// 		if util.CompareString(value.PointAmount, params.PointAmount) < 1 {
+	// 			resp.SetReturn(resultcode.Result_Require_ValidPointAmount)
+	// 		} else {
+	// 			// 2. private token 전환 요청 = 임시로 성공 처리  todo
+	// 			{
+	// 				// block chain 네트워크에 전환 요청
+	// 				// 전환 성공여부 확인
+	// 				// private token 보유량 확인
+	// 			}
 
-				// 3. point_exchange_history 테이블에 정보 추가
-				history := context.PointMemberExchangeHistory{
-					ContextKey: context.ContextKey{
-						Idx:         value.Idx,
-						CpMemberIdx: value.CpMemberIdx,
-					},
-					LatestPointAmount:          value.PointAmount,
-					ExchangePointAmount:        params.PointAmount,
-					LatestPrivateTokenAmount:   value.PrivateTokenAmount,
-					ExchangePrivateTokenAmount: params.PointAmount,
-					TxnHash:                    "0xtest_hash",
-					ExchangeState:              context.Exchange_State_type_complete,
-				}
-				context.MakeAt(&history.CreateAt)
+	// 			// 3. point_exchange_history 테이블에 정보 추가
+	// 			history := context.PointMemberExchangeHistory{
+	// 				ContextKey: context.ContextKey{
+	// 					Idx:         value.Idx,
+	// 					CpMemberIdx: value.CpMemberIdx,
+	// 				},
+	// 				LatestPointAmount:          value.PointAmount,
+	// 				ExchangePointAmount:        params.PointAmount,
+	// 				LatestPrivateTokenAmount:   value.PrivateTokenAmount,
+	// 				ExchangePrivateTokenAmount: params.PointAmount,
+	// 				TxnHash:                    "0xtest_hash",
+	// 				ExchangeState:              context.Exchange_State_type_complete,
+	// 			}
+	// 			context.MakeAt(&history.CreateAt)
 
-				if err := model.GetDB().InsertPointAppExchangeHistory(&history); err != nil {
-					resp.SetReturn(resultcode.Result_DBError)
-				} else {
-					// 4. point_member 테이블에 최종 정보 갱신
-					value.PointAmount = strconv.FormatInt(util.ParseInt(value.PointAmount)-util.ParseInt(params.PointAmount), 10)
-					value.PrivateTokenAmount = strconv.FormatInt(util.ParseInt(value.PrivateTokenAmount)+util.ParseInt(params.PointAmount), 10)
-					if err := model.GetDB().UpdatePointMember(value); err != nil {
-						resp.SetReturn(resultcode.Result_DBError)
-					}
-				}
-			}
-		}
-	}
+	// 			if err := model.GetDB().InsertPointAppExchangeHistory(&history); err != nil {
+	// 				resp.SetReturn(resultcode.Result_DBError)
+	// 			} else {
+	// 				// 4. point_member 테이블에 최종 정보 갱신
+	// 				value.PointAmount = strconv.FormatInt(util.ParseInt(value.PointAmount)-util.ParseInt(params.PointAmount), 10)
+	// 				value.PrivateTokenAmount = strconv.FormatInt(util.ParseInt(value.PrivateTokenAmount)+util.ParseInt(params.PointAmount), 10)
+	// 				if err := model.GetDB().UpdatePointMember(value); err != nil {
+	// 					resp.SetReturn(resultcode.Result_DBError)
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
