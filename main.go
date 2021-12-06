@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/app"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/app"
 )
 
 func main() {

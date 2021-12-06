@@ -10,8 +10,9 @@ var once sync.Once
 var currentConfig *ServerConfig
 
 type PointManager struct {
-	ApplicationName string `json:"application_name" yaml:"application_name"`
-	APIDocs         bool   `json:"api_docs" yaml:"api_docs"`
+	ApplicationName        string `json:"application_name" yaml:"application_name"`
+	APIDocs                bool   `json:"api_docs" yaml:"api_docs"`
+	CachePointExpiryPeriod int64  `json:"cache_point_expiry_period" yaml:"cache_point_expiry_period"`
 }
 
 type ApiAuth struct {

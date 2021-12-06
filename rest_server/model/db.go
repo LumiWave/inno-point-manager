@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/basedb"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
 type PointDB struct {
@@ -18,6 +18,8 @@ type DB struct {
 	Cache        *basedb.Cache
 
 	MssqlPoints map[int64]*basedb.Mssql
+
+	PointDoc map[string]*MemberPointInfo
 }
 
 var gDB *DB
@@ -31,6 +33,7 @@ func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mss
 }
 
 func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
+	gDB.PointDoc = make(map[string]*MemberPointInfo)
 	gDB.MssqlPoints = pointdbs
 }
 

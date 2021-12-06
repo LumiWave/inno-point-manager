@@ -24,6 +24,8 @@ const (
 	Result_Require_PointID        = 12004  // 유효한 point_id 정보 필요
 	Result_Require_ChangeQuantity = 120005 // 유효한 change_quantity 정보 필요
 
+	Result_RedisError_Lock_fail = 18000 // redis lock error
+
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
 	Result_DBError_Unknown = 19002 // 알려지지 않은 db 에러
@@ -55,6 +57,8 @@ var ResultCodeText = map[int]string{
 	Result_Error_LatestPointAmountIsDiffrent: "latest point information is different",
 	Result_Error_NotExistMember:              "Not exist member",
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
+
+	Result_RedisError_Lock_fail: "Redis lock error.",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",

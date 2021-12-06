@@ -9,14 +9,14 @@ import (
 	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/basedb"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/externalapi"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/internalapi"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/schedule"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/util"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/externalapi"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/internalapi"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/schedule"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/util"
 )
 
 type ServerApp struct {

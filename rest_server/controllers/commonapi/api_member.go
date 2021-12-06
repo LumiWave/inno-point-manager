@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
 func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.PointManagerContext) error {
@@ -17,16 +18,13 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		// 포인트 정보 조회
-		if points, err := model.GetDB().SelectPointMember(req.CUID, req.DatabaseID, req.AppID); err != nil {
+		if pointInfo, err := inner.LoadPoint(req.CUID, req.AppID, req.DatabaseID); err != nil {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		} else {
-			pointsInfo := context.ResPointMemberRegister{
-				CUID:   req.CUID,
-				AppID:  req.AppID,
-				Points: points,
+			pointInfos := context.ResPointMemberRegister{
+				PointInfo: *pointInfo,
 			}
-
-			resp.Value = pointsInfo
+			resp.Value = pointInfos
 		}
 	}
 

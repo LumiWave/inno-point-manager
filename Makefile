@@ -10,7 +10,7 @@ server_ext_api=external_api.yml
 
 # set variables for build
 output=bin
-app=ipblock-server-$(env)
+app=inno-point-manager-$(env)
 src=cmd/$(app)
 
 ifeq ("$(env)", "")
@@ -43,7 +43,7 @@ test:
 	# test
 	# If the test succeeds, kill the test process and then do the next build,
 	# if it fails, kill the test process and exit the build.
-	go test github.com/ONBUFF-IP-TOKEN/ipblock-server -v -timeout 30s \
+	go test github.com/ONBUFF-IP-TOKEN/inno-point-manager -v -timeout 30s \
 		&& { echo test success; make stop; } \
 		|| { echo test failure; make stop; exit 1;}
 

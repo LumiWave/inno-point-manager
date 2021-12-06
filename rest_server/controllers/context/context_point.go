@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
 type Point_type string

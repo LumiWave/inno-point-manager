@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
 func PutPointAppUpdate(params *context.ReqPointMemberAppUpdate, ctx *context.PointManagerContext) error {

@@ -4,9 +4,9 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/commonapi"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/labstack/echo"
 )
 

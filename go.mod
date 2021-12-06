@@ -1,4 +1,4 @@
-module github.com/ONBUFF-IP-TOKEN/ipblock-server
+module github.com/ONBUFF-IP-TOKEN/inno-point-manager
 
 go 1.17
 

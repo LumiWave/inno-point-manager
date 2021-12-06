@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/datetime"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"

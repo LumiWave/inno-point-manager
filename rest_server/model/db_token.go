@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/util"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/util"
 )
 
 func (o *DB) InsertPointTokenSwapHistory(params *context.PointMemberTokenSwapHistory) error {

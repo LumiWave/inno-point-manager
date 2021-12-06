@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
 // type TokenInfo struct {
@@ -59,6 +59,15 @@ type Point struct {
 	Quantity int64 `json:"quantity"`
 }
 
+type PointInfo struct {
+	MyUuid     string `json:"-"`
+	DatabaseID int64  `json:"-"`
+
+	CUID   string   `json:"cu_id"`
+	AppID  int64    `json:"app_id"`
+	Points *[]Point `json:"points"`
+}
+
 // 회원 추가
 type ReqPointMemberRegister struct {
 	AUID       int64  `json:"au_id"`
@@ -89,7 +98,5 @@ func (o *ReqPointMemberRegister) CheckValidate() *base.BaseResponse {
 }
 
 type ResPointMemberRegister struct {
-	CUID   string   `json:"cu_id"`
-	AppID  int64    `json:"app_id"`
-	Points *[]Point `json:"points"`
+	PointInfo
 }
