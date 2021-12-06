@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "prebuild",
             "mode": "auto",
-            "program": "${fileWorkspaceFolder}/rest_server/main.go",
+            "program": "${fileWorkspaceFolder}/main.go",
             "env": {},
             "args": ["-c", "config.yml"],
             "cwd": "${workspaceRoot}/bin"
