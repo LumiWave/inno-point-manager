@@ -56,8 +56,8 @@ func (o *PointMemberInfo) CheckValidate(bPost bool) *base.BaseResponse {
 ////////////////////////////////////////
 
 type Point struct {
-	PointID  int64
-	Quantity int64
+	PointID  int64 `json:"point_id"`
+	Quantity int64 `json:"quantity"`
 }
 
 // 회원 추가

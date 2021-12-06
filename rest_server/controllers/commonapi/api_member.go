@@ -14,7 +14,7 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 	resp.Success()
 
 	if err := model.GetDB().InsertPointMember(req); err != nil {
-		resp.SetReturn(resultcode.Result_DBError)
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

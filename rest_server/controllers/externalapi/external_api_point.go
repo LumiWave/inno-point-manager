@@ -14,7 +14,7 @@ import (
 func (o *ExternalAPI) PutPointAppUpdate(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewPointMemberAppUpdate()
+	params := context.NewReqPointMemberAppUpdate()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)

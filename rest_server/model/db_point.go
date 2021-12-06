@@ -8,21 +8,21 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/util"
 )
 
-func (o *DB) InsertPointAppHistory(params *context.PointMemberAppUpdate) error {
-	sqlQuery := fmt.Sprintf("INSERT INTO onbuff_inno.dbo.point_history(cp_member_idx, "+
-		"type, latest_point_amount, change_point_amount, create_at) output inserted.idx "+
-		"VALUES(%v,N'%v',N'%v',N'%v',%v)",
-		params.CpMemberIdx, params.Type, params.LatestPointAmount, params.ChangePointAmount, params.CreateAt)
+func (o *DB) InsertPointAppHistory(params *context.ReqPointMemberAppUpdate) error {
+	// sqlQuery := fmt.Sprintf("INSERT INTO onbuff_inno.dbo.point_history(cp_member_idx, "+
+	// 	"type, latest_point_amount, change_point_amount, create_at) output inserted.idx "+
+	// 	"VALUES(%v,N'%v',N'%v',N'%v',%v)",
+	// 	params.CpMemberIdx, params.Type, params.LatestPointAmount, params.ChangePointAmount, params.CreateAt)
 
-	var lastInsertId int64
-	err := o.MssqlAccount.QueryRow(sqlQuery, &lastInsertId)
+	// var lastInsertId int64
+	// err := o.MssqlAccount.QueryRow(sqlQuery, &lastInsertId)
 
-	if err != nil {
-		log.Error(err)
-		return err
-	}
+	// if err != nil {
+	// 	log.Error(err)
+	// 	return err
+	// }
 
-	log.Debug("InsertPointAppHistory idx:", lastInsertId)
+	// log.Debug("InsertPointAppHistory idx:", lastInsertId)
 
 	return nil
 }

@@ -1,16 +1,45 @@
 package model
 
 import (
+	originCtx "context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
+
+	orginMssql "github.com/denisenkom/go-mssqldb"
+)
+
+const (
+	USPPO_Rgstr_Members    = "[dbo].[USPPO_Rgstr_Members]"
+	USPPO_Mod_MemberPoints = "[dbo].[USPPO_Mod_MemberPoints]"
 )
 
 func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 
-	//	log.Debug("InsertPointMember idx:", lastInsertId)
+	mssql, ok := o.MssqlPoints[params.DatabaseID]
+	if !ok {
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
+		sql.Named("AUID", params.AUID),
+		sql.Named("CUID", params.CUID),
+		sql.Named("AppID", params.AppID),
+		&rs); err != nil {
+		log.Error("QueryContext err : ", err)
+		return err
+	}
+
+	if rs == resultcode.Result_Error_duplicate_auid {
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
+	} else if rs != 1 {
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
 
 	return nil
 }

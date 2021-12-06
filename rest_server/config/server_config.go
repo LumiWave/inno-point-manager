@@ -34,7 +34,7 @@ type ApiAuth struct {
 }
 
 type MssqlPoint struct {
-	DBID     int    `json:"db_id" yaml:"db_id"`
+	DBID     int64  `json:"db_id" yaml:"db_id"`
 	Host     string `json:"host" yaml:"host"`
 	Port     string `json:"port" yaml:"port"`
 	ID       string `json:"id" yaml:"id"`

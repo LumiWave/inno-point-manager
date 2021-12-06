@@ -37,26 +37,31 @@ type PointMemberHistory struct {
 ////////////////////////////////////////
 
 ///////// member 포인트 업데이트
-type PointMemberAppUpdate struct {
-	PointMemberHistory
+type ReqPointMemberAppUpdate struct {
+	CUID    string `json:"cu_id"`
+	AppID   int64  `json:"app_id"`
+	PointID int64  `json:"point_id"`
+
+	LastQuantity   int64 `json:"last_quantity"`
+	ChangeQuantity int64 `json:"change_quantity"`
 }
 
-func NewPointMemberAppUpdate() *PointMemberAppUpdate {
-	return new(PointMemberAppUpdate)
+func NewReqPointMemberAppUpdate() *ReqPointMemberAppUpdate {
+	return new(ReqPointMemberAppUpdate)
 }
 
-func (o *PointMemberAppUpdate) CheckValidate() *base.BaseResponse {
-	if o.CpMemberIdx == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_MemberIdx)
+func (o *ReqPointMemberAppUpdate) CheckValidate() *base.BaseResponse {
+	if len(o.CUID) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
 	}
-	if len(o.Type) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_PointType)
+	if o.AppID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
 	}
-	if len(o.LatestPointAmount) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_LatestPointAmount)
+	if o.PointID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_PointID)
 	}
-	if len(o.ChangePointAmount) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_ChangePointAmount)
+	if o.ChangeQuantity == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_ChangeQuantity)
 	}
 	return nil
 }

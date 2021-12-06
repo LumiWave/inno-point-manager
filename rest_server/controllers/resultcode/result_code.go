@@ -17,12 +17,17 @@ const (
 	Result_Error_NotExistMember              = 11101 // 존재하지 않는 member
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
 
-	Result_Require_AUID       = 12000 // 유효한 au_id 정보 필요
-	Result_Require_CUID       = 12001 // 유효한 cu_id 정보 필요
-	Result_Require_AppID      = 12002 // 유효한 app_id 정보 필요
-	Result_Require_DatabaseID = 12003 // 유효한 database_id 정보 필요
+	Result_Require_AUID           = 12000  // 유효한 au_id 정보 필요
+	Result_Require_CUID           = 12001  // 유효한 cu_id 정보 필요
+	Result_Require_AppID          = 12002  // 유효한 app_id 정보 필요
+	Result_Require_DatabaseID     = 12003  // 유효한 database_id 정보 필요
+	Result_Require_PointID        = 12004  // 유효한 point_id 정보 필요
+	Result_Require_ChangeQuantity = 120005 // 유효한 change_quantity 정보 필요
 
-	Result_DBError = 19000 // db 에러
+	Result_DBError              = 19000 // db 에러
+	Result_Invalid_DBID         = 19001 // 유효하지 못한 database index
+	Result_DBError_Unknown      = 19002 // 알려지지 않은 db 에러
+	Result_Error_duplicate_auid = 50102 // 해당 App에 중복된 AUID가 있습니다.
 
 	Result_Auth_RequireMessage    = 20000
 	Result_Auth_RequireSign       = 20001
@@ -49,12 +54,17 @@ var ResultCodeText = map[int]string{
 	Result_Error_NotExistMember:              "Not exist member",
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
 
-	Result_DBError: "Internal DB error",
+	Result_DBError:              "Internal DB error",
+	Result_Invalid_DBID:         "Invalid DB ID",
+	Result_DBError_Unknown:      "Unknown DB error",
+	Result_Error_duplicate_auid: "The app has duplicate AUIDs.",
 
-	Result_Require_AUID:       "Requires valid 'au_id' information.",
-	Result_Require_CUID:       "Requires valid 'cu_id' information.",
-	Result_Require_AppID:      "Requires valid 'app_id' information.",
-	Result_Require_DatabaseID: "Requires valid 'database_id' information.",
+	Result_Require_AUID:           "Requires valid 'au_id' information.",
+	Result_Require_CUID:           "Requires valid 'cu_id' information.",
+	Result_Require_AppID:          "Requires valid 'app_id' information.",
+	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
+	Result_Require_PointID:        "Requires valid 'point_id' information.",
+	Result_Require_ChangeQuantity: "Requires valid 'change_quantity' information.",
 
 	Result_Auth_RequireMessage:    "Message is required",
 	Result_Auth_RequireSign:       "Sign info is required",

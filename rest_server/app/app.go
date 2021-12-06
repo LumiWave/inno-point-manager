@@ -16,6 +16,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/model"
 	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/schedule"
+	"github.com/ONBUFF-IP-TOKEN/ipblock-server/rest_server/util"
 )
 
 type ServerApp struct {
@@ -80,19 +81,33 @@ func (o *ServerApp) NewDB(conf *config.ServerConfig) error {
 	gCache := basedb.GetCache(&conf.Cache)
 
 	// point db create
-	pointDBs := make(map[int]*basedb.Mssql)
-	for _, pointDB := range conf.MssqlDBPoint {
-		mssqlDBP, err := basedb.GetMssql(pointDB.Database, "", pointDB.ID, pointDB.Password, pointDB.Host, int(port))
-		if err != nil {
-			log.Errorf("err: %v, val: %v, %v, %v, %v, %v, %v",
-				err, pointDB.Host, pointDB.ID, pointDB.Password, pointDB.Database, pointDB.PoolSize, pointDB.IdleSize)
-			return err
-		}
-
-		pointDBs[pointDB.DBID] = mssqlDBP
-	}
+	pointDBs := make(map[int64]*basedb.Mssql)
 
 	model.SetDB(mssqlDB, gCache, pointDBs)
+
+	if getPointDBs, err := model.GetDB().GetPointDatabases(); err != nil {
+		return err
+	} else {
+		for _, pointDB := range getPointDBs {
+
+			mssqlDBP, err := basedb.NewMssql(pointDB.DatabaseName,
+				"pointDB",
+				conf.MssqlDBPoint[0].ID,
+				conf.MssqlDBPoint[0].Password,
+				pointDB.ServerName,
+				int(util.ParseInt(conf.MssqlDBPoint[0].Port)))
+
+			if err != nil {
+				log.Errorf("err: %v, val: %v, %v, %v, %v",
+					err, pointDB.ServerName, conf.MssqlDBPoint[0].ID, conf.MssqlDBPoint[0].Password, pointDB.DatabaseName)
+				return err
+			}
+
+			pointDBs[pointDB.DatabaseID] = mssqlDBP
+		}
+
+		model.SetDBPoint(pointDBs)
+	}
 
 	return nil
 }
