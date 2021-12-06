@@ -1,6 +1,6 @@
 # set -x
 
-sh ./prebuild.sh
+sh ./prebuild_dev.sh
 
 rm -rf bin/inno-point-manager
 
