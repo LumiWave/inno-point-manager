@@ -14,39 +14,11 @@ import (
 )
 
 const (
-	USPPO_Rgstr_Members    = "[dbo].[USPPO_Rgstr_Members]"
 	USPPO_Mod_MemberPoints = "[dbo].[USPPO_Mod_MemberPoints]"
 )
 
-// 포인트 맴버 등록
-func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
-	mssql, ok := o.MssqlPoints[params.DatabaseID]
-	if !ok {
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
-	}
-	var rs orginMssql.ReturnStatus
-	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
-		sql.Named("AUID", params.AUID),
-		sql.Named("CUID", params.CUID),
-		sql.Named("AppID", params.AppID),
-		&rs); err != nil {
-		log.Error("QueryContext err : ", err)
-		return err
-	}
-
-	if rs == resultcode.Result_Error_duplicate_auid {
-		log.Error("returnStatus Result_Error_duplicate_auid : ", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
-	} else if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
-	}
-
-	return nil
-}
-
 // 포인트 업데이트
-func (o *DB) UpdatePoint(CUID string, AppID, PointID, Quantity, DatabaseID int64) error {
+func (o *DB) UpdateAppPoint(CUID string, AppID, PointID, Quantity, DatabaseID int64) error {
 	mssql, ok := o.MssqlPoints[DatabaseID]
 	if !ok {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])

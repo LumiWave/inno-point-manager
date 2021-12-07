@@ -60,8 +60,8 @@ type Point struct {
 }
 
 type PointInfo struct {
-	MyUuid     string `json:"-"`
-	DatabaseID int64  `json:"-"`
+	MyUuid     string `json:"my_uuid"`
+	DatabaseID int64  `json:"database_id"`
 
 	CUID   string   `json:"cu_id"`
 	AppID  int64    `json:"app_id"`

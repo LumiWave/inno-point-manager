@@ -5,46 +5,27 @@ import (
 	"strconv"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
-func PutPointAppUpdate(params *context.ReqPointMemberAppUpdate, ctx *context.PointManagerContext) error {
+func PutPointAppUpdate(req *context.ReqPointMemberAppUpdate, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	// context.MakeAt(&params.CreateAt)
-
-	// // 1. 존재하는 member 인지 확인
-	// if value, err := model.GetDB().SelectPointMember(params.CpMemberIdx); err != nil {
-	// 	resp.SetReturn(resultcode.Result_DBError)
-	// } else {
-	// 	if value.CpMemberIdx <= 0 {
-	// 		// 존재하지 않는 member
-	// 		resp.SetReturn(resultcode.Result_Error_NotExistMember)
-	// 	} else {
-	// 		// 2. latest_point_amount 정보가 point_member 테이블과 동일 한지 확인
-	// 		if params.LatestPointAmount != value.PointAmount {
-	// 			resp.SetReturn(resultcode.Result_Error_LatestPointAmountIsDiffrent)
-	// 		} else {
-	// 			// 4. point_member 테이블에 point_amount 정보 update
-	// 			pA1, _ := strconv.ParseInt(value.PointAmount, 10, 64)
-	// 			pA2, _ := strconv.ParseInt(params.ChangePointAmount, 10, 64)
-	// 			value.PointAmount = strconv.FormatInt(pA1+pA2, 10)
-	// 			if err := model.GetDB().UpdatePointMember(value); err != nil {
-	// 				resp.SetReturn(resultcode.Result_DBError)
-	// 			} else {
-	// 				// 3. app_point_history 테이블에 정보 insert
-	// 				if err := model.GetDB().InsertPointAppHistory(params); err != nil {
-	// 					resp.SetReturn(resultcode.Result_DBError)
-	// 				}
-	// 			}
-	// 		}
-
-	// 		resp.Value = value
-	// 	}
-	// }
+	if pointInfo, err := inner.UpdateAppPoint(req); err != nil {
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else {
+		pointInfos := context.ResPointMemberAppUpdate{
+			CUID:         req.CUID,
+			AppID:        req.AppID,
+			PointID:      pointInfo.PointID,
+			LastQuantity: pointInfo.Quantity,
+		}
+		resp.Value = pointInfos
+	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }

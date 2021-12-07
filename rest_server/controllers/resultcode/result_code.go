@@ -17,12 +17,12 @@ const (
 	Result_Error_NotExistMember              = 11101 // 존재하지 않는 member
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
 
-	Result_Require_AUID           = 12000  // 유효한 au_id 정보 필요
-	Result_Require_CUID           = 12001  // 유효한 cu_id 정보 필요
-	Result_Require_AppID          = 12002  // 유효한 app_id 정보 필요
-	Result_Require_DatabaseID     = 12003  // 유효한 database_id 정보 필요
-	Result_Require_PointID        = 12004  // 유효한 point_id 정보 필요
-	Result_Require_ChangeQuantity = 120005 // 유효한 change_quantity 정보 필요
+	Result_Require_AUID           = 12000 // 유효한 au_id 정보 필요
+	Result_Require_CUID           = 12001 // 유효한 cu_id 정보 필요
+	Result_Require_AppID          = 12002 // 유효한 app_id 정보 필요
+	Result_Require_DatabaseID     = 12003 // 유효한 database_id 정보 필요
+	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
+	Result_Require_ChangeQuantity = 12005 // 유효한 change_quantity 정보 필요
 
 	Result_RedisError_Lock_fail = 18000 // redis lock error
 

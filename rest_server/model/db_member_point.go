@@ -12,47 +12,48 @@ type MemberPointInfo struct {
 }
 
 func (o *MemberPointInfo) UpdateRun() {
-	//1. update timeout check
-	ticker := time.NewTicker(10000 * time.Millisecond)
-
 	defer func() {
-		ticker.Stop()
+		key := MakePointKey(o.CUID, o.AppID)
+		GetDB().PointDoc[key] = nil
 	}()
 
 	go func() {
 		for {
-			select {
-			case <-ticker.C:
-				{
-					//2. redis lock
-					key := MakePointLockKey(o.CUID, o.AppID)
-					unLock, err := AutoLock(key)
-					if err != nil {
-						return
-					}
+			timer := time.NewTimer(10 * time.Second)
+			<-timer.C
 
-					defer unLock() // redis unlock
+			//2. redis lock
+			Lockkey := MakePointLockKey(o.CUID, o.AppID)
+			unLock, err := AutoLock(Lockkey)
+			if err != nil {
+				return
+			}
 
-					//3. redis read
-					pointInfo, err := GetDB().GetPoint(key)
-					if err != nil {
-						return
-					}
-					//4. myuuid check else go func end
-					if !strings.EqualFold(o.MyUuid, pointInfo.MyUuid) {
-						return
-					}
-					//5. db update
-					for _, point := range *pointInfo.Points {
-						if err := GetDB().UpdatePoint(pointInfo.CUID, pointInfo.AppID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
-							return
-						}
-					}
-
-					//6. local save
-					o.PointInfo = pointInfo
+			key := MakePointKey(o.CUID, o.AppID)
+			//3. redis read
+			pointInfo, err := GetDB().GetCachePoint(key)
+			if err != nil {
+				unLock() // redis unlock
+				return
+			}
+			//4. myuuid check else go func end
+			if !strings.EqualFold(o.MyUuid, pointInfo.MyUuid) {
+				unLock() // redis unlock
+				return
+			}
+			//5. db update
+			for _, point := range *pointInfo.Points {
+				if err := GetDB().UpdateAppPoint(pointInfo.CUID, pointInfo.AppID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
+					unLock() // redis unlock
+					return
 				}
 			}
+
+			//6. local save
+			o.PointInfo = pointInfo
+
+			timer.Stop()
+			unLock() // redis unlock
 		}
 	}()
 }

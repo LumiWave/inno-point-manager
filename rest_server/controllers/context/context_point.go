@@ -38,9 +38,10 @@ type PointMemberHistory struct {
 
 ///////// member 포인트 업데이트
 type ReqPointMemberAppUpdate struct {
-	CUID    string `json:"cu_id"`
-	AppID   int64  `json:"app_id"`
-	PointID int64  `json:"point_id"`
+	CUID       string `json:"cu_id"`
+	AppID      int64  `json:"app_id"`
+	PointID    int64  `json:"point_id"`
+	DatabaseID int64  `json:"database_id"`
 
 	LastQuantity   int64 `json:"last_quantity"`
 	ChangeQuantity int64 `json:"change_quantity"`
@@ -60,10 +61,21 @@ func (o *ReqPointMemberAppUpdate) CheckValidate() *base.BaseResponse {
 	if o.PointID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_PointID)
 	}
+	if o.DatabaseID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
+	}
 	if o.ChangeQuantity == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_ChangeQuantity)
 	}
 	return nil
+}
+
+type ResPointMemberAppUpdate struct {
+	CUID    string `json:"cu_id"`
+	AppID   int64  `json:"app_id"`
+	PointID int64  `json:"point_id"`
+
+	LastQuantity int64 `json:"last_quantity"`
 }
 
 ////////////////////////////////////////

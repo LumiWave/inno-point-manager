@@ -12,6 +12,10 @@ type PointDB struct {
 	ServerName   string
 }
 
+type Point struct {
+	PointIds []int64
+}
+
 type DB struct {
 	Mysql        *basedb.Mysql
 	MssqlAccount *basedb.Mssql
@@ -20,6 +24,8 @@ type DB struct {
 	MssqlPoints map[int64]*basedb.Mssql
 
 	PointDoc map[string]*MemberPointInfo
+
+	PointList map[int64]Point // 전체 포인트 종류
 }
 
 var gDB *DB
@@ -34,7 +40,10 @@ func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mss
 
 func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
 	gDB.PointDoc = make(map[string]*MemberPointInfo)
+	gDB.PointList = make(map[int64]Point)
 	gDB.MssqlPoints = pointdbs
+
+	gDB.GetPointList()
 }
 
 func GetDB() *DB {

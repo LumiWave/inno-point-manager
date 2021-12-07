@@ -17,6 +17,10 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 	if err := model.GetDB().InsertPointMember(req); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
+		// 강제로 0 point 업데이트
+		for _, pointID := range model.GetDB().PointList[req.AppID].PointIds {
+			model.GetDB().UpdateAppPoint(req.CUID, req.AppID, pointID, 0, req.DatabaseID)
+		}
 		// 포인트 정보 조회
 		if pointInfo, err := inner.LoadPoint(req.CUID, req.AppID, req.DatabaseID); err != nil {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)

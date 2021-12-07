@@ -12,6 +12,10 @@ import (
 )
 
 func MakePointLockKey(CUID string, AppID int64) string {
+	return config.GetInstance().DBPrefix + "-POINT-MEMBER-" + CUID + "-" + strconv.FormatInt(AppID, 10) + "-lock"
+}
+
+func MakePointKey(CUID string, AppID int64) string {
 	return config.GetInstance().DBPrefix + ":POINT-MEMBER:" + CUID + "-" + strconv.FormatInt(AppID, 10)
 }
 
@@ -30,7 +34,7 @@ func AutoLock(key string) (func() error, error) {
 	return unLock, nil
 }
 
-func (o *DB) GetPoint(key string) (*context.PointInfo, error) {
+func (o *DB) GetCachePoint(key string) (*context.PointInfo, error) {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
@@ -42,7 +46,7 @@ func (o *DB) GetPoint(key string) (*context.PointInfo, error) {
 	return pointInfos, err
 }
 
-func (o *DB) SetPoint(key string, pointInfo *context.PointInfo) error {
+func (o *DB) SetCachePoint(key string, pointInfo *context.PointInfo) error {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
