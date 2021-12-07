@@ -20,24 +20,54 @@ const (
 	Exchange_State_type_complete = "2" // 전환 완료
 )
 
-///////// member 포인트 누적 history 정보
-type PointMemberHistory struct {
-	ContextKey
+type Point struct {
+	PointID  int64 `json:"point_id"`
+	Quantity int64 `json:"quantity"`
+}
 
-	Type              Point_type `json:"type"`
-	LatestPointAmount string     `json:"latest_point_amount"`
-	ChangePointAmount string     `json:"change_point_amount"`
+type PointInfo struct {
+	MyUuid     string `json:"my_uuid"`
+	DatabaseID int64  `json:"database_id"`
 
-	CreateAt int64 `json:"create_at"`
-	//ExchangeAt int64 `json:"exchange_at"`
+	CUID   string   `json:"cu_id"`
+	AppID  int64    `json:"app_id"`
+	Points *[]Point `json:"points"`
+}
 
-	PageInfo
+///////// member 포인트 조회
+type ReqGetPointApp struct {
+	CUID       string `query:"cu_id"`
+	AppID      int64  `query:"app_id"`
+	DatabaseID int64  `query:"database_id"`
+}
+
+func NewReqGetPointApp() *ReqGetPointApp {
+	return new(ReqGetPointApp)
+}
+
+func (o *ReqGetPointApp) CheckValidate() *base.BaseResponse {
+	if len(o.CUID) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
+	}
+	if o.AppID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
+	}
+	if o.DatabaseID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
+	}
+	return nil
+}
+
+type ResGetPointApp struct {
+	CUID   string   `json:"cu_id"`
+	AppID  int64    `josn:"app_id"`
+	Points *[]Point `json:"points"`
 }
 
 ////////////////////////////////////////
 
 ///////// member 포인트 업데이트
-type ReqPointMemberAppUpdate struct {
+type ReqPointAppUpdate struct {
 	CUID       string `json:"cu_id"`
 	AppID      int64  `json:"app_id"`
 	PointID    int64  `json:"point_id"`
@@ -47,11 +77,11 @@ type ReqPointMemberAppUpdate struct {
 	ChangeQuantity int64 `json:"change_quantity"`
 }
 
-func NewReqPointMemberAppUpdate() *ReqPointMemberAppUpdate {
-	return new(ReqPointMemberAppUpdate)
+func NewReqPointMemberAppUpdate() *ReqPointAppUpdate {
+	return new(ReqPointAppUpdate)
 }
 
-func (o *ReqPointMemberAppUpdate) CheckValidate() *base.BaseResponse {
+func (o *ReqPointAppUpdate) CheckValidate() *base.BaseResponse {
 	if len(o.CUID) == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
 	}
@@ -70,12 +100,28 @@ func (o *ReqPointMemberAppUpdate) CheckValidate() *base.BaseResponse {
 	return nil
 }
 
-type ResPointMemberAppUpdate struct {
+type ResPointAppUpdate struct {
 	CUID    string `json:"cu_id"`
 	AppID   int64  `json:"app_id"`
 	PointID int64  `json:"point_id"`
 
 	LastQuantity int64 `json:"last_quantity"`
+}
+
+////////////////////////////////////////
+
+///////// member 포인트 누적 history 정보
+type PointMemberHistory struct {
+	ContextKey
+
+	Type              Point_type `json:"type"`
+	LatestPointAmount string     `json:"latest_point_amount"`
+	ChangePointAmount string     `json:"change_point_amount"`
+
+	CreateAt int64 `json:"create_at"`
+	//ExchangeAt int64 `json:"exchange_at"`
+
+	PageInfo
 }
 
 ////////////////////////////////////////

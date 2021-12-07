@@ -45,7 +45,7 @@ func (o *DB) UpdateAppPoint(CUID string, AppID, PointID, Quantity, DatabaseID in
 	return nil
 }
 
-func (o *DB) InsertPointAppHistory(params *context.ReqPointMemberAppUpdate) error {
+func (o *DB) InsertPointAppHistory(params *context.ReqPointAppUpdate) error {
 	// sqlQuery := fmt.Sprintf("INSERT INTO onbuff_inno.dbo.point_history(cp_member_idx, "+
 	// 	"type, latest_point_amount, change_point_amount, create_at) output inserted.idx "+
 	// 	"VALUES(%v,N'%v',N'%v',N'%v',%v)",

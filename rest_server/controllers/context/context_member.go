@@ -54,20 +54,6 @@ import (
 
 ////////////////////////////////////////
 
-type Point struct {
-	PointID  int64 `json:"point_id"`
-	Quantity int64 `json:"quantity"`
-}
-
-type PointInfo struct {
-	MyUuid     string `json:"my_uuid"`
-	DatabaseID int64  `json:"database_id"`
-
-	CUID   string   `json:"cu_id"`
-	AppID  int64    `json:"app_id"`
-	Points *[]Point `json:"points"`
-}
-
 // 회원 추가
 type ReqPointMemberRegister struct {
 	AUID       int64  `json:"au_id"`

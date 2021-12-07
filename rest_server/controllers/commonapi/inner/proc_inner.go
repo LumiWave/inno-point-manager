@@ -16,7 +16,7 @@ type MemberPoint struct {
 	AppId int64
 }
 
-func UpdateAppPoint(req *context.ReqPointMemberAppUpdate) (*context.Point, error) {
+func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 	// 1. redis lock
 	Lockkey := model.MakePointLockKey(req.CUID, req.AppID)
 	unLock, err := model.AutoLock(Lockkey)

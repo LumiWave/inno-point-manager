@@ -11,14 +11,33 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
-func PutPointAppUpdate(req *context.ReqPointMemberAppUpdate, ctx *context.PointManagerContext) error {
+// 맴버 포인트 정보 조회
+func GetPointApp(req *context.ReqGetPointApp, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	// 포인트 정보 조회
+	if pointInfo, err := inner.LoadPoint(req.CUID, req.AppID, req.DatabaseID); err != nil {
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else {
+		pointInfos := context.ResPointMemberRegister{
+			PointInfo: *pointInfo,
+		}
+		resp.Value = pointInfos
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+// app point 업데이트
+func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
 	if pointInfo, err := inner.UpdateAppPoint(req); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
-		pointInfos := context.ResPointMemberAppUpdate{
+		pointInfos := context.ResPointAppUpdate{
 			CUID:         req.CUID,
 			AppID:        req.AppID,
 			PointID:      pointInfo.PointID,
