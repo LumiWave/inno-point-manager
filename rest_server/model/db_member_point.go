@@ -13,7 +13,7 @@ type MemberPointInfo struct {
 
 func (o *MemberPointInfo) UpdateRun() {
 	defer func() {
-		key := MakePointKey(o.CUID, o.AppID)
+		key := MakePointKey(o.MUID)
 		GetDB().PointDoc[key] = nil
 	}()
 
@@ -23,13 +23,13 @@ func (o *MemberPointInfo) UpdateRun() {
 			<-timer.C
 
 			//2. redis lock
-			Lockkey := MakePointLockKey(o.CUID, o.AppID)
+			Lockkey := MakePointLockKey(o.MUID)
 			unLock, err := AutoLock(Lockkey)
 			if err != nil {
 				return
 			}
 
-			key := MakePointKey(o.CUID, o.AppID)
+			key := MakePointKey(o.MUID)
 			//3. redis read
 			pointInfo, err := GetDB().GetCachePoint(key)
 			if err != nil {
@@ -42,8 +42,8 @@ func (o *MemberPointInfo) UpdateRun() {
 				return
 			}
 			//5. db update
-			for _, point := range *pointInfo.Points {
-				if err := GetDB().UpdateAppPoint(pointInfo.CUID, pointInfo.AppID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
+			for _, point := range pointInfo.Points {
+				if err := GetDB().UpdateAppPoint(pointInfo.MUID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
 					unLock() // redis unlock
 					return
 				}

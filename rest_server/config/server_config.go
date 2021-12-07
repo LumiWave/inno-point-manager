@@ -16,14 +16,9 @@ type PointManager struct {
 }
 
 type ApiAuth struct {
-	AuthEnable        bool   `yaml:"auth_enable"`
-	JwtSecretKey      string `yaml:"jwt_secret_key"`
-	TokenExpiryPeriod int64  `yaml:"token_expiry_period"`
-	SignExpiryPeriod  int64  `yaml:"sign_expiry_period"`
-	AesKey            string `yaml:"aes_key"`
-	InternalAuth      bool   `json:"internal_auth" yaml:"internal_auth"`
-	ApiAuthDomain     string `json:"api_auth_domain" yaml:"api_auth_domain"`
-	ApiAuthVerify     string `json:"api_auth_verify" yaml:"api_auth_verify"`
+	AuthEnable    bool   `yaml:"auth_enable"`
+	ApiAuthDomain string `json:"api_auth_domain" yaml:"api_auth_domain"`
+	ApiAuthVerify string `json:"api_auth_verify" yaml:"api_auth_verify"`
 }
 
 type MssqlPoint struct {

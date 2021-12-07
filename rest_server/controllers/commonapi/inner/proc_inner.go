@@ -9,16 +9,16 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var gPointDoc map[string]MemberPoint
+// var gPointDoc map[string]MemberPoint
 
-type MemberPoint struct {
-	CUID  string
-	AppId int64
-}
+// type MemberPoint struct {
+// 	MUID  int64
+// 	AppId int64
+// }
 
 func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 	// 1. redis lock
-	Lockkey := model.MakePointLockKey(req.CUID, req.AppID)
+	Lockkey := model.MakePointLockKey(req.MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
@@ -29,21 +29,21 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 
 	respPoint := new(context.Point)
 	// 2. redis에 해당 포인트 정보 존재하는지 check
-	key := model.MakePointKey(req.CUID, req.AppID)
+	key := model.MakePointKey(req.MUID)
 	pointInfo, err := model.GetDB().GetCachePoint(key)
 	if err != nil {
 		// redis에 존재 하지 않으면 로그인 유저가 로그인 하지 않았다고 판단 하고 에러 리턴
 		//return nil, err
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
-		if points, err := model.GetDB().GetPointMember(req.CUID, req.AppID, req.DatabaseID); err != nil {
+		if points, err := model.GetDB().GetPointApp(req.MUID, req.DatabaseID); err != nil {
 			return nil, err
 		} else {
 			find := false
 			findIdx := 0
-			for idx, point := range *points {
+			for idx, point := range points {
 				if point.PointID == req.PointID {
 					if point.Quantity == req.LastQuantity { // last 수량 비교
-						(*points)[idx].Quantity += req.ChangeQuantity
+						points[idx].Quantity += req.ChangeQuantity
 						find = true
 						findIdx = idx
 					} else {
@@ -63,14 +63,13 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 				return nil, err
 			}
 
-			respPoint = &(*points)[findIdx]
+			respPoint = points[findIdx]
 
 			pointInfo = &context.PointInfo{
 				MyUuid:     uuid.NewV4().String(),
 				DatabaseID: req.DatabaseID,
 
-				CUID:   req.CUID,
-				AppID:  req.AppID,
+				MUID:   req.MUID,
 				Points: points,
 			}
 
@@ -87,7 +86,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 		}
 	} else {
 		// redis 에 존재하면 업데이트
-		points := *pointInfo.Points
+		points := pointInfo.Points
 
 		err = nil
 		find := false
@@ -114,19 +113,19 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 			return nil, err
 		}
 
-		pointInfo.Points = &points
+		pointInfo.Points = points
 		if err := model.GetDB().SetCachePoint(key, pointInfo); err != nil {
 			return nil, err
 		}
-		respPoint = &points[findIdx]
+		respPoint = points[findIdx]
 	}
 
 	return respPoint, nil
 }
 
-func LoadPoint(CUID string, AppID, DatabaseID int64) (*context.PointInfo, error) {
+func LoadPoint(MUID, DatabaseID int64) (*context.PointInfo, error) {
 	// 1. redis lock
-	Lockkey := model.MakePointLockKey(CUID, AppID)
+	Lockkey := model.MakePointLockKey(MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
@@ -136,19 +135,18 @@ func LoadPoint(CUID string, AppID, DatabaseID int64) (*context.PointInfo, error)
 	defer unLock()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
-	key := model.MakePointKey(CUID, AppID)
+	key := model.MakePointKey(MUID)
 	pointInfo, err := model.GetDB().GetCachePoint(key)
 	if err != nil {
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
-		if points, err := model.GetDB().GetPointMember(CUID, AppID, DatabaseID); err != nil {
+		if points, err := model.GetDB().GetPointApp(MUID, DatabaseID); err != nil {
 			return nil, err
 		} else {
 			pointInfo = &context.PointInfo{
 				MyUuid:     uuid.NewV4().String(),
 				DatabaseID: DatabaseID,
 
-				CUID:   CUID,
-				AppID:  AppID,
+				MUID:   MUID,
 				Points: points,
 			}
 

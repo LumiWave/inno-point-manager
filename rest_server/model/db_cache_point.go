@@ -11,12 +11,12 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
-func MakePointLockKey(CUID string, AppID int64) string {
-	return config.GetInstance().DBPrefix + "-POINT-MEMBER-" + CUID + "-" + strconv.FormatInt(AppID, 10) + "-lock"
+func MakePointLockKey(MUID int64) string {
+	return config.GetInstance().DBPrefix + "-POINT-MEMBER-" + strconv.FormatInt(MUID, 10) + "-lock"
 }
 
-func MakePointKey(CUID string, AppID int64) string {
-	return config.GetInstance().DBPrefix + ":POINT-MEMBER:" + CUID + "-" + strconv.FormatInt(AppID, 10)
+func MakePointKey(MUID int64) string {
+	return config.GetInstance().DBPrefix + ":POINT-MEMBER:" + strconv.FormatInt(MUID, 10)
 }
 
 func AutoLock(key string) (func() error, error) {

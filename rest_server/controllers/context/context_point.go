@@ -29,16 +29,14 @@ type PointInfo struct {
 	MyUuid     string `json:"my_uuid"`
 	DatabaseID int64  `json:"database_id"`
 
-	CUID   string   `json:"cu_id"`
-	AppID  int64    `json:"app_id"`
-	Points *[]Point `json:"points"`
+	MUID   int64    `json:"mu_id"`
+	Points []*Point `json:"points"`
 }
 
 ///////// member 포인트 조회
 type ReqGetPointApp struct {
-	CUID       string `query:"cu_id"`
-	AppID      int64  `query:"app_id"`
-	DatabaseID int64  `query:"database_id"`
+	MUID       int64 `query:"mu_id"`
+	DatabaseID int64 `query:"database_id"`
 }
 
 func NewReqGetPointApp() *ReqGetPointApp {
@@ -46,11 +44,8 @@ func NewReqGetPointApp() *ReqGetPointApp {
 }
 
 func (o *ReqGetPointApp) CheckValidate() *base.BaseResponse {
-	if len(o.CUID) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
-	}
-	if o.AppID == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
+	if o.MUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_MUID)
 	}
 	if o.DatabaseID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
@@ -58,20 +53,19 @@ func (o *ReqGetPointApp) CheckValidate() *base.BaseResponse {
 	return nil
 }
 
-type ResGetPointApp struct {
-	CUID   string   `json:"cu_id"`
-	AppID  int64    `josn:"app_id"`
-	Points *[]Point `json:"points"`
-}
+// type ResGetPointApp struct {
+// 	MUID   int64    `json:"mu_id"`
+// 	AppID  int64    `josn:"app_id"`
+// 	Points *[]Point `json:"points"`
+// }
 
 ////////////////////////////////////////
 
 ///////// member 포인트 업데이트
 type ReqPointAppUpdate struct {
-	CUID       string `json:"cu_id"`
-	AppID      int64  `json:"app_id"`
-	PointID    int64  `json:"point_id"`
-	DatabaseID int64  `json:"database_id"`
+	MUID       int64 `json:"mu_id"`
+	PointID    int64 `json:"point_id"`
+	DatabaseID int64 `json:"database_id"`
 
 	LastQuantity   int64 `json:"last_quantity"`
 	ChangeQuantity int64 `json:"change_quantity"`
@@ -82,11 +76,8 @@ func NewReqPointMemberAppUpdate() *ReqPointAppUpdate {
 }
 
 func (o *ReqPointAppUpdate) CheckValidate() *base.BaseResponse {
-	if len(o.CUID) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
-	}
-	if o.AppID == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
+	if o.MUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_MUID)
 	}
 	if o.PointID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_PointID)
@@ -101,9 +92,8 @@ func (o *ReqPointAppUpdate) CheckValidate() *base.BaseResponse {
 }
 
 type ResPointAppUpdate struct {
-	CUID    string `json:"cu_id"`
-	AppID   int64  `json:"app_id"`
-	PointID int64  `json:"point_id"`
+	MUID    int64 `json:"mu_id"`
+	PointID int64 `json:"point_id"`
 
 	LastQuantity int64 `json:"last_quantity"`
 }

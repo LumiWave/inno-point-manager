@@ -14,19 +14,55 @@ import (
 )
 
 const (
-	USPPO_Mod_MemberPoints = "[dbo].[USPPO_Mod_MemberPoints]"
+	USPPO_GetList_MemberPoints = "[dbo].[USPPO_GetList_MemberPoints]"
+	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
 )
 
+// 맴버의 포인트 정보 조회
+func (o *DB) GetPointApp(MUID, DatabaseID int64) ([]*context.Point, error) {
+	mssql, ok := o.MssqlPoints[DatabaseID]
+	if !ok {
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_GetList_MemberPoints,
+		sql.Named("MUID", MUID),
+		&rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return nil, err
+	}
+
+	points := []*context.Point{}
+
+	point := new(context.Point)
+	for rows.Next() {
+		point.PointID = 0
+		point.Quantity = 0
+		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
+			return nil, err
+		}
+		points = append(points, point)
+	}
+
+	if rs != 1 {
+		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	return points, nil
+}
+
 // 포인트 업데이트
-func (o *DB) UpdateAppPoint(CUID string, AppID, PointID, Quantity, DatabaseID int64) error {
+func (o *DB) UpdateAppPoint(MUID, PointID, Quantity, DatabaseID int64) error {
 	mssql, ok := o.MssqlPoints[DatabaseID]
 	if !ok {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 	var rs orginMssql.ReturnStatus
 	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
-		sql.Named("CUID", CUID),
-		sql.Named("AppID", AppID),
+		sql.Named("MUID", MUID),
 		sql.Named("PointID", PointID),
 		sql.Named("Quantity", Quantity),
 		&rs); err != nil {

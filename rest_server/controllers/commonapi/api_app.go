@@ -17,7 +17,7 @@ func GetPointApp(req *context.ReqGetPointApp, ctx *context.PointManagerContext) 
 	resp.Success()
 
 	// 포인트 정보 조회
-	if pointInfo, err := inner.LoadPoint(req.CUID, req.AppID, req.DatabaseID); err != nil {
+	if pointInfo, err := inner.LoadPoint(req.MUID, req.DatabaseID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		pointInfos := context.ResPointMemberRegister{
@@ -38,8 +38,7 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		pointInfos := context.ResPointAppUpdate{
-			CUID:         req.CUID,
-			AppID:        req.AppID,
+			MUID:         req.MUID,
 			PointID:      pointInfo.PointID,
 			LastQuantity: pointInfo.Quantity,
 		}

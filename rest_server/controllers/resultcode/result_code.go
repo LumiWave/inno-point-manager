@@ -18,7 +18,7 @@ const (
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
 
 	Result_Require_AUID           = 12000 // 유효한 au_id 정보 필요
-	Result_Require_CUID           = 12001 // 유효한 cu_id 정보 필요
+	Result_Require_MUID           = 12001 // 유효한 mu_id 정보 필요
 	Result_Require_AppID          = 12002 // 유효한 app_id 정보 필요
 	Result_Require_DatabaseID     = 12003 // 유효한 database_id 정보 필요
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
@@ -68,7 +68,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_duplicate_auid: "The app has duplicate AUIDs.",
 
 	Result_Require_AUID:           "Requires valid 'au_id' information.",
-	Result_Require_CUID:           "Requires valid 'cu_id' information.",
+	Result_Require_MUID:           "Requires valid 'mu_id' information.",
 	Result_Require_AppID:          "Requires valid 'app_id' information.",
 	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
 	Result_Require_PointID:        "Requires valid 'point_id' information.",

@@ -56,10 +56,10 @@ import (
 
 // 회원 추가
 type ReqPointMemberRegister struct {
-	AUID       int64  `json:"au_id"`
-	CUID       string `json:"cu_id"`
-	AppID      int64  `json:"app_id"`
-	DatabaseID int64  `json:"database_id"`
+	AUID       int64 `json:"au_id"`
+	MUID       int64 `json:"mu_id"`
+	AppID      int64 `json:"app_id"`
+	DatabaseID int64 `json:"database_id"`
 }
 
 func NewReqPointMemberRegister() *ReqPointMemberRegister {
@@ -70,8 +70,8 @@ func (o *ReqPointMemberRegister) CheckValidate() *base.BaseResponse {
 	if o.AUID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
 	}
-	if len(o.CUID) == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_CUID)
+	if o.MUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_MUID)
 	}
 	if o.AppID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_AppID)
