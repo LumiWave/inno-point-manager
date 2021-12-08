@@ -92,14 +92,14 @@ func (o *ServerApp) NewDB(conf *config.ServerConfig) error {
 
 			mssqlDBP, err := basedb.NewMssql(pointDB.DatabaseName,
 				"pointDB",
-				conf.MssqlDBPoint[0].ID,
-				conf.MssqlDBPoint[0].Password,
+				conf.MssqlDBPoint.ID,
+				conf.MssqlDBPoint.Password,
 				pointDB.ServerName,
-				int(util.ParseInt(conf.MssqlDBPoint[0].Port)))
+				int(util.ParseInt(conf.MssqlDBPoint.Port)))
 
 			if err != nil {
 				log.Errorf("err: %v, val: %v, %v, %v, %v",
-					err, pointDB.ServerName, conf.MssqlDBPoint[0].ID, conf.MssqlDBPoint[0].Password, pointDB.DatabaseName)
+					err, pointDB.ServerName, conf.MssqlDBPoint.ID, conf.MssqlDBPoint.Password, pointDB.DatabaseName)
 				return err
 			}
 

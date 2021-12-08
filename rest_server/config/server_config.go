@@ -22,16 +22,9 @@ type ApiAuth struct {
 }
 
 type MssqlPoint struct {
-	DBID     int64  `json:"db_id" yaml:"db_id"`
-	Host     string `json:"host" yaml:"host"`
 	Port     string `json:"port" yaml:"port"`
 	ID       string `json:"id" yaml:"id"`
 	Password string `json:"password" yaml:"password"`
-	Database string `json:"database" yaml:"database"`
-	PoolSize string `json:"poolsize" yaml:"poolsize"`
-	IdleSize string `json:"idlesize" yaml:"idlesize"`
-	Timeout  string `json:"timeout" yaml:"timeout"`
-	ReadPref string `json:"readpref" yaml:"readpref"`
 }
 
 type ServerConfig struct {
@@ -39,7 +32,7 @@ type ServerConfig struct {
 
 	PManager       PointManager    `yaml:"point_manager"`
 	MssqlDBAccount baseconf.DBAuth `yaml:"mssql_db_account"`
-	MssqlDBPoint   []MssqlPoint    `yaml:"mssql_db_points"`
+	MssqlDBPoint   MssqlPoint      `yaml:"mssql_db_point"`
 	Auth           ApiAuth         `yaml:"api_auth"`
 }
 
