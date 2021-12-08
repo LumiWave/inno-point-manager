@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseutil/datetime"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/shirou/gopsutil/cpu"
@@ -29,7 +28,7 @@ func GetSystemMonitor() *SystemMonitor {
 	onceSystemMonitor.Do(func() {
 		gSystemMonitor = new(SystemMonitor)
 		gSystemMonitor.NodeMetric = new(context.NodeMetric)
-		gSystemMonitor.NodeMetric.UpTime = strconv.FormatInt(datetime.GetTS2Sec(), 10)
+		gSystemMonitor.NodeMetric.UpTime = strconv.FormatInt(time.Now().UnixMilli(), 10)
 		gSystemMonitor.Run()
 	})
 
@@ -61,7 +60,7 @@ func (o *SystemMonitor) CheckMetricInfo() *context.NodeMetric {
 	// 정상여부
 	o.NodeMetric.IsRunning = true
 	// cpu 타임
-	o.NodeMetric.CpuTime = strconv.FormatInt(datetime.GetTS2Sec(), 10)
+	o.NodeMetric.CpuTime = strconv.FormatInt(time.Now().UnixMilli(), 10)
 	// 메모리 사용정보
 	o.NodeMetric.MemTotalBytes, o.NodeMetric.MemAllocBytes, o.NodeMetric.MemPercent = o.getMemoryUsage()
 	// CPU 점유율
@@ -100,7 +99,9 @@ func (o *SystemMonitor) getDisUsage() []context.DiskUsage {
 			if strings.Index(partition.Mountpoint, "/run") == 0 ||
 				strings.Index(partition.Mountpoint, "/boot") == 0 ||
 				strings.EqualFold(partition.Mountpoint, "/") ||
-				strings.Index(partition.Mountpoint, "/mnt/") == 0 {
+				strings.Index(partition.Mountpoint, "/mnt/") == 0 ||
+				strings.Index(partition.Mountpoint, "C") == 0 ||
+				strings.Index(partition.Mountpoint, "D") == 0 {
 				if state, err := disk.Usage(partition.Mountpoint); err == nil {
 					disks = append(disks, context.DiskUsage{Disk: *state})
 				}

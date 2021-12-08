@@ -34,27 +34,3 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
-
-// func PutPointMemberUpdate(params *context.PointMemberInfo, ctx *context.PointManagerContext) error {
-// 	resp := new(base.BaseResponse)
-// 	resp.Success()
-
-// 	if err := model.GetDB().UpdatePointMember(params); err != nil {
-// 		resp.SetReturn(resultcode.Result_DBError)
-// 	}
-
-// 	return ctx.EchoContext.JSON(http.StatusOK, resp)
-// }
-
-// func GetPointApp(params *context.PointMemberInfo, ctx *context.PointManagerContext) error {
-// 	resp := new(base.BaseResponse)
-// 	resp.Success()
-
-// 	// if value, err := model.GetDB().SelectPointMember(params.CpMemberIdx); err != nil {
-// 	// 	resp.SetReturn(resultcode.Result_DBError)
-// 	// } else {
-// 	// 	resp.Value = value
-// 	// }
-
-// 	return ctx.EchoContext.JSON(http.StatusOK, resp)
-// }

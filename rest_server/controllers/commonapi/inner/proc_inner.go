@@ -79,10 +79,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 			}
 
 			// 2-3. redis update thread 생성
-			model.GetDB().PointDoc[key] = &model.MemberPointInfo{
-				PointInfo: pointInfo,
-			}
-			model.GetDB().PointDoc[key].UpdateRun()
+			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo)
 		}
 	} else {
 		// redis 에 존재하면 업데이트
@@ -156,10 +153,7 @@ func LoadPoint(MUID, DatabaseID int64) (*context.PointInfo, error) {
 			}
 
 			// 2-3. redis update thread 생성
-			model.GetDB().PointDoc[key] = &model.MemberPointInfo{
-				PointInfo: pointInfo,
-			}
-			model.GetDB().PointDoc[key].UpdateRun()
+			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo)
 		}
 	} else {
 		// redis에 존재 한다면 내가 관리하는 thread check, 내 관리가 아니면 그냥 값만 리턴

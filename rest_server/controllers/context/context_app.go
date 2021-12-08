@@ -53,15 +53,9 @@ func (o *ReqGetPointApp) CheckValidate() *base.BaseResponse {
 	return nil
 }
 
-// type ResGetPointApp struct {
-// 	MUID   int64    `json:"mu_id"`
-// 	AppID  int64    `josn:"app_id"`
-// 	Points *[]Point `json:"points"`
-// }
-
 ////////////////////////////////////////
 
-///////// member 포인트 업데이트
+///////// app 포인트 업데이트
 type ReqPointAppUpdate struct {
 	MUID       int64 `json:"mu_id"`
 	PointID    int64 `json:"point_id"`

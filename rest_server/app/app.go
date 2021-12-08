@@ -32,6 +32,10 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	base.AppendReturnCodeText(&resultcode.ResultCodeText)
 	context.AppendRequestParameter()
 
+	if err := o.InitScheduler(); err != nil {
+		return err
+	}
+
 	if err := o.NewDB(o.conf); err != nil {
 		return err
 	}
@@ -62,6 +66,12 @@ func NewApp() (*ServerApp, error) {
 	}
 
 	return app, nil
+}
+
+func (o *ServerApp) InitScheduler() error {
+	o.sysMonitor = schedule.GetSystemMonitor()
+
+	return nil
 }
 
 func (o *ServerApp) NewDB(conf *config.ServerConfig) error {

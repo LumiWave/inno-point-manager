@@ -11,10 +11,12 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
+// redis point lock key generate
 func MakePointLockKey(MUID int64) string {
 	return config.GetInstance().DBPrefix + "-POINT-MEMBER-" + strconv.FormatInt(MUID, 10) + "-lock"
 }
 
+// redis point key generate
 func MakePointKey(MUID int64) string {
 	return config.GetInstance().DBPrefix + ":POINT-MEMBER:" + strconv.FormatInt(MUID, 10)
 }
