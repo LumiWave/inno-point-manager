@@ -23,22 +23,16 @@ type VerifyAuthToken struct {
 func CheckAuthToken(authToken string) (bool, error) {
 	conf := config.GetInstance()
 
-	params := &VerifyAuthToken{
-		AuthToken: authToken,
-	}
-
 	callURL := fmt.Sprintf("%s%s", conf.Auth.ApiAuthDomain, conf.Auth.ApiAuthVerify)
-	buff := bytes.NewBuffer(nil)
-	pbytes, _ := json.Marshal(params)
-	buff = bytes.NewBuffer(pbytes)
 
-	req, err := http.NewRequest("POST", callURL, buff)
+	req, err := http.NewRequest("GET", callURL, bytes.NewBuffer(nil))
 	if err != nil {
 		log.Error(err)
 		return false, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+authToken)
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
 

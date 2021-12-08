@@ -12,12 +12,13 @@ type MemberPointInfo struct {
 }
 
 func (o *MemberPointInfo) UpdateRun() {
-	defer func() {
-		key := MakePointKey(o.MUID)
-		GetDB().PointDoc[key] = nil
-	}()
 
 	go func() {
+		defer func() {
+			key := MakePointKey(o.MUID)
+			GetDB().PointDoc[key] = nil
+		}()
+
 		for {
 			timer := time.NewTimer(10 * time.Second)
 			<-timer.C
