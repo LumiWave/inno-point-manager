@@ -42,42 +42,17 @@ func PreCheck(c echo.Context) base.PreCheckResponse {
 				Response:  res,
 			}
 		}
-		// if !conf.Auth.InternalAuth {
-		// 	walletAddr, isValid := auth.GetIAuth().IsValidAuthToken(author[0][7:])
-		// 	if !isValid {
-		// 		// auth token 오류 리턴
-		// 		res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
 
-		// 		return base.PreCheckResponse{
-		// 			IsSucceed: false,
-		// 			Response:  res,
-		// 		}
-		// 	}
-		// 	log.Info("from : ", *walletAddr)
-		// 	base.GetContext(c).(*context.PointManagerContext).SetWalletAddr(*walletAddr)
-		// } else {
-		// membership server 인증 진행
-		// walletAddr, _, isValid := auth.GetIAuth().GetAuthInfo(author[0][7:])
-		// if !isValid {
-		// 	// auth token 오류 리턴
-		// 	res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
-
-		// 	return base.PreCheckResponse{
-		// 		IsSucceed: false,
-		// 		Response:  res,
-		// 	}
-		// }
-
-		if ret, err := auth.CheckAuthToken(author[0][7:]); err != nil || !ret {
+		if ret, value, err := auth.CheckAuthToken(author[0][7:]); err != nil || !ret {
 			res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
 			return base.PreCheckResponse{
 				IsSucceed: false,
 				Response:  res,
 			}
+		} else {
+			base.GetContext(c).(*context.PointManagerContext).SetVerifyAuthToken(value)
+			log.Debugf("from : [companyid:%v][appid:%v][logintype:%v]", value.CompanyID, value.AppID, value.LoginType)
 		}
-		//log.Info("from : ", walletAddr)
-		//base.GetContext(c).(*context.PointManagerContext).SetWalletAddr(walletAddr)
-		//}
 	}
 
 	return base.PreCheckResponse{

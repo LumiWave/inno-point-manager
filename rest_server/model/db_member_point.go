@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 )
 
 type MemberPointInfo struct {
@@ -27,6 +29,7 @@ func (o *MemberPointInfo) UpdateRun() {
 			Lockkey := MakePointLockKey(o.MUID)
 			unLock, err := AutoLock(Lockkey)
 			if err != nil {
+				log.Errorf("redis lock fail [lockkey:%v][err:%v]", Lockkey, err)
 				return
 			}
 
@@ -35,10 +38,12 @@ func (o *MemberPointInfo) UpdateRun() {
 			pointInfo, err := GetDB().GetCachePoint(key)
 			if err != nil {
 				unLock() // redis unlock
+				log.Errorf("GetCachePoint [key:%v][err:%v]", key, err)
 				return
 			}
 			//4. myuuid check else go func end
 			if !strings.EqualFold(o.MyUuid, pointInfo.MyUuid) {
+				log.Errorf("Myuuid diffrent [my_uuid:%v][cache_uuid:%v]", o.MyUuid, pointInfo.MyUuid)
 				unLock() // redis unlock
 				return
 			}
@@ -46,6 +51,7 @@ func (o *MemberPointInfo) UpdateRun() {
 			for _, point := range pointInfo.Points {
 				if err := GetDB().UpdateAppPoint(pointInfo.MUID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
 					unLock() // redis unlock
+					log.Errorf("UpdateAppPoint [err:%v]", err)
 					return
 				}
 			}
