@@ -34,6 +34,8 @@ func (o *DB) GetPointApp(MUID, DatabaseID int64) ([]*context.Point, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	points := []*context.Point{}
 
 	point := new(context.Point)

@@ -38,9 +38,9 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		pointInfos := context.ResPointAppUpdate{
-			MUID:         req.MUID,
-			PointID:      pointInfo.PointID,
-			LastQuantity: pointInfo.Quantity,
+			MUID:        req.MUID,
+			PointID:     pointInfo.PointID,
+			PreQuantity: pointInfo.Quantity,
 		}
 		resp.Value = pointInfos
 	}

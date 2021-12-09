@@ -21,6 +21,8 @@ func (o *DB) GetPointDatabases() (map[int64]*PointDB, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	pointdbs := make(map[int64]*PointDB)
 
 	pointdb := new(PointDB)
@@ -40,6 +42,8 @@ func (o *DB) GetPointList() error {
 		log.Error("QueryContext err : ", err)
 		return err
 	}
+
+	defer rows.Close()
 
 	var pointId, appId int64
 	for rows.Next() {

@@ -11,7 +11,7 @@ import (
 
 type MemberPointInfo struct {
 	*context.PointInfo
-	BackUpLastestQuantity map[int64]int64 `json:"backup_latest_quantity"`
+	BackUpCurQuantity map[int64]int64 `json:"backup_current_quantity"`
 }
 
 func NewMemberPointInfo(pointInfo *context.PointInfo) *MemberPointInfo {
@@ -19,9 +19,9 @@ func NewMemberPointInfo(pointInfo *context.PointInfo) *MemberPointInfo {
 		PointInfo: pointInfo,
 	}
 
-	memberPointInfo.BackUpLastestQuantity = make(map[int64]int64)
+	memberPointInfo.BackUpCurQuantity = make(map[int64]int64)
 	for _, point := range memberPointInfo.Points {
-		memberPointInfo.BackUpLastestQuantity[point.PointID] = point.Quantity
+		memberPointInfo.BackUpCurQuantity[point.PointID] = point.Quantity
 	}
 
 	memberPointInfo.UpdateRun()
@@ -65,14 +65,14 @@ func (o *MemberPointInfo) UpdateRun() {
 			}
 			//5. db update
 			for _, point := range pointInfo.Points {
-				if o.BackUpLastestQuantity[point.PointID] != point.Quantity { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
+				if o.BackUpCurQuantity[point.PointID] != point.Quantity { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
 					if err := GetDB().UpdateAppPoint(pointInfo.MUID, point.PointID, point.Quantity, pointInfo.DatabaseID); err != nil {
 						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
 						return
 					} else {
-						// 업데이트 성공시 BackUpLastestQuantity 최신으로 업데이트
-						o.BackUpLastestQuantity[point.PointID] = point.Quantity
+						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트
+						o.BackUpCurQuantity[point.PointID] = point.Quantity
 					}
 				}
 			}

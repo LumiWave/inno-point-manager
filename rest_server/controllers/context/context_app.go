@@ -61,8 +61,8 @@ type ReqPointAppUpdate struct {
 	PointID    int64 `json:"point_id"`
 	DatabaseID int64 `json:"database_id"`
 
-	LastQuantity   int64 `json:"last_quantity"`
-	ChangeQuantity int64 `json:"change_quantity"`
+	PreQuantity    int64 `json:"previous_quantity"`
+	AdjustQuantity int64 `json:"adjust_quantity"`
 }
 
 func NewReqPointMemberAppUpdate() *ReqPointAppUpdate {
@@ -79,8 +79,8 @@ func (o *ReqPointAppUpdate) CheckValidate() *base.BaseResponse {
 	if o.DatabaseID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
 	}
-	if o.ChangeQuantity == 0 {
-		return base.MakeBaseResponse(resultcode.Result_Require_ChangeQuantity)
+	if o.AdjustQuantity == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AdjustQuantity)
 	}
 	return nil
 }
@@ -89,7 +89,7 @@ type ResPointAppUpdate struct {
 	MUID    int64 `json:"mu_id"`
 	PointID int64 `json:"point_id"`
 
-	LastQuantity int64 `json:"last_quantity"`
+	PreQuantity int64 `json:"previous_quantity"`
 }
 
 ////////////////////////////////////////

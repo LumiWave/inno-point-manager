@@ -10,7 +10,7 @@ const (
 	Result_Require_ValidPointAmount       = 11005 // 포인트 정보 필요
 	Result_Require_PointType              = 11006 // point 이벤트 타입 정보 필요
 	Result_Require_LatestPointAmount      = 11007 // 마지막 app 포인트 정보 필요
-	Result_Require_ChangePointAmount      = 11008 // app 포인트 변화량 필요
+	Result_Require_AdjustPointAmount      = 11008 // app 포인트 변화량 필요
 	Result_Require_PrivateTokenAmount     = 11009 // private 토큰 정보 필요
 
 	Result_Error_LatestPointAmountIsDiffrent = 11100 // 마지막 포인트 정보가 다르다.
@@ -22,7 +22,7 @@ const (
 	Result_Require_AppID          = 12002 // 유효한 app_id 정보 필요
 	Result_Require_DatabaseID     = 12003 // 유효한 database_id 정보 필요
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
-	Result_Require_ChangeQuantity = 12005 // 유효한 change_quantity 정보 필요
+	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
 
 	Result_RedisError_Lock_fail = 18000 // redis lock error
 
@@ -51,7 +51,7 @@ var ResultCodeText = map[int]string{
 	Result_Require_ValidPointAmount:       "require valid point amount",
 	Result_Require_PointType:              "require point type",
 	Result_Require_LatestPointAmount:      "require latest point amount",
-	Result_Require_ChangePointAmount:      "require change point amount",
+	Result_Require_AdjustPointAmount:      "require adjust point amount",
 	Result_Require_PrivateTokenAmount:     "require private token amount",
 
 	Result_Error_LatestPointAmountIsDiffrent: "latest point information is different",
@@ -72,7 +72,7 @@ var ResultCodeText = map[int]string{
 	Result_Require_AppID:          "Requires valid 'app_id' information.",
 	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
 	Result_Require_PointID:        "Requires valid 'point_id' information.",
-	Result_Require_ChangeQuantity: "Requires valid 'change_quantity' information.",
+	Result_Require_AdjustQuantity: "Requires valid 'adjust_quantity' information.",
 
 	Result_Auth_RequireMessage:    "Message is required",
 	Result_Auth_RequireSign:       "Sign info is required",

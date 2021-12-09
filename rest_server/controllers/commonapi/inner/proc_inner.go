@@ -32,8 +32,6 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 	key := model.MakePointKey(req.MUID)
 	pointInfo, err := model.GetDB().GetCachePoint(key)
 	if err != nil {
-		// redis에 존재 하지 않으면 로그인 유저가 로그인 하지 않았다고 판단 하고 에러 리턴
-		//return nil, err
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
 		if points, err := model.GetDB().GetPointApp(req.MUID, req.DatabaseID); err != nil {
 			return nil, err
@@ -42,8 +40,8 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 			findIdx := 0
 			for idx, point := range points {
 				if point.PointID == req.PointID {
-					if point.Quantity == req.LastQuantity { // last 수량 비교
-						points[idx].Quantity += req.ChangeQuantity
+					if point.Quantity == req.PreQuantity { // last 수량 비교
+						points[idx].Quantity += req.AdjustQuantity
 						find = true
 						findIdx = idx
 					} else {
@@ -90,8 +88,8 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 		findIdx := 0
 		for idx, point := range points {
 			if point.PointID == req.PointID {
-				if point.Quantity == req.LastQuantity { // last 수량 비교
-					points[idx].Quantity = req.LastQuantity + req.ChangeQuantity
+				if point.Quantity == req.PreQuantity { // last 수량 비교
+					points[idx].Quantity = req.PreQuantity + req.AdjustQuantity
 					find = true
 					findIdx = idx
 				} else {
