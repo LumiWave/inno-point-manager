@@ -54,7 +54,7 @@ import (
 
 ////////////////////////////////////////
 
-// 회원 추가
+///////// 회원 추가
 type ReqPointMemberRegister struct {
 	AUID       int64 `json:"au_id"`
 	MUID       int64 `json:"mu_id"`
@@ -86,3 +86,34 @@ func (o *ReqPointMemberRegister) CheckValidate() *base.BaseResponse {
 type ResPointMemberRegister struct {
 	PointInfo
 }
+
+////////////////////////////////////////
+
+///////// 지갑 정보 조회
+type ReqPointMemberWallet struct {
+	AUID int64 `query:"au_id"`
+}
+
+func NewPointMemberWallet() *ReqPointMemberWallet {
+	return new(ReqPointMemberWallet)
+}
+
+func (o *ReqPointMemberWallet) CheckValidate() *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
+	return nil
+}
+
+type WalletInfo struct {
+	CoinID        int64  `json:"coin_id"`
+	WalletAddress string `json:"wallet_address"`
+	CoinQuantity  string `json:"coin_quantity"`
+}
+
+type ResPointMemberWallet struct {
+	AUID       int64        `json:"au_id"`
+	WalletInfo []WalletInfo `json:"wallet_info"`
+}
+
+////////////////////////////////////////

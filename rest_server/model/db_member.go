@@ -4,6 +4,7 @@ import (
 	originCtx "context"
 	"database/sql"
 	"errors"
+	"strconv"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
@@ -12,7 +13,8 @@ import (
 )
 
 const (
-	USPPO_Rgstr_Members = "[dbo].[USPPO_Rgstr_Members]"
+	USPPO_Rgstr_Members        = "[dbo].[USPPO_Rgstr_Members]"
+	USPAU_GetList_AccountCoins = "[dbo].[USPAU_GetList_AccountCoins]"
 )
 
 // 포인트 맴버 등록
@@ -42,57 +44,36 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 	return nil
 }
 
-// func (o *DB) UpdatePointMember(params *context.PointMemberInfo) error {
-// 	sqlQuery := makeUpdateString(params)
-// 	result, err := o.MssqlAccount.PrepareAndExec(sqlQuery)
+// 지갑 정보 조회
+func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID int64) (*context.ResPointMemberWallet, error) {
 
-// 	if err != nil {
-// 		log.Error(err)
-// 		return err
-// 	}
+	coinIds := ""
+	for _, coinId := range o.AppCoins[appID] {
+		coinIds += "/" + strconv.FormatInt(coinId.CoinID, 10)
+	}
 
-// 	cnt, err := result.RowsAffected()
-// 	if err != nil {
-// 		log.Error(err)
-// 		return err
-// 	}
-// 	log.Debug("UpdatePointMember Affected Count: ", cnt)
-// 	return nil
-// }
+	var rs orginMssql.ReturnStatus
+	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins,
+		sql.Named("AUID", params.AUID),
+		sql.Named("CoinString", coinIds),
+		sql.Named("RowSeparator", "/"),
+		&rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return nil, err
+	}
 
-// func makeUpdateString(params *context.PointMemberInfo) string {
-// 	sqlQuery := "UPDATE onbuff_inno.dbo.point_member set"
+	defer rows.Close()
 
-// 	bValid := false
-// 	if len(params.PointAmount) != 0 {
-// 		sqlQuery += " point_amount=" + params.PointAmount
-// 		bValid = true
-// 	}
-// 	if len(params.PrivateTokenAmount) != 0 {
-// 		getString(&sqlQuery, &bValid)
-// 		sqlQuery += fmt.Sprintf("private_token_amount=N'%v'", params.PrivateTokenAmount)
-// 	}
-// 	if len(params.PrivateWalletAddr) != 0 {
-// 		getString(&sqlQuery, &bValid)
-// 		sqlQuery += fmt.Sprintf("private_wallet_address=N'%v'", params.PrivateWalletAddr)
-// 	}
-// 	if len(params.PublicTokenAmount) != 0 {
-// 		getString(&sqlQuery, &bValid)
-// 		sqlQuery += fmt.Sprintf("public_token_amount=N'%v'", params.PublicTokenAmount)
-// 	}
-// 	if len(params.PublicWalletAddr) != 0 {
-// 		getString(&sqlQuery, &bValid)
-// 		sqlQuery += fmt.Sprintf("public_wallet_address=N'%v'", params.PublicWalletAddr)
-// 	}
-// 	sqlQuery += fmt.Sprintf(" WHERE cp_member_idx=%v", params.CpMemberIdx)
-// 	return sqlQuery
-// }
+	walletInfos := &context.ResPointMemberWallet{
+		AUID: params.AUID,
+	}
+	WalletInfo := context.WalletInfo{}
+	for rows.Next() {
+		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
 
-// func getString(sqlQuery *string, existValid *bool) {
-// 	if *existValid {
-// 		*sqlQuery += ","
-// 	} else {
-// 		*existValid = true
-// 		*sqlQuery += " "
-// 	}
-// }
+			walletInfos.WalletInfo = append(walletInfos.WalletInfo, WalletInfo)
+		}
+	}
+	return walletInfos, nil
+}

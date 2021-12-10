@@ -10,11 +10,11 @@ import (
 	"github.com/labstack/echo"
 )
 
-// app 포인트 조회
-func (o *ExternalAPI) GetPointApp(c echo.Context) error {
+// 내 지갑 정보 조회
+func (o *ExternalAPI) GetPointMemberWallet(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewReqGetPointApp()
+	params := context.NewPointMemberWallet()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
@@ -24,5 +24,5 @@ func (o *ExternalAPI) GetPointApp(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.GetPointApp(params, ctx)
+	return commonapi.GetPointMemberWallet(params, ctx)
 }

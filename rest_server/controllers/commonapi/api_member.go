@@ -34,3 +34,16 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
+
+func GetPointMemberWallet(req *context.ReqPointMemberWallet, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	if wallets, err := model.GetDB().GetPointMemberWallet(req, ctx.VerifyValue.AppID); err != nil {
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else {
+		resp.Value = wallets
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}

@@ -16,6 +16,11 @@ type Point struct {
 	PointIds []int64
 }
 
+type AppCoin struct {
+	AppID  int64 `json:"app_id"`
+	CoinID int64 `json:"coin_id"`
+}
+
 type DB struct {
 	Mysql        *basedb.Mysql
 	MssqlAccount *basedb.Mssql
@@ -25,7 +30,8 @@ type DB struct {
 
 	PointDoc map[string]*MemberPointInfo
 
-	PointList map[int64]Point // 전체 포인트 종류
+	PointList map[int64]Point     // 전체 포인트 종류
+	AppCoins  map[int64][]AppCoin // 전체 app에 속한 CoinID 정보
 }
 
 var gDB *DB
@@ -41,9 +47,11 @@ func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mss
 func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
 	gDB.PointDoc = make(map[string]*MemberPointInfo)
 	gDB.PointList = make(map[int64]Point)
+	gDB.AppCoins = make(map[int64][]AppCoin)
 	gDB.MssqlPoints = pointdbs
 
 	gDB.GetPointList()
+	gDB.GetAppCoins()
 }
 
 func GetDB() *DB {

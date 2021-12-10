@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	USPAU_Scan_DatabaseServers = "[dbo].[USPAU_Scan_DatabaseServers]"
-	USPAU_Scan_Points          = "[dbo].[USPAU_Scan_Points]"
+	USPAU_Scan_DatabaseServers  = "[dbo].[USPAU_Scan_DatabaseServers]"
+	USPAU_Scan_Points           = "[dbo].[USPAU_Scan_Points]"
+	USPAU_Scan_ApplicationCoins = "[dbo].[USPAU_Scan_ApplicationCoins]"
 )
 
 // point database 리스트 요청
@@ -51,6 +52,27 @@ func (o *DB) GetPointList() error {
 			points := o.PointList[appId]
 			points.PointIds = append(points.PointIds, pointId)
 			o.PointList[appId] = points
+		}
+	}
+
+	return nil
+}
+
+// 전체 app coinid list
+func (o *DB) GetAppCoins() error {
+	var rs orginMssql.ReturnStatus
+	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationCoins, &rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return err
+	}
+
+	defer rows.Close()
+
+	appCoin := &AppCoin{}
+	for rows.Next() {
+		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinID); err == nil {
+			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], *appCoin)
 		}
 	}
 
