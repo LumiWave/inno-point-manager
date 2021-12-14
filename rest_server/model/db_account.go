@@ -11,6 +11,7 @@ const (
 	USPAU_Scan_DatabaseServers  = "[dbo].[USPAU_Scan_DatabaseServers]"
 	USPAU_Scan_Points           = "[dbo].[USPAU_Scan_Points]"
 	USPAU_Scan_ApplicationCoins = "[dbo].[USPAU_Scan_ApplicationCoins]"
+	USPAU_Scan_Coins            = "[dbo].[USPAU_Scan_Coins]"
 )
 
 // point database 리스트 요청
@@ -69,10 +70,42 @@ func (o *DB) GetAppCoins() error {
 
 	defer rows.Close()
 
-	appCoin := &AppCoin{}
 	for rows.Next() {
+		appCoin := &AppCoin{}
 		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinID); err == nil {
-			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], *appCoin)
+			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], appCoin)
+		}
+	}
+
+	return nil
+}
+
+// 전체 coin info list
+func (o *DB) GetCoins() error {
+	var rs orginMssql.ReturnStatus
+	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Coins, &rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		coin := &Coin{}
+		if err := rows.Scan(&coin.CoinID, &coin.CoinName); err == nil {
+			o.Coins[coin.CoinID] = coin
+		}
+	}
+
+	for _, appCoins := range o.AppCoins {
+		for _, appCoin := range appCoins {
+			for coinId, coin := range o.Coins {
+				if appCoin.CoinID == coinId {
+					appCoin.CoinName = coin.CoinName
+					break
+				}
+			}
 		}
 	}
 
