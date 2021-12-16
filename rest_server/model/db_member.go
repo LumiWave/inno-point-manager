@@ -71,7 +71,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 	WalletInfo := context.WalletInfo{}
 	for rows.Next() {
 		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
-
+			WalletInfo.CoinSymbol = o.Coins[WalletInfo.CoinID].CoinName
 			walletInfos.WalletInfo = append(walletInfos.WalletInfo, WalletInfo)
 		}
 	}
