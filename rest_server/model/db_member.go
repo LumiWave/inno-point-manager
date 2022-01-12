@@ -49,7 +49,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 
 	coinIds := ""
 	for _, coinId := range o.AppCoins[appID] {
-		coinIds += "/" + strconv.FormatInt(coinId.CoinID, 10)
+		coinIds += "/" + strconv.FormatInt(coinId.CoinId, 10)
 	}
 
 	var rs orginMssql.ReturnStatus
@@ -71,7 +71,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 	WalletInfo := context.WalletInfo{}
 	for rows.Next() {
 		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
-			WalletInfo.CoinSymbol = o.Coins[WalletInfo.CoinID].CoinName
+			WalletInfo.CoinSymbol = o.Coins[WalletInfo.CoinID].CoinSymbol
 			walletInfos.WalletInfo = append(walletInfos.WalletInfo, WalletInfo)
 		}
 	}

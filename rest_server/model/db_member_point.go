@@ -33,7 +33,7 @@ func (o *MemberPointInfo) UpdateRun() {
 	go func() {
 
 		defer func() {
-			key := MakePointKey(o.MUID)
+			key := MakePointListKey(o.MUID)
 			GetDB().PointDoc[key] = nil
 		}()
 
@@ -42,19 +42,19 @@ func (o *MemberPointInfo) UpdateRun() {
 			<-timer.C
 
 			//2. redis lock
-			Lockkey := MakePointLockKey(o.MUID)
+			Lockkey := MakePointListLockKey(o.MUID)
 			unLock, err := AutoLock(Lockkey)
 			if err != nil {
 				log.Errorf("redis lock fail [lockkey:%v][err:%v]", Lockkey, err)
 				return
 			}
 
-			key := MakePointKey(o.MUID)
+			key := MakePointListKey(o.MUID)
 			//3. redis read
-			pointInfo, err := GetDB().GetCachePoint(key)
+			pointInfo, err := GetDB().GetCachePointList(key)
 			if err != nil {
 				unLock() // redis unlock
-				log.Errorf("GetCachePoint [key:%v][err:%v]", key, err)
+				log.Errorf("GetCachePointList [key:%v][err:%v]", key, err)
 				return
 			}
 			//4. myuuid check else go func end

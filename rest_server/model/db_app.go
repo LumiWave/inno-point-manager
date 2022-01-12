@@ -43,7 +43,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 	for rows.Next() {
 		point.PointID = 0
 		point.Quantity = 0
-		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
+		if err := rows.Scan(&point.PointID, &point.Quantity, &point.DailyQuantity, &point.DailyDate); err != nil {
 			return nil, err
 		}
 		points = append(points, point)
@@ -76,18 +76,25 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 
 	defer rows.Close()
 
+	rowCnt := 0
 	point := new(context.Point)
 	for rows.Next() {
 		point.PointID = PointID
 		point.Quantity = 0
-		if err := rows.Scan(&point.Quantity); err != nil {
+		if err := rows.Scan(&point.Quantity, &point.DailyQuantity, &point.DailyDate); err != nil {
 			return nil, err
+		} else {
+			rowCnt++
 		}
 	}
 
 	if rs != 1 {
 		log.Error("returnStatus Result_DBError_Unknown : ", rs)
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	if rowCnt == 0 {
+		return nil, nil
 	}
 
 	return point, nil

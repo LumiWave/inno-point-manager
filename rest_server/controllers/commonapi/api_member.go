@@ -18,8 +18,8 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		// 강제로 0 point 업데이트
-		for _, pointID := range model.GetDB().PointList[req.AppID].PointIds {
-			model.GetDB().UpdateAppPoint(req.MUID, pointID, 0, req.DatabaseID)
+		for _, pointInfo := range model.GetDB().AppPointsMap[req.AppID].Points {
+			model.GetDB().UpdateAppPoint(req.MUID, pointInfo.PointId, 0, req.DatabaseID)
 		}
 		// 포인트 정보 조회
 		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID); err != nil {

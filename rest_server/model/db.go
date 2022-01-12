@@ -12,13 +12,29 @@ type PointDB struct {
 	ServerName   string
 }
 
-type Point struct {
-	PointIds []int64
+// type Point struct {
+// 	PointIds []int64
+// }
+
+type PointInfo struct {
+	PointId              int64  `json:"point_id,omitempty"`
+	PointName            string `json:"point_name,omitempty"`
+	IconUrl              string `json:"icon_url,omitempty"`
+	DaliyLimitedQuantity int64  `json:"daliy_limited_quantity,omitempty"`
+}
+
+type AppPointInfo struct {
+	AppId   int64        `json:"app_id,omitempty"`
+	AppName string       `json:"app_name,omitempty"`
+	IconUrl string       `json:"icon_url"`
+	Points  []*PointInfo `json:"points"`
 }
 
 type Coin struct {
-	CoinID   int64  `json:"coin_id"`
-	CoinName string `json:"coin_symbol"`
+	CoinId          int64  `json:"coin_id,omitempty"`
+	CoinSymbol      string `json:"coin_symbol,omitempty"`
+	ContractAddress string `json:"contract_address,omitempty"`
+	IconUrl         string `json:"icon_url,omitempty"`
 }
 
 type AppCoin struct {
@@ -35,9 +51,13 @@ type DB struct {
 
 	PointDoc map[string]*MemberPointInfo
 
-	PointList map[int64]Point      // 전체 포인트 종류
-	AppCoins  map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
-	Coins     map[int64]*Coin      // 전체 coin 정보
+	//PointList     map[int64]PointInfo // 전체 포인트 종류
+	ScanPointsMap map[int64]PointInfo // 전체 포인트 종류 : key PointId
+
+	AppPointsMap map[int64]*AppPointInfo // 전체 app과 포인트 : key AppId
+
+	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
+	Coins    map[int64]*Coin      // 전체 coin 정보
 }
 
 var gDB *DB
@@ -52,14 +72,18 @@ func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mss
 
 func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
 	gDB.PointDoc = make(map[string]*MemberPointInfo)
-	gDB.PointList = make(map[int64]Point)
+	gDB.ScanPointsMap = make(map[int64]PointInfo)
+	gDB.AppPointsMap = make(map[int64]*AppPointInfo)
 	gDB.AppCoins = make(map[int64][]*AppCoin)
 	gDB.Coins = make(map[int64]*Coin)
 	gDB.MssqlPoints = pointdbs
 
+	// sequence is important
 	gDB.GetPointList()
 	gDB.GetAppCoins()
 	gDB.GetCoins()
+	gDB.GetApps()
+	gDB.GetAppPoints()
 }
 
 func GetDB() *DB {

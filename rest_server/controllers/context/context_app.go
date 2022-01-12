@@ -21,8 +21,10 @@ const (
 )
 
 type Point struct {
-	PointID  int64 `json:"point_id"`
-	Quantity int64 `json:"quantity"`
+	PointID       int64  `json:"point_id"`
+	Quantity      int64  `json:"quantity"`
+	DailyQuantity int64  `json:"daily_quantity"`
+	DailyDate     string `json:"daily_date"`
 }
 
 type PointInfo struct {
