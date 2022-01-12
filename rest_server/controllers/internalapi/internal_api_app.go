@@ -11,6 +11,23 @@ import (
 )
 
 // app 포인트 조회
+func (o *InternalAPI) GetPointAppList(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqGetPointApp()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetPointAppList(params, ctx)
+}
+
+// app 포인트 조회
 func (o *InternalAPI) GetPointApp(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 

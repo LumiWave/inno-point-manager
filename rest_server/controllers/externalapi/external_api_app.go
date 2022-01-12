@@ -10,8 +10,8 @@ import (
 	"github.com/labstack/echo"
 )
 
-// app 포인트 조회
-func (o *ExternalAPI) GetPointApp(c echo.Context) error {
+// app 포인트 리스트 조회
+func (o *ExternalAPI) GetPointAppList(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
 	params := context.NewReqGetPointApp()
@@ -24,7 +24,7 @@ func (o *ExternalAPI) GetPointApp(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.GetPointApp(params, ctx)
+	return commonapi.GetPointAppList(params, ctx)
 }
 
 // app 포인트 업데이트

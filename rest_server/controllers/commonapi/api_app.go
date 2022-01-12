@@ -3,6 +3,7 @@ package commonapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
@@ -11,13 +12,31 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
-// 맴버 포인트 정보 조회
+// 맴버 포인트 리스트 정보 조회
+func GetPointAppList(req *context.ReqGetPointApp, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	// 포인트 정보 조회
+	if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID); err != nil {
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else {
+		pointInfos := context.ResPointMemberRegister{
+			PointInfo: *pointInfo,
+		}
+		resp.Value = pointInfos
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+// 맴버 포인트 리스트 정보 조회
 func GetPointApp(req *context.ReqGetPointApp, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
 	// 포인트 정보 조회
-	if pointInfo, err := inner.LoadPoint(req.MUID, req.DatabaseID); err != nil {
+	if pointInfo, err := inner.LoadPoint(req.MUID, req.PointID, req.DatabaseID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		pointInfos := context.ResPointMemberRegister{
@@ -35,7 +54,11 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 	resp.Success()
 
 	if pointInfo, err := inner.UpdateAppPoint(req); err != nil {
-		model.MakeDbError(resp, resultcode.Result_DBError, err)
+		if strings.EqualFold("not equal previous quantity", err.Error()) {
+			resp.SetReturn(resultcode.Result_Error_NotEqual_PreviousQuantity)
+		} else {
+			model.MakeDbError(resp, resultcode.Result_DBError, err)
+		}
 	} else {
 		pointInfos := context.ResPointAppUpdate{
 			MUID:        req.MUID,

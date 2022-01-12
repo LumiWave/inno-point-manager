@@ -16,6 +16,7 @@ const (
 	Result_Error_LatestPointAmountIsDiffrent = 11100 // 마지막 포인트 정보가 다르다.
 	Result_Error_NotExistMember              = 11101 // 존재하지 않는 member
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
+	Result_Error_NotEqual_PreviousQuantity   = 11103 // 이전 수량이 다르다.
 
 	Result_Require_AUID           = 12000 // 유효한 au_id 정보 필요
 	Result_Require_MUID           = 12001 // 유효한 mu_id 정보 필요
@@ -57,6 +58,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_LatestPointAmountIsDiffrent: "latest point information is different",
 	Result_Error_NotExistMember:              "Not exist member",
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
+	Result_Error_NotEqual_PreviousQuantity:   "not equal previous quantity",
 
 	Result_RedisError_Lock_fail: "Redis lock error.",
 

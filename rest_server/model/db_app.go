@@ -15,11 +15,12 @@ import (
 
 const (
 	USPPO_GetList_MemberPoints = "[dbo].[USPPO_GetList_MemberPoints]"
+	USPPO_Get_MemberPoints     = "[dbo].[USPPO_Get_MemberPoints]"
 	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
 )
 
-// 맴버의 포인트 정보 조회
-func (o *DB) GetPointApp(MUID, DatabaseID int64) ([]*context.Point, error) {
+// 맴버의 포인트 리스트 정보 조회
+func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 	mssql, ok := o.MssqlPoints[DatabaseID]
 	if !ok {
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
@@ -54,6 +55,78 @@ func (o *DB) GetPointApp(MUID, DatabaseID int64) ([]*context.Point, error) {
 	}
 
 	return points, nil
+}
+
+// 맴버의 포인트 정보 조회
+func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error) {
+	mssql, ok := o.MssqlPoints[DatabaseID]
+	if !ok {
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Get_MemberPoints,
+		sql.Named("MUID", MUID),
+		sql.Named("PointID", PointID),
+		&rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	point := new(context.Point)
+	for rows.Next() {
+		point.PointID = PointID
+		point.Quantity = 0
+		if err := rows.Scan(&point.Quantity); err != nil {
+			return nil, err
+		}
+	}
+
+	if rs != 1 {
+		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	return point, nil
+}
+
+// 맴버의 포인트 정보 조회 by point id
+func (o *DB) GetPointAppByPointID(MUID, pointId, DatabaseID int64) (*context.Point, error) {
+	mssql, ok := o.MssqlPoints[DatabaseID]
+	if !ok {
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Get_MemberPoints,
+		sql.Named("MUID", MUID),
+		sql.Named("PointID", pointId),
+		&rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	point := new(context.Point)
+	for rows.Next() {
+		point.PointID = 0
+		point.Quantity = 0
+		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
+			return nil, err
+		}
+	}
+
+	if rs != 1 {
+		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	return point, nil
 }
 
 // 포인트 업데이트

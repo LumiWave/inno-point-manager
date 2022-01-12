@@ -22,7 +22,7 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 			model.GetDB().UpdateAppPoint(req.MUID, pointID, 0, req.DatabaseID)
 		}
 		// 포인트 정보 조회
-		if pointInfo, err := inner.LoadPoint(req.MUID, req.DatabaseID); err != nil {
+		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID); err != nil {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		} else {
 			pointInfos := context.ResPointMemberRegister{

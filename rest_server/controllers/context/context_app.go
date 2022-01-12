@@ -26,7 +26,7 @@ type Point struct {
 }
 
 type PointInfo struct {
-	MyUuid     string `json:"my_uuid"`
+	MyUuid     string `json:"my_uuid,omitempty"`
 	DatabaseID int64  `json:"database_id"`
 
 	MUID   int64    `json:"mu_id"`
@@ -36,6 +36,7 @@ type PointInfo struct {
 ///////// member 포인트 조회
 type ReqGetPointApp struct {
 	MUID       int64 `query:"mu_id"`
+	PointID    int64 `query:"point_id"`
 	DatabaseID int64 `query:"database_id"`
 }
 
