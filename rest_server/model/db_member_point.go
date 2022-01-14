@@ -14,14 +14,19 @@ type MemberPointInfo struct {
 	BackUpCurQuantity map[int64]int64 `json:"backup_current_quantity"`
 }
 
-func NewMemberPointInfo(pointInfo *context.PointInfo) *MemberPointInfo {
+func NewMemberPointInfo(pointInfo *context.PointInfo, load bool) *MemberPointInfo {
 	memberPointInfo := &MemberPointInfo{
 		PointInfo: pointInfo,
 	}
 
 	memberPointInfo.BackUpCurQuantity = make(map[int64]int64)
 	for _, point := range memberPointInfo.Points {
-		memberPointInfo.BackUpCurQuantity[point.PointID] = point.Quantity
+		if load {
+			memberPointInfo.BackUpCurQuantity[point.PointID] = point.Quantity
+		} else {
+			memberPointInfo.BackUpCurQuantity[point.PointID] = 0
+		}
+
 	}
 
 	memberPointInfo.UpdateRun()
