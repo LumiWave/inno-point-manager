@@ -73,7 +73,7 @@ func (o *MemberPointInfo) UpdateRun() {
 					if dailyQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, pointInfo.DatabaseID); err != nil {
 						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
-						return
+						//						return
 					} else {
 						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
