@@ -6,16 +6,6 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
-type PointDB struct {
-	DatabaseID   int64
-	DatabaseName string
-	ServerName   string
-}
-
-// type Point struct {
-// 	PointIds []int64
-// }
-
 type PointInfo struct {
 	PointId              int64  `json:"point_id,omitempty"`
 	PointName            string `json:"point_name,omitempty"`

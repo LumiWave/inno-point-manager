@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
 
@@ -18,7 +19,7 @@ const (
 )
 
 // point database 리스트 요청
-func (o *DB) GetPointDatabases() (map[int64]*PointDB, error) {
+func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
 	if err != nil {
@@ -28,9 +29,9 @@ func (o *DB) GetPointDatabases() (map[int64]*PointDB, error) {
 
 	defer rows.Close()
 
-	pointdbs := make(map[int64]*PointDB)
+	pointdbs := make(map[int64]*context.PointDB)
 
-	pointdb := new(PointDB)
+	pointdb := new(context.PointDB)
 	for rows.Next() {
 		rows.Scan(&pointdb.DatabaseID, &pointdb.DatabaseName, &pointdb.ServerName)
 		pointdbs[pointdb.DatabaseID] = pointdb

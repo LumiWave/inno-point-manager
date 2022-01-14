@@ -69,7 +69,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 	for rows.Next() {
 		point.PointID = 0
 		point.Quantity = 0
-		if err := rows.Scan(&point.PointID, &point.Quantity, &point.DailyQuantity, &point.DailyDate); err != nil {
+		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
 			return nil, err
 		}
 		points = append(points, point)
@@ -107,7 +107,7 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 	for rows.Next() {
 		point.PointID = PointID
 		point.Quantity = 0
-		if err := rows.Scan(&point.Quantity, &point.DailyQuantity, &point.DailyDate); err != nil {
+		if err := rows.Scan(&point.Quantity); err != nil {
 			return nil, err
 		} else {
 			rowCnt++
@@ -163,28 +163,36 @@ func (o *DB) GetPointAppByPointID(MUID, pointId, DatabaseID int64) (*context.Poi
 }
 
 // 포인트 업데이트
-func (o *DB) UpdateAppPoint(MUID, PointID, Quantity, DatabaseID int64) error {
-	mssql, ok := o.MssqlPoints[DatabaseID]
+func (o *DB) UpdateAppPoint(muid, pointId, preQuantity, adjQuantity, quantity, dbId int64) (int64, string, error) {
+	mssql, ok := o.MssqlPoints[dbId]
 	if !ok {
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
+
+	var dailyQuantity int64
+	var resetDate string
 	var rs orginMssql.ReturnStatus
 	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
-		sql.Named("MUID", MUID),
-		sql.Named("PointID", PointID),
-		sql.Named("Quantity", Quantity),
+		sql.Named("MUID", muid),
+		sql.Named("PointID", pointId),
+		sql.Named("PreQuantity", preQuantity),
+		sql.Named("AdjQuantity", adjQuantity),
+		sql.Named("Quantity", quantity),
+
+		sql.Named("DailyQuantity", sql.Out{Dest: &dailyQuantity}),
+		sql.Named("ResetDate", sql.Out{Dest: &resetDate}),
 		&rs); err != nil {
 		log.Error("QueryContext err : ", err)
-		return err
+		return 0, "", err
 	}
 
 	if rs == resultcode.Result_Error_Invalid_data {
 		log.Error("returnStatus Result_Error_Invalid_data : ", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
+		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
 		log.Error("returnStatus Result_DBError_Unknown : ", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
-	return nil
+	return dailyQuantity, resetDate, nil
 }

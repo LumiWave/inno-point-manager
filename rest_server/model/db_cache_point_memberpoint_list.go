@@ -9,17 +9,17 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 )
 
-// redis point lock key generate
-func MakePointListLockKey(MUID int64) string {
-	return config.GetInstance().DBPrefix + "-POINT-MEMBER-" + strconv.FormatInt(MUID, 10) + "-lock"
+// redis member point lock key generate
+func MakeMemberPointListLockKey(MUID int64) string {
+	return config.GetInstance().DBPrefix + "-MEMBER-POINT-" + strconv.FormatInt(MUID, 10) + "-lock"
 }
 
-// redis point key generate
-func MakePointListKey(MUID int64) string {
-	return config.GetInstance().DBPrefix + ":POINT-MEMBER:" + strconv.FormatInt(MUID, 10)
+// redis member point key generate
+func MakeMemberPointListKey(MUID int64) string {
+	return config.GetInstance().DBPrefix + ":MEMBER-POINT:" + strconv.FormatInt(MUID, 10)
 }
 
-func (o *DB) GetCachePointList(key string) (*context.PointInfo, error) {
+func (o *DB) GetCacheMemberPointList(key string) (*context.PointInfo, error) {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
@@ -31,7 +31,7 @@ func (o *DB) GetCachePointList(key string) (*context.PointInfo, error) {
 	return pointInfos, err
 }
 
-func (o *DB) SetCachePointList(key string, pointInfo *context.PointInfo) error {
+func (o *DB) SetCacheMemberPointList(key string, pointInfo *context.PointInfo) error {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
@@ -40,6 +40,6 @@ func (o *DB) SetCachePointList(key string, pointInfo *context.PointInfo) error {
 	return o.Cache.Set(key, pointInfo, time.Duration(conf.PManager.CachePointExpiryPeriod*int64(time.Minute)))
 }
 
-func (o *DB) DelCachePointList(key string) error {
+func (o *DB) DelCacheMemberPointList(key string) error {
 	return o.Cache.Del(key)
 }

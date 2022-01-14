@@ -18,7 +18,7 @@ import (
 
 func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 	// 1. redis lock
-	Lockkey := model.MakePointListLockKey(req.MUID)
+	Lockkey := model.MakeMemberPointListLockKey(req.MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
@@ -29,19 +29,38 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 
 	respPoint := new(context.Point)
 	// 2. redis에 해당 포인트 정보 존재하는지 check
-	key := model.MakePointListKey(req.MUID)
-	pointInfo, err := model.GetDB().GetCachePointList(key)
+	key := model.MakeMemberPointListKey(req.MUID)
+	pointInfo, err := model.GetDB().GetCacheMemberPointList(key)
 	if err != nil {
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
 		if points, err := model.GetDB().GetPointAppList(req.MUID, req.DatabaseID); err != nil {
 			return nil, err
 		} else {
+			// 2-1-1. Account points 로드
+			if accountPoint, err := model.GetDB().GetListAccountPoints(0, req.MUID); err != nil {
+				return nil, err
+			} else {
+				// merge
+				for _, point := range points {
+					if val, ok := accountPoint[point.PointID]; ok {
+						point.DailyQuantity = val.DailyQuantity
+						point.ResetDate = val.ResetDate
+					}
+				}
+			}
+
 			find := false
 			findIdx := 0
 			for idx, point := range points {
 				if point.PointID == req.PointID {
 					if point.Quantity == req.PreQuantity { // last 수량 비교
+						//points[idx].PreQuantity += req.PreQuantity
+						if points[idx].PreQuantity == 0 {
+							points[idx].PreQuantity = req.PreQuantity
+						}
+						points[idx].AdjustQuantity += req.AdjustQuantity
 						points[idx].Quantity += req.AdjustQuantity
+
 						find = true
 						findIdx = idx
 					} else {
@@ -72,7 +91,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 			}
 
 			// 2-2. redis 에 write
-			if err := model.GetDB().SetCachePointList(key, pointInfo); err != nil {
+			if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
 				return nil, err
 			}
 
@@ -89,7 +108,11 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 		for idx, point := range points {
 			if point.PointID == req.PointID {
 				if point.Quantity == req.PreQuantity { // last 수량 비교
-					points[idx].Quantity = req.PreQuantity + req.AdjustQuantity
+					if points[idx].PreQuantity == 0 {
+						points[idx].PreQuantity = req.PreQuantity
+					}
+					points[idx].AdjustQuantity += req.AdjustQuantity
+					points[idx].Quantity += req.AdjustQuantity
 					find = true
 					findIdx = idx
 				} else {
@@ -109,7 +132,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 		}
 
 		pointInfo.Points = points
-		if err := model.GetDB().SetCachePointList(key, pointInfo); err != nil {
+		if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
 			return nil, err
 		}
 		respPoint = points[findIdx]
@@ -120,7 +143,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
 
 func LoadPointList(MUID, DatabaseID int64) (*context.PointInfo, error) {
 	// 1. redis lock
-	Lockkey := model.MakePointListLockKey(MUID)
+	Lockkey := model.MakeMemberPointListLockKey(MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
@@ -130,13 +153,26 @@ func LoadPointList(MUID, DatabaseID int64) (*context.PointInfo, error) {
 	defer unLock()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
-	key := model.MakePointListKey(MUID)
-	pointInfo, err := model.GetDB().GetCachePointList(key)
+	key := model.MakeMemberPointListKey(MUID)
+	pointInfo, err := model.GetDB().GetCacheMemberPointList(key)
 	if err != nil {
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
 		if points, err := model.GetDB().GetPointAppList(MUID, DatabaseID); err != nil {
 			return nil, err
 		} else {
+			// 2-1-1. Account points 로드
+			if accountPoint, err := model.GetDB().GetListAccountPoints(0, MUID); err != nil {
+				return nil, err
+			} else {
+				// merge
+				for _, point := range points {
+					if val, ok := accountPoint[point.PointID]; ok {
+						point.DailyQuantity = val.DailyQuantity
+						point.ResetDate = val.ResetDate
+					}
+				}
+			}
+
 			pointInfo = &context.PointInfo{
 				MyUuid:     uuid.NewV4().String(),
 				DatabaseID: DatabaseID,
@@ -146,7 +182,7 @@ func LoadPointList(MUID, DatabaseID int64) (*context.PointInfo, error) {
 			}
 
 			// 2-2. redis 에 write
-			if err := model.GetDB().SetCachePointList(key, pointInfo); err != nil {
+			if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
 				return nil, err
 			}
 
@@ -162,7 +198,7 @@ func LoadPointList(MUID, DatabaseID int64) (*context.PointInfo, error) {
 
 func LoadPoint(MUID, PointID, DatabaseID int64) (*context.PointInfo, error) {
 	// 1. redis lock
-	Lockkey := model.MakePointListLockKey(MUID)
+	Lockkey := model.MakeMemberPointListLockKey(MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
@@ -172,8 +208,8 @@ func LoadPoint(MUID, PointID, DatabaseID int64) (*context.PointInfo, error) {
 	defer unLock()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
-	key := model.MakePointListKey(MUID)
-	pointInfo, err := model.GetDB().GetCachePointList(key)
+	key := model.MakeMemberPointListKey(MUID)
+	pointInfo, err := model.GetDB().GetCacheMemberPointList(key)
 	if err != nil {
 		// 2-1. redis에 존재하지 않는다면 db에서 로드
 		if points, err := model.GetDB().GetPointAppList(MUID, DatabaseID); err != nil {
@@ -186,6 +222,19 @@ func LoadPoint(MUID, PointID, DatabaseID int64) (*context.PointInfo, error) {
 				MUID: MUID,
 			}
 
+			// 2-1-1. Account points 로드
+			if accountPoint, err := model.GetDB().GetListAccountPoints(0, MUID); err != nil {
+				return nil, err
+			} else {
+				// merge
+				for _, point := range points {
+					if val, ok := accountPoint[point.PointID]; ok {
+						point.DailyQuantity = val.DailyQuantity
+						point.ResetDate = val.ResetDate
+					}
+				}
+			}
+
 			pointInfo = &context.PointInfo{
 				MyUuid:     uuid.NewV4().String(),
 				DatabaseID: DatabaseID,
@@ -195,7 +244,7 @@ func LoadPoint(MUID, PointID, DatabaseID int64) (*context.PointInfo, error) {
 			}
 
 			// 2-2. redis 에 write
-			if err := model.GetDB().SetCachePointList(key, pointInfo); err != nil {
+			if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
 				return nil, err
 			}
 
