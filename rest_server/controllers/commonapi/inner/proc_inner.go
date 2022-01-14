@@ -16,13 +16,17 @@ import (
 // 	AppId int64
 // }
 
-func UpdateAppPoint(req *context.ReqPointAppUpdate) (*context.Point, error) {
+func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point, error) {
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(req.MUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		return nil, err
 	}
+
+	// if value, ok := model.GetDB().AppPointsMap[appId]; ok {
+
+	// }
 
 	// 1-1. redis unlock
 	defer unLock()

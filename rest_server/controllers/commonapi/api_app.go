@@ -52,7 +52,7 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if pointInfo, err := inner.UpdateAppPoint(req); err != nil {
+	if pointInfo, err := inner.UpdateAppPoint(req, ctx.GetValue().AppID); err != nil {
 		if strings.EqualFold("not equal previous quantity", err.Error()) {
 			resp.SetReturn(resultcode.Result_Error_NotEqual_PreviousQuantity)
 		} else {
