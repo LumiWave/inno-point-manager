@@ -12,7 +12,7 @@ import (
 
 const (
 	USPAU_GetList_AccountPoints = "[dbo].[USPAU_GetList_AccountPoints]"
-	USPAU_GetList_AccountCoins  = "[dbo].[USPAU_GetList_AccountCoins]"
+	USPAU_GetList_AccountCoins  = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
 )
 
 // 계정 일일 포인트량 조회
@@ -41,7 +41,6 @@ func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountP
 
 // 지갑 정보 조회
 func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID int64) (*context.ResPointMemberWallet, error) {
-
 	coinIds := ""
 	for _, coinId := range o.AppCoins[appID] {
 		coinIds += "/" + strconv.FormatInt(coinId.CoinId, 10)
