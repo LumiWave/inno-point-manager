@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONBUFF-IP-TOKEN/basenet"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
@@ -11,12 +12,14 @@ import (
 
 type MemberPointInfo struct {
 	*context.PointInfo
+	AppId             int64
 	BackUpCurQuantity map[int64]int64 `json:"backup_current_quantity"`
 }
 
-func NewMemberPointInfo(pointInfo *context.PointInfo, load bool) *MemberPointInfo {
+func NewMemberPointInfo(pointInfo *context.PointInfo, appId int64, load bool) *MemberPointInfo {
 	memberPointInfo := &MemberPointInfo{
 		PointInfo: pointInfo,
+		AppId:     appId,
 	}
 
 	memberPointInfo.BackUpCurQuantity = make(map[int64]int64)
@@ -73,10 +76,24 @@ func (o *MemberPointInfo) UpdateRun() {
 					if dailyQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, pointInfo.DatabaseID); err != nil {
 						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
-						//						return
 					} else {
 						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
+
+						// daily app point thread binding
+						data := &basenet.CommandData{
+							CommandType: Command_DailyAppPoint,
+							Data: &context.DailyAppPoint{
+								AppId:          o.AppId,
+								PointType:      context.PointType_EarnPoint,
+								PointId:        point.PointID,
+								AdjustQuantity: point.AdjustQuantity,
+							},
+							Callback: nil,
+						}
+						if ch, exist := context.GetChanInstance().Get(context.Channel_AppPoint); exist {
+							ch.(chan *basenet.CommandData) <- data
+						}
 
 						//현재 일일 누적량, 날짜 업데이트
 						point.DailyQuantity = dailyQuantity

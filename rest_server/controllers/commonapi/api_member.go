@@ -22,7 +22,7 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 			model.GetDB().UpdateAppPoint(req.MUID, pointInfo.PointId, 0, 0, 0, req.DatabaseID)
 		}
 		// 포인트 정보 조회
-		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID); err != nil {
+		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID, ctx.GetValue().AppID); err != nil {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		} else {
 			pointInfos := context.ResPointMemberRegister{
@@ -39,7 +39,7 @@ func GetPointMemberWallet(req *context.ReqPointMemberWallet, ctx *context.PointM
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if wallets, err := model.GetDB().GetPointMemberWallet(req, ctx.VerifyValue.AppID); err != nil {
+	if wallets, err := model.GetDB().GetPointMemberWallet(req, ctx.GetValue().AppID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		resp.Value = wallets

@@ -75,6 +75,8 @@ func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
 	gDB.GetCoins()
 	gDB.GetApps()
 	gDB.GetAppPoints()
+
+	GetCmd()
 }
 
 func GetDB() *DB {

@@ -15,7 +15,7 @@ func AutoLock(key string) (func() error, error) {
 	opts.WaitTimeout = 5 * time.Second
 	opts.WaitRetry = 500 * time.Millisecond
 	unLock, err := GetDB().Cache.AutoLock(key, opts)
-	//unLock, err := GetDB().Cache.AutoLock(key, nil)
+
 	if err != nil {
 		log.Errorf("Result_RedisError_Lock_fail : %v", err)
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_RedisError_Lock_fail])
