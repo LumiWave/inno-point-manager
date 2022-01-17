@@ -95,7 +95,8 @@ type ResPointAppUpdate struct {
 	MUID    int64 `json:"mu_id"`
 	PointID int64 `json:"point_id"`
 
-	PreQuantity int64 `json:"previous_quantity"`
+	PreQuantity   int64 `json:"previous_quantity"`
+	DailyQuantity int64 `json:"daily_quantity"`
 }
 
 ////////////////////////////////////////

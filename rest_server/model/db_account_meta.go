@@ -144,6 +144,7 @@ func (o *DB) GetApps() error {
 		appInfo := &AppPointInfo{}
 		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl); err == nil {
 			o.AppPointsMap[appInfo.AppId] = appInfo
+			o.AppPointsMap[appInfo.AppId].PointsMap = make(map[int64]*PointInfo)
 		}
 	}
 
@@ -167,6 +168,7 @@ func (o *DB) GetAppPoints() error {
 			temp := o.ScanPointsMap[pointId.Int64]
 			temp.DaliyLimitedQuantity = daliyLimiteQuantity.Int64
 			o.AppPointsMap[appId.Int64].Points = append(o.AppPointsMap[appId.Int64].Points, &temp)
+			o.AppPointsMap[appId.Int64].PointsMap[pointId.Int64] = &temp
 		}
 	}
 

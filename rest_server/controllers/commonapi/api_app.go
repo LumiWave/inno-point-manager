@@ -53,16 +53,19 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 	resp.Success()
 
 	if pointInfo, err := inner.UpdateAppPoint(req, ctx.GetValue().AppID); err != nil {
-		if strings.EqualFold("not equal previous quantity", err.Error()) {
+		if strings.EqualFold(resultcode.ResultCodeText[resultcode.Result_Error_NotEqual_PreviousQuantity], err.Error()) {
 			resp.SetReturn(resultcode.Result_Error_NotEqual_PreviousQuantity)
+		} else if strings.EqualFold(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_DailyPoints_earned], err.Error()) {
+			resp.SetReturn(resultcode.Result_Error_Exceeded_DailyPoints_earned)
 		} else {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		}
 	} else {
 		pointInfos := context.ResPointAppUpdate{
-			MUID:        req.MUID,
-			PointID:     pointInfo.PointID,
-			PreQuantity: pointInfo.Quantity,
+			MUID:          req.MUID,
+			PointID:       pointInfo.PointID,
+			PreQuantity:   pointInfo.Quantity,
+			DailyQuantity: pointInfo.DailyQuantity,
 		}
 		resp.Value = pointInfos
 	}

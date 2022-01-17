@@ -38,7 +38,7 @@ func (o *MemberPointInfo) UpdateRun() {
 
 		defer func() {
 			key := MakeMemberPointListKey(o.MUID)
-			GetDB().PointDoc[key] = nil
+			delete(GetDB().PointDoc, key)
 		}()
 
 		for {

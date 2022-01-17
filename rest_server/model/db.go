@@ -14,10 +14,11 @@ type PointInfo struct {
 }
 
 type AppPointInfo struct {
-	AppId   int64        `json:"app_id,omitempty"`
-	AppName string       `json:"app_name,omitempty"`
-	IconUrl string       `json:"icon_url"`
-	Points  []*PointInfo `json:"points"`
+	AppId     int64                `json:"app_id,omitempty"`
+	AppName   string               `json:"app_name,omitempty"`
+	IconUrl   string               `json:"icon_url"`
+	Points    []*PointInfo         `json:"points"`
+	PointsMap map[int64]*PointInfo `json:"-"` // key pointId
 }
 
 type Coin struct {
