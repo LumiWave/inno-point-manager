@@ -19,8 +19,8 @@ func (o *ExternalAPI) GetPointAppList(c echo.Context) error {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
-
-	if err := params.CheckValidate(); err != nil {
+	params.AppId = 0
+	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 
@@ -37,7 +37,8 @@ func (o *ExternalAPI) GetPointApp(c echo.Context) error {
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(); err != nil {
+	params.AppId = 0
+	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 	return commonapi.GetPointApp(params, ctx)

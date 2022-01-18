@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-// app 포인트 조회
+// app 포인트 리스트 조회
 func (o *InternalAPI) GetPointAppList(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
@@ -20,7 +20,7 @@ func (o *InternalAPI) GetPointAppList(c echo.Context) error {
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(); err != nil {
+	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 
@@ -37,7 +37,7 @@ func (o *InternalAPI) GetPointApp(c echo.Context) error {
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(); err != nil {
+	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 

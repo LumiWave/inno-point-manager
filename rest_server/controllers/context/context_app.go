@@ -40,6 +40,7 @@ type PointInfo struct {
 
 ///////// member 포인트 조회
 type ReqGetPointApp struct {
+	AppId      int64 `query:"app_id"`
 	MUID       int64 `query:"mu_id"`
 	PointID    int64 `query:"point_id"`
 	DatabaseID int64 `query:"database_id"`
@@ -49,12 +50,15 @@ func NewReqGetPointApp() *ReqGetPointApp {
 	return new(ReqGetPointApp)
 }
 
-func (o *ReqGetPointApp) CheckValidate() *base.BaseResponse {
+func (o *ReqGetPointApp) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
 	if o.MUID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_MUID)
 	}
 	if o.DatabaseID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
+	}
+	if o.AppId != 0 {
+		ctx.GetValue().AppID = o.AppId
 	}
 	return nil
 }
