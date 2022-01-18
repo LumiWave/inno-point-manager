@@ -76,6 +76,7 @@ func (o *Command) AddDailyAppPoint(data interface{}, cb chan interface{}) {
 		lockKey := MakeDailyAppPointLockKey(dailyAppPoint.AppId, dailyAppPoint.PointId)
 		if unLock, err := AutoLock(lockKey); err != nil {
 			log.Errorf("redis lock fail [lockkey:%v][err:%v]", lockKey, err)
+			log.Errorf("daily app point leak [app_id:%v][point_id:%v][adjust_quantity:%v]", dailyAppPoint.AppId, dailyAppPoint.PointId, dailyAppPoint.AdjustQuantity)
 			return
 		} else {
 			defer unLock()
@@ -93,6 +94,9 @@ func (o *Command) AddDailyAppPoint(data interface{}, cb chan interface{}) {
 
 		if err := GetDB().SetCacheDailyAppPoint(key, cachePoint); err != nil {
 			log.Errorf("SetCacheDailyAppPoint [key:%v][err:%v]", key, err)
+			log.Errorf("daily app point leak [app_id:%v][point_id:%v][adjust_quantity:%v]", dailyAppPoint.AppId, dailyAppPoint.PointId, dailyAppPoint.AdjustQuantity)
+		} else {
+			NewDaliyAppPointUnit(dailyAppPoint.AppId, dailyAppPoint.PointId)
 		}
 	}
 }

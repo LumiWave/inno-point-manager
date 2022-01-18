@@ -13,6 +13,7 @@ import (
 const (
 	USPAU_GetList_AccountPoints = "[dbo].[USPAU_GetList_AccountPoints]"
 	USPAU_GetList_AccountCoins  = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
+	USPAU_Mod_ApplicationPoints = "[dbo].[USPAU_Mod_ApplicationPoints]"
 )
 
 // 계정 일일 포인트량 조회
@@ -70,4 +71,27 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 		}
 	}
 	return walletInfos, nil
+}
+
+func (o *DB) UpdateApplicationPoints(appId, pointId, adjustQuantity, adjustExchangeQuantity int64) (int64, int64, string, error) {
+	var rs orginMssql.ReturnStatus
+
+	var dailyQuantity, dailyExchangeQuantity int64
+	var resetDate string
+	_, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_ApplicationPoints,
+		sql.Named("AppID", appId),
+		sql.Named("PointID", pointId),
+		sql.Named("AdjQuantity", adjustQuantity),
+		sql.Named("AdjExchangeQuantity", adjustExchangeQuantity),
+
+		sql.Named("DailyQuantity", sql.Out{Dest: &dailyQuantity}),
+		sql.Named("DailyExchangeQuantity", sql.Out{Dest: &dailyExchangeQuantity}),
+		sql.Named("ResetDate", sql.Out{Dest: &resetDate}),
+		&rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return 0, 0, "", err
+	}
+
+	return dailyQuantity, dailyExchangeQuantity, resetDate, nil
 }
