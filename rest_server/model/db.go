@@ -10,9 +10,9 @@ type PointInfo struct {
 	PointId              int64   `json:"point_id,omitempty"`
 	PointName            string  `json:"point_name,omitempty"`
 	IconUrl              string  `json:"icon_url,omitempty"`
-	DaliyLimitedQuantity int64   `json:"daliy_limited_quantity,omitempty"`
 	MinExchangeQuantity  int64   `json:"minimum_exchange_quantity"`
 	ExchangeRatio        float64 `json:"exchange_ratio"`
+	DaliyLimitedQuantity int64   `json:"daliy_limited_quantity,omitempty"`
 }
 
 type AppPointInfo struct {
