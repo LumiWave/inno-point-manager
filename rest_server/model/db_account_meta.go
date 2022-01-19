@@ -76,7 +76,7 @@ func (o *DB) GetAppCoins() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationCoins, &rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_Scan_ApplicationCoins QueryContext error : %v", err)
 		return err
 	}
 
@@ -86,6 +86,8 @@ func (o *DB) GetAppCoins() error {
 		appCoin := &AppCoin{}
 		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId); err == nil {
 			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], appCoin)
+		} else {
+			log.Errorf("USPAU_Scan_ApplicationCoins Scan error : %v", err)
 		}
 	}
 
@@ -97,7 +99,7 @@ func (o *DB) GetCoins() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Coins, &rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_Scan_Coins QueryContext error : %v", err)
 		return err
 	}
 
@@ -107,8 +109,10 @@ func (o *DB) GetCoins() error {
 
 	for rows.Next() {
 		coin := &Coin{}
-		if err := rows.Scan(&coin.CoinId, &coin.CoinSymbol, &coin.ContractAddress, &coin.IconUrl); err == nil {
+		if err := rows.Scan(&coin.CoinId, &coin.CoinSymbol, &coin.ContractAddress, &coin.IconUrl, &coin.ExchangeFees); err == nil {
 			o.Coins[coin.CoinId] = coin
+		} else {
+			log.Errorf("USPAU_Scan_Coins Scan error : %v", err)
 		}
 	}
 
@@ -119,6 +123,7 @@ func (o *DB) GetCoins() error {
 					appCoin.CoinSymbol = coin.CoinSymbol
 					appCoin.ContractAddress = coin.ContractAddress
 					appCoin.IconUrl = coin.IconUrl
+					appCoin.ExchangeFees = coin.ExchangeFees
 					break
 				}
 			}
@@ -133,7 +138,7 @@ func (o *DB) GetApps() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Applications, &rs)
 	if err != nil {
-		log.Error("GetApps QueryContext err : ", err)
+		log.Errorf("USPAU_Scan_Applications QueryContext error : %v", err)
 		return err
 	}
 
@@ -145,6 +150,8 @@ func (o *DB) GetApps() error {
 		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl); err == nil {
 			o.AppPointsMap[appInfo.AppId] = appInfo
 			o.AppPointsMap[appInfo.AppId].PointsMap = make(map[int64]*PointInfo)
+		} else {
+			log.Errorf("USPAU_Scan_Applications Scan error : %v", err)
 		}
 	}
 
@@ -156,19 +163,25 @@ func (o *DB) GetAppPoints() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationPoints, &rs)
 	if err != nil {
-		log.Error("GetAppPoints QueryContext err : ", err)
+		log.Error("USPAU_Scan_ApplicationPoints QueryContext error : %v", err)
 		return err
 	}
 
 	defer rows.Close()
 
-	var appId, daliyLimiteQuantity, pointId sql.NullInt64
+	var appId, pointId, minExchangeQuantity, daliyLimiteQuantity sql.NullInt64
+	var exchangeRatio sql.NullFloat64
 	for rows.Next() {
-		if err := rows.Scan(&appId, &pointId, &daliyLimiteQuantity); err == nil {
+		if err := rows.Scan(&appId, &pointId, &minExchangeQuantity, &exchangeRatio, &daliyLimiteQuantity); err == nil {
 			temp := o.ScanPointsMap[pointId.Int64]
 			temp.DaliyLimitedQuantity = daliyLimiteQuantity.Int64
+			temp.MinExchangeQuantity = minExchangeQuantity.Int64
+			temp.ExchangeRatio = exchangeRatio.Float64
+
 			o.AppPointsMap[appId.Int64].Points = append(o.AppPointsMap[appId.Int64].Points, &temp)
 			o.AppPointsMap[appId.Int64].PointsMap[pointId.Int64] = &temp
+		} else {
+			log.Errorf("USPAU_Scan_ApplicationPoints Scan error : %v", err)
 		}
 	}
 
