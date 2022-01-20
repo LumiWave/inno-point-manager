@@ -89,7 +89,12 @@ func (o *Command) AddDailyAppPoint(data interface{}, cb chan interface{}) {
 			log.Infof("GetCacheDailyAppPoint [key:%v][err:%v]", key, err)
 			cachePoint = dailyAppPoint
 		} else {
-			cachePoint.AdjustQuantity += dailyAppPoint.AdjustQuantity
+			if dailyAppPoint.AdjustQuantity > 0 { // app point 변화량은 양수만 누적한다. 교환량은 절대값으로 누적한다.
+				cachePoint.AdjustQuantity += dailyAppPoint.AdjustQuantity
+				cachePoint.AdjustExchangeQuantity += dailyAppPoint.AdjustQuantity
+			} else {
+				cachePoint.AdjustExchangeQuantity += -dailyAppPoint.AdjustQuantity
+			}
 		}
 
 		if err := GetDB().SetCacheDailyAppPoint(key, cachePoint); err != nil {

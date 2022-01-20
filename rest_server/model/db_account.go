@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	USPAU_GetList_AccountPoints = "[dbo].[USPAU_GetList_AccountPoints]"
-	USPAU_GetList_AccountCoins  = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
-	USPAU_Mod_ApplicationPoints = "[dbo].[USPAU_Mod_ApplicationPoints]"
+	USPAU_GetList_AccountPoints              = "[dbo].[USPAU_GetList_AccountPoints]"
+	USPAU_GetList_AccountCoins_By_CoinString = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
+	USPAU_Mod_ApplicationPoints              = "[dbo].[USPAU_Mod_ApplicationPoints]"
 )
 
 // 계정 일일 포인트량 조회
@@ -31,9 +31,10 @@ func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountP
 	defer rows.Close()
 
 	accountPoints := make(map[int64]*context.AccountPoint)
-	accountPoint := context.AccountPoint{}
 	for rows.Next() {
-		if err := rows.Scan(&accountPoint.AppId, &accountPoint.PointId, &accountPoint.DailyQuantity, &accountPoint.ResetDate); err == nil {
+		accountPoint := context.AccountPoint{}
+		if err := rows.Scan(&accountPoint.AppId, &accountPoint.PointId, &accountPoint.DailyLimitedQuantity,
+			&accountPoint.DailyAcqQuantity, &accountPoint.DailyCnsmQuantity, &accountPoint.ResetDate); err == nil {
 			accountPoints[accountPoint.PointId] = &accountPoint
 		}
 	}
@@ -48,7 +49,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 	}
 
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins,
+	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins_By_CoinString,
 		sql.Named("AUID", params.AUID),
 		sql.Named("CoinString", coinIds),
 		sql.Named("RowSeparator", "/"),

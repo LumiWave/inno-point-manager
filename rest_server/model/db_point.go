@@ -16,6 +16,7 @@ const (
 	USPPO_GetList_MemberPoints = "[dbo].[USPPO_GetList_MemberPoints]"
 	USPPO_Get_MemberPoints     = "[dbo].[USPPO_Get_MemberPoints]"
 	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
+	USPPO_Add_MemberPoints     = "[dbo].[USPPO_Add_MemberPoints]"
 )
 
 // 포인트 맴버 등록
@@ -72,6 +73,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
 			return nil, err
 		}
+		point.PreQuantity = point.Quantity // load 시 동일하게 초기화
 		points = append(points, point)
 	}
 
@@ -126,60 +128,54 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 	return point, nil
 }
 
-// 맴버의 포인트 정보 조회 by point id
-func (o *DB) GetPointAppByPointID(MUID, pointId, DatabaseID int64) (*context.Point, error) {
-	mssql, ok := o.MssqlPoints[DatabaseID]
+// 포인트 최초 초기화 등록
+func (o *DB) InsertMemberPoints(dbID, muID, pointID, quantity int64) error {
+	mssql, ok := o.MssqlPoints[dbID]
 	if !ok {
-		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
 	var rs orginMssql.ReturnStatus
-	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Get_MemberPoints,
-		sql.Named("MUID", MUID),
-		sql.Named("PointID", pointId),
-		&rs)
-	if err != nil {
+	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Add_MemberPoints,
+		sql.Named("MUID", muID),
+		sql.Named("PointID", pointID),
+		sql.Named("Quantity", quantity),
+		&rs); err != nil {
 		log.Error("QueryContext err : ", err)
-		return nil, err
+		return err
 	}
 
-	defer rows.Close()
-
-	point := new(context.Point)
-	for rows.Next() {
-		point.PointID = 0
-		point.Quantity = 0
-		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
-			return nil, err
-		}
-	}
-
-	if rs != 1 {
+	if rs == resultcode.Result_Error_Invalid_data {
+		log.Error("returnStatus Result_Error_Invalid_data : ", rs)
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
+	} else if rs != 1 {
 		log.Error("returnStatus Result_DBError_Unknown : ", rs)
-		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
-	return point, nil
+	return nil
 }
 
 // 포인트 업데이트
-func (o *DB) UpdateAppPoint(muid, pointId, preQuantity, adjQuantity, quantity, dbId int64) (int64, string, error) {
-	mssql, ok := o.MssqlPoints[dbId]
+func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quantity int64, logID context.LogID_type, eventID context.EventID_type) (int64, string, error) {
+	mssql, ok := o.MssqlPoints[dbID]
 	if !ok {
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
-	var dailyQuantity int64
+	var dailyLimitedQuantity int64
 	var resetDate string
 	var rs orginMssql.ReturnStatus
 	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
-		sql.Named("MUID", muid),
-		sql.Named("PointID", pointId),
+		sql.Named("MUID", muID),
+		sql.Named("PointID", pointID),
 		sql.Named("PreQuantity", preQuantity),
 		sql.Named("AdjQuantity", adjQuantity),
 		sql.Named("Quantity", quantity),
+		sql.Named("LogID", logID),
+		sql.Named("EventID", eventID),
 
-		sql.Named("DailyQuantity", sql.Out{Dest: &dailyQuantity}),
+		sql.Named("DailyLimitedQuantity", sql.Out{Dest: &dailyLimitedQuantity}),
 		sql.Named("ResetDate", sql.Out{Dest: &resetDate}),
 		&rs); err != nil {
 		log.Error("QueryContext err : ", err)
@@ -194,5 +190,5 @@ func (o *DB) UpdateAppPoint(muid, pointId, preQuantity, adjQuantity, quantity, d
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
-	return dailyQuantity, resetDate, nil
+	return dailyLimitedQuantity, resetDate, nil
 }

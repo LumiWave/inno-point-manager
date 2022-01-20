@@ -12,13 +12,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// var gPointDoc map[string]MemberPoint
-
-// type MemberPoint struct {
-// 	MUID  int64
-// 	AppId int64
-// }
-
 func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point, error) {
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(req.MUID)
@@ -46,7 +39,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyQuantity
+						point.DailyQuantity = val.DailyLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -68,9 +61,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 							break
 						}
 
-						if points[idx].PreQuantity == 0 {
-							points[idx].PreQuantity = req.PreQuantity
-						}
+						// if points[idx].PreQuantity == 0 {
+						// 	points[idx].PreQuantity = req.PreQuantity
+						// }
 
 						points[idx].AdjustQuantity += req.AdjustQuantity
 						points[idx].Quantity += req.AdjustQuantity
@@ -129,9 +122,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 						break
 					}
 
-					if points[idx].PreQuantity == 0 {
-						points[idx].PreQuantity = req.PreQuantity
-					}
+					// if points[idx].PreQuantity == 0 {
+					// 	points[idx].PreQuantity = req.PreQuantity
+					// }
 					points[idx].AdjustQuantity += req.AdjustQuantity
 					points[idx].Quantity += req.AdjustQuantity
 					find = true
@@ -188,7 +181,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyQuantity
+						point.DailyQuantity = val.DailyLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -254,7 +247,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyQuantity
+						point.DailyQuantity = val.DailyLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Error(err)
 						} else {
