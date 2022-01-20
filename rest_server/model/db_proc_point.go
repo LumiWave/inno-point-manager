@@ -73,13 +73,13 @@ func (o *MemberPointInfo) UpdateRun() {
 			//5. db update
 			for _, point := range pointInfo.Points {
 				if o.BackUpCurQuantity[point.PointID] != point.Quantity { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
-					var logID context.LogID_type
+					var eventID context.EventID_type
 					if point.AdjustQuantity >= 0 {
-						logID = context.LogID_add
+						eventID = context.EventID_add
 					} else {
-						logID = context.LogID_sub
+						eventID = context.EventID_sub
 					}
-					if dailyLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, logID, context.EventID_cp); err != nil {
+					if dailyLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
 						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
 					} else {

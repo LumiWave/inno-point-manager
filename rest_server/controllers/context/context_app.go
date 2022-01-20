@@ -6,15 +6,20 @@ import (
 )
 
 type LogID_type int
+
+const (
+	LogID_cp              = 1 // 고객사
+	LogID_exchange        = 2 // 전환
+	LogID_external_wallet = 3 // 외부지갑
+)
+
 type EventID_type int
 
 const (
-	LogID_add = 1 // 재화 획득
-	LogID_sub = 2 // 재화 소모
-)
-
-const (
-	EventID_cp = 1 // 고객사
+	EventID_add     = 1 // 재화 증가
+	EventID_sub     = 2 // 재화 감소
+	EventID_toCoin  = 3 // 포인트->코인
+	EventID_toPoint = 4 // 코인->포인트
 )
 
 type Exchange_State_type string
