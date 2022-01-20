@@ -33,8 +33,8 @@ func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountP
 	accountPoints := make(map[int64]*context.AccountPoint)
 	for rows.Next() {
 		accountPoint := context.AccountPoint{}
-		if err := rows.Scan(&accountPoint.AppId, &accountPoint.PointId, &accountPoint.DailyLimitedQuantity,
-			&accountPoint.DailyAcqQuantity, &accountPoint.DailyCnsmQuantity, &accountPoint.ResetDate); err == nil {
+		if err := rows.Scan(&accountPoint.AppId, &accountPoint.PointId, &accountPoint.TodayLimitedQuantity,
+			&accountPoint.TodayAcqQuantity, &accountPoint.TodayCnsmQuantity, &accountPoint.ResetDate); err == nil {
 			accountPoints[accountPoint.PointId] = &accountPoint
 		}
 	}

@@ -163,7 +163,7 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
-	var dailyLimitedQuantity int64
+	var todayLimitedQuantity int64
 	var resetDate string
 	var rs orginMssql.ReturnStatus
 	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
@@ -175,7 +175,7 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		sql.Named("LogID", logID),
 		sql.Named("EventID", eventID),
 
-		sql.Named("DailyLimitedQuantity", sql.Out{Dest: &dailyLimitedQuantity}),
+		sql.Named("TodayLimitedQuantity", sql.Out{Dest: &todayLimitedQuantity}),
 		sql.Named("ResetDate", sql.Out{Dest: &resetDate}),
 		&rs); err != nil {
 		log.Error("QueryContext err : ", err)
@@ -190,5 +190,5 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
-	return dailyLimitedQuantity, resetDate, nil
+	return todayLimitedQuantity, resetDate, nil
 }

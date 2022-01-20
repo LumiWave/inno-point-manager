@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/basenet"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
@@ -79,30 +78,16 @@ func (o *MemberPointInfo) UpdateRun() {
 					} else {
 						eventID = context.EventID_sub
 					}
-					if dailyLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
+					if todayLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
+						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
 						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
 					} else {
 						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
 
-						// daily app point thread binding
-						data := &basenet.CommandData{
-							CommandType: Command_DailyAppPoint,
-							Data: &context.DailyAppPoint{
-								AppId:          o.AppId,
-								PointType:      context.PointType_EarnPoint,
-								PointId:        point.PointID,
-								AdjustQuantity: point.AdjustQuantity,
-							},
-							Callback: nil,
-						}
-						if ch, exist := context.GetChanInstance().Get(context.Channel_AppPoint); exist {
-							ch.(chan *basenet.CommandData) <- data
-						}
-
 						//현재 일일 누적량, 날짜 업데이트
-						point.DailyQuantity = dailyLimitedQuantity
+						point.DailyQuantity = todayLimitedQuantity
 						point.ResetDate = resetDate
 
 						point.AdjustQuantity = 0

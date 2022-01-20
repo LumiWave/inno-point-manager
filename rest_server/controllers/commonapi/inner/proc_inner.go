@@ -39,7 +39,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyLimitedQuantity
+						point.DailyQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -181,7 +181,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyLimitedQuantity
+						point.DailyQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -247,7 +247,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.DailyLimitedQuantity
+						point.DailyQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Error(err)
 						} else {
