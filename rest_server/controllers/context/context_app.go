@@ -5,31 +5,6 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
-type LogID_type int
-
-const (
-	LogID_cp              = 1 // 고객사
-	LogID_exchange        = 2 // 전환
-	LogID_external_wallet = 3 // 외부지갑
-)
-
-type EventID_type int
-
-const (
-	EventID_add     = 1 // 재화 증가
-	EventID_sub     = 2 // 재화 감소
-	EventID_toCoin  = 3 // 포인트->코인
-	EventID_toPoint = 4 // 코인->포인트
-)
-
-type Exchange_State_type string
-
-const (
-	Exchange_State_type_ready    = "0" // 전환 대기
-	Exchange_State_type_ing      = "1" // 전환 중
-	Exchange_State_type_complete = "2" // 전환 완료
-)
-
 type Point struct {
 	PointID       int64  `json:"point_id"`
 	Quantity      int64  `json:"quantity"`
