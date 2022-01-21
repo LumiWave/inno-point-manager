@@ -11,8 +11,8 @@ type PointDB struct {
 type AccountPoint struct {
 	AppId                int64  `json:"app_id"`
 	PointId              int64  `json:"point_id"`
-	TodayLimitedQuantity int64  `json:"daily_limited_quantity"`
-	TodayAcqQuantity     int64  `json:"daily_acq_quantity"`
-	TodayCnsmQuantity    int64  `json:"daily_cnsm_quantity"`
+	TodayLimitedQuantity int64  `json:"today_limited_quantity"`
+	TodayAcqQuantity     int64  `json:"today_acq_quantity"`
+	TodayCnsmQuantity    int64  `json:"today_cnsm_quantity"`
 	ResetDate            string `json:"reset_date"`
 }

@@ -17,7 +17,7 @@ const (
 	Result_Error_NotExistMember              = 11101 // 존재하지 않는 member
 	Result_Error_LackOfTokenQuantity         = 11102 // 토큰 수량이 부족하다.
 	Result_Error_NotEqual_PreviousQuantity   = 11103 // 이전 수량이 다르다.
-	Result_Error_Exceeded_DailyPoints_earned = 11104 // 하루 최대 포인트 획득량 달성
+	Result_Error_Exceeded_TodayPoints_earned = 11104 // 하루 최대 포인트 획득량 달성
 
 	Result_Require_AUID           = 12000 // 유효한 au_id 정보 필요
 	Result_Require_MUID           = 12001 // 유효한 mu_id 정보 필요
@@ -60,7 +60,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_NotExistMember:              "Not exist member",
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
 	Result_Error_NotEqual_PreviousQuantity:   "not equal previous quantity",
-	Result_Error_Exceeded_DailyPoints_earned: "Exceeded daily points earned",
+	Result_Error_Exceeded_TodayPoints_earned: "Exceeded today points earned",
 
 	Result_RedisError_Lock_fail: "Redis lock error.",
 

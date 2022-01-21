@@ -39,7 +39,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -55,9 +55,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 				if point.PointID == req.PointID {
 					if point.Quantity == req.PreQuantity { // last 수량 비교
 						//일일 최대 적립 포인트량 비교
-						enable := checkDailyPoint(point, appId, &req.AdjustQuantity)
+						enable := checkTodayPoint(point, appId, &req.AdjustQuantity)
 						if !enable {
-							err = errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_DailyPoints_earned])
+							err = errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_TodayPoints_earned])
 							break
 						}
 
@@ -116,9 +116,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 			if point.PointID == req.PointID {
 				if point.Quantity == req.PreQuantity { // last 수량 비교
 					//일일 최대 적립 포인트량 비교
-					enable := checkDailyPoint(point, appId, &req.AdjustQuantity)
+					enable := checkTodayPoint(point, appId, &req.AdjustQuantity)
 					if !enable {
-						err = errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_DailyPoints_earned])
+						err = errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_TodayPoints_earned])
 						break
 					}
 
@@ -181,7 +181,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -247,7 +247,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.DailyQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Error(err)
 						} else {
@@ -311,15 +311,15 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 	return pointInfo, nil
 }
 
-func checkDailyPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {
+func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {
 	if strings.EqualFold(point.ResetDate, time.Now().Format("2006-01-02")) { // 날짜가 바뀌었는지 체크
-		if point.DailyQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
+		if point.TodayQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
 			// 이미 다 채운 상태라면 에러 리턴
 			return false
 		} else {
-			if point.DailyQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
+			if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
 				// 초과시 가능 포인트만 적립
-				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity - point.DailyQuantity
+				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity - point.TodayQuantity
 			}
 		}
 	}

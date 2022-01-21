@@ -87,7 +87,7 @@ func (o *MemberPointInfo) UpdateRun() {
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
 
 						//현재 일일 누적량, 날짜 업데이트
-						point.DailyQuantity = todayLimitedQuantity
+						point.TodayQuantity = todayLimitedQuantity
 						point.ResetDate = resetDate
 
 						point.AdjustQuantity = 0

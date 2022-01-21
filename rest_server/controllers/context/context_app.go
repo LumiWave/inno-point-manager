@@ -33,7 +33,7 @@ const (
 type Point struct {
 	PointID       int64  `json:"point_id"`
 	Quantity      int64  `json:"quantity"`
-	DailyQuantity int64  `json:"daily_quantity"`
+	TodayQuantity int64  `json:"today_quantity"`
 	ResetDate     string `json:"reset_date"`
 
 	PreQuantity    int64 `json:"previous_quantity,omitempty"`
@@ -67,7 +67,7 @@ func (o *ReqGetPointApp) CheckValidate(ctx *PointManagerContext) *base.BaseRespo
 	if o.DatabaseID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_DatabaseID)
 	}
-	if o.AppId != 0 {
+	if o.AppId != 0 && ctx.GetValue() != nil {
 		ctx.GetValue().AppID = o.AppId
 	}
 	return nil
@@ -110,7 +110,7 @@ type ResPointAppUpdate struct {
 	PointID int64 `json:"point_id"`
 
 	PreQuantity   int64 `json:"previous_quantity"`
-	DailyQuantity int64 `json:"daily_quantity"`
+	TodayQuantity int64 `json:"today_quantity"`
 }
 
 ////////////////////////////////////////
