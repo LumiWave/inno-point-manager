@@ -399,24 +399,30 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			} else {
 				eventID = context.EventID_sub
 			}
-			if todayLimitedQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
-				point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
-				log.Errorf("UpdateAppPoint error : %v", err)
-				resp.SetReturn(resultcode.Result_Error_DB_UpdateAppPoint)
-				return resp
-			} else {
-				//현재 일일 누적량, 날짜 업데이트
-				point.TodayQuantity = todayLimitedQuantity
-				point.ResetDate = resetDate
 
+			if point.AdjustQuantity != 0 {
+				if todayLimitedQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
+					point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
+					log.Errorf("UpdateAppPoint error : %v", err)
+					resp.SetReturn(resultcode.Result_Error_DB_UpdateAppPoint)
+					return resp
+				} else {
+					//현재 일일 누적량, 날짜 업데이트
+					point.TodayQuantity = todayLimitedQuantity
+					point.ResetDate = resetDate
+
+					point.AdjustQuantity = 0
+					point.PreQuantity = point.Quantity
+				}
+			} else {
 				point.AdjustQuantity = 0
 				point.PreQuantity = point.Quantity
+			}
 
-				// swap point quantity에 업데이트
-				if params.PointID == point.PointID && params.MUID == mePointInfo.MUID {
-					params.PreviousPointQuantity = point.Quantity
-					params.PointQuantity = params.PreviousPointQuantity + params.AdjustPointQuantity
-				}
+			// swap point quantity에 업데이트
+			if params.PointID == point.PointID && params.MUID == mePointInfo.MUID {
+				params.PreviousPointQuantity = point.Quantity
+				params.PointQuantity = params.PreviousPointQuantity + params.AdjustPointQuantity
 			}
 		}
 	}
@@ -425,16 +431,17 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 	if params.EventID == context.EventID_toCoin {
 		// 코인으로 전환시 체크
 		// 포인트 보유수량이 전환량 보다 큰지 확인
+		absAdjustPointQuantity := int64(math.Abs(float64(params.AdjustPointQuantity)))
 		if params.PreviousPointQuantity <= 0 || // 보유 포인트량이 0일경우
 			params.PreviousPointQuantity < params.AdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
-			pointInfo.MinExchangeQuantity > params.AdjustPointQuantity { // 전환 최소 수량 에러
+			pointInfo.MinExchangeQuantity > absAdjustPointQuantity { // 전환 최소 수량 에러
 			// 전환할 포인트 수량이 없음 에러
 			log.Errorf("not find me point id [point_id:%v][PointQuantity:%v]", params.PointID, params.PreviousPointQuantity)
 			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
 			return resp
 		}
 		// 전환 비율 계산 후 타당성 확인
-		exchangeCoin := float64(params.AdjustPointQuantity) + float64(params.AdjustPointQuantity)*pointInfo.ExchangeRatio
+		exchangeCoin := float64(absAdjustPointQuantity) * pointInfo.ExchangeRatio
 		exchangeCoin = toFixed(exchangeCoin, 4)
 		if params.AdjustCoinQuantity != exchangeCoin {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
@@ -443,14 +450,15 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 
 	} else if params.EventID == context.EventID_toPoint {
 		// 코인 보유 수량이 전환량 보다 큰지 확인
+		absAdjustCoinQuantity := math.Abs(params.AdjustCoinQuantity)
 		if params.PreviousCoinQuantity <= 0 || // 보유 코인량이 0인경우
-			params.PreviousCoinQuantity < params.AdjustCoinQuantity {
+			params.PreviousCoinQuantity < absAdjustCoinQuantity {
 			log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_MinCoinQuantity]+" [coin_id:%v][coin_quantity:%v]", params.CoinID, params.PreviousCoinQuantity)
 			resp.SetReturn(resultcode.Result_Error_MinCoinQuantity)
 			return resp
 		}
 		// 전환 비율 계산 후 타당성 확인
-		exchangePoint := params.AdjustCoinQuantity * pointInfo.ExchangeRatio
+		exchangePoint := absAdjustCoinQuantity / pointInfo.ExchangeRatio
 		exchangePoint = toFixed(exchangePoint, 0)
 		if params.AdjustPointQuantity != int64(exchangePoint) {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToCoin)
@@ -458,16 +466,14 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		}
 	}
 
-	params.LogID = context.LogID_exchange
-
 	// swap 후에 redis 삭제
 	if err := model.GetDB().PostPointCoinSwap(params); err != nil {
 		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 	}
 
 	model.GetDB().DelCacheMemberPointList(key)
-
-	return nil
+	resp.Value = params
+	return resp
 }
 
 func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {

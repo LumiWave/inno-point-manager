@@ -13,7 +13,7 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 	resp.Success()
 
 	if err := inner.Swap(params); err != nil {
-		*resp = base.BaseResponseInternalServerError()
+		resp = err
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
