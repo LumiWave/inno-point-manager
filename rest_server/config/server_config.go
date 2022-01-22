@@ -33,10 +33,12 @@ type MssqlPoint struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager       PointManager    `yaml:"point_manager"`
-	MssqlDBAccount baseconf.DBAuth `yaml:"mssql_db_account"`
-	MssqlDBPoint   MssqlPoint      `yaml:"mssql_db_point"`
-	Auth           ApiAuth         `yaml:"api_auth"`
+	PManager           PointManager    `yaml:"point_manager"`
+	MssqlDBAccountAll  baseconf.DBAuth `yaml:"mssql_db_account"`
+	MssqlDBAccountRead baseconf.DBAuth `yaml:"mssql_db_account_read"`
+	MssqlDBPointAll    baseconf.DBAuth `yaml:"mssql_db_point"`
+	MssqlDBPointRead   baseconf.DBAuth `yaml:"mssql_db_point_read"`
+	Auth               ApiAuth         `yaml:"api_auth"`
 }
 
 func GetInstance(filepath ...string) *ServerConfig {

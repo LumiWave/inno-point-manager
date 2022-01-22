@@ -80,7 +80,6 @@ func (o *MemberPointInfo) UpdateRun() {
 					}
 					if todayLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
 						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
-						unLock() // redis unlock
 						log.Errorf("UpdateAppPoint [err:%v]", err)
 					} else {
 						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트

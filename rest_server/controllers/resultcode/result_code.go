@@ -26,7 +26,15 @@ const (
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
 	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
 
-	Result_RedisError_Lock_fail = 18000 // redis lock error
+	Result_Error_MinPointQuantity      = 12100 // 포인트 최소 보유 수량 에러
+	Result_Error_MinCoinQuantity       = 12101 // 코인 최소 보유 수량 에러
+	Result_Error_Exchangeratio_ToCoin  = 12102 // 코인으로 전환 비율 에러
+	Result_Error_Exchangeratio_ToPoint = 12103 // 포인트로 전환 비율 에러
+
+	Result_RedisError_Lock_fail       = 18000 // redis lock error
+	Result_Error_DB_GetPointAppList   = 18100 // db member point 조회 에러
+	Result_Error_DB_UpdateAppPoint    = 18101 // db point update 에러
+	Result_Error_DB_PostPointCoinSwap = 18102 // db swap 에러
 
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
@@ -61,8 +69,13 @@ var ResultCodeText = map[int]string{
 	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
 	Result_Error_NotEqual_PreviousQuantity:   "not equal previous quantity",
 	Result_Error_Exceeded_TodayPoints_earned: "Exceeded today points earned",
+	Result_Error_Exchangeratio_ToCoin:        "Coin Exchange ratio error",
+	Result_Error_Exchangeratio_ToPoint:       "Point Exchange ratio error",
 
-	Result_RedisError_Lock_fail: "Redis lock error.",
+	Result_RedisError_Lock_fail:       "Redis lock error.",
+	Result_Error_DB_GetPointAppList:   "db member point scan error",
+	Result_Error_DB_UpdateAppPoint:    "db point update error",
+	Result_Error_DB_PostPointCoinSwap: "db swap error",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
@@ -77,6 +90,9 @@ var ResultCodeText = map[int]string{
 	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
 	Result_Require_PointID:        "Requires valid 'point_id' information.",
 	Result_Require_AdjustQuantity: "Requires valid 'adjust_quantity' information.",
+
+	Result_Error_MinPointQuantity: "lack of minimum point quantity",
+	Result_Error_MinCoinQuantity:  "lack of munimum coin quantity",
 
 	Result_Auth_RequireMessage:    "Message is required",
 	Result_Auth_RequireSign:       "Sign info is required",

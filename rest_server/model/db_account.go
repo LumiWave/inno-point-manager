@@ -19,7 +19,7 @@ const (
 // 계정 일일 포인트량 조회
 func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountPoint, error) {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountPoints,
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountPoints,
 		sql.Named("AUID", auid),
 		sql.Named("MUID", muid),
 		&rs)
@@ -49,7 +49,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 	}
 
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins_By_CoinString,
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins_By_CoinString,
 		sql.Named("AUID", params.AUID),
 		sql.Named("CoinString", coinIds),
 		sql.Named("RowSeparator", "/"),
@@ -79,7 +79,7 @@ func (o *DB) UpdateApplicationPoints(appId, pointId, adjustQuantity, adjustExcha
 
 	var dailyQuantity, dailyExchangeQuantity int64
 	var resetDate string
-	_, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_ApplicationPoints,
+	_, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_ApplicationPoints,
 		sql.Named("AppID", appId),
 		sql.Named("PointID", pointId),
 		sql.Named("AdjQuantity", adjustQuantity),

@@ -21,7 +21,7 @@ const (
 
 // 포인트 맴버 등록
 func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
-	mssql, ok := o.MssqlPoints[params.DatabaseID]
+	mssql, ok := o.MssqlPointsAll[params.DatabaseID]
 	if !ok {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
@@ -48,7 +48,7 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 
 // 맴버의 포인트 리스트 정보 조회
 func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
-	mssql, ok := o.MssqlPoints[DatabaseID]
+	mssql, ok := o.MssqlPointsRead[DatabaseID]
 	if !ok {
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
@@ -78,7 +78,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 	}
 
 	if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		log.Errorf("USPPO_GetList_MemberPoints returnStatus : %v", rs)
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
@@ -87,7 +87,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 
 // 맴버의 포인트 정보 조회
 func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error) {
-	mssql, ok := o.MssqlPoints[DatabaseID]
+	mssql, ok := o.MssqlPointsRead[DatabaseID]
 	if !ok {
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
@@ -130,7 +130,7 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 
 // 포인트 최초 초기화 등록
 func (o *DB) InsertMemberPoints(dbID, muID, pointID, quantity int64) error {
-	mssql, ok := o.MssqlPoints[dbID]
+	mssql, ok := o.MssqlPointsAll[dbID]
 	if !ok {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
@@ -158,7 +158,7 @@ func (o *DB) InsertMemberPoints(dbID, muID, pointID, quantity int64) error {
 
 // 포인트 업데이트
 func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quantity int64, logID context.LogID_type, eventID context.EventID_type) (int64, string, error) {
-	mssql, ok := o.MssqlPoints[dbID]
+	mssql, ok := o.MssqlPointsAll[dbID]
 	if !ok {
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}

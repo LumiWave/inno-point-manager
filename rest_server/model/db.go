@@ -1,8 +1,14 @@
 package model
 
 import (
+	"strconv"
+
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/basedb"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
@@ -37,11 +43,12 @@ type AppCoin struct {
 }
 
 type DB struct {
-	Mysql        *basedb.Mysql
-	MssqlAccount *basedb.Mssql
-	Cache        *basedb.Cache
+	MssqlAccountAll  *basedb.Mssql
+	MssqlAccountRead *basedb.Mssql
+	Cache            *basedb.Cache
 
-	MssqlPoints map[int64]*basedb.Mssql
+	MssqlPointsAll  map[int64]*basedb.Mssql
+	MssqlPointsRead map[int64]*basedb.Mssql
 
 	PointDoc map[string]*MemberPointInfo
 
@@ -56,21 +63,62 @@ type DB struct {
 
 var gDB *DB
 
-func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mssql) {
-	gDB = &DB{
-		MssqlAccount: db,
-		Cache:        cache,
-		MssqlPoints:  pointdbs,
-	}
+func GetDB() *DB {
+	return gDB
 }
 
-func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
+func InitDB(conf *config.ServerConfig) (err error) {
+	cache := basedb.GetCache(&conf.Cache)
+	gDB = &DB{
+		Cache: cache,
+	}
+
+	gDB.MssqlAccountAll, err = gDB.ConnectDB(&conf.MssqlDBAccountAll)
+	if err != nil {
+		return err
+	}
+
+	gDB.MssqlAccountRead, err = gDB.ConnectDB(&conf.MssqlDBAccountRead)
+	if err != nil {
+		return err
+	}
+
+	// point db create
+	gDB.MssqlPointsAll = make(map[int64]*basedb.Mssql)
+	gDB.MssqlPointsRead = make(map[int64]*basedb.Mssql)
+
+	if getPointDBs, err := gDB.GetPointDatabases(); err != nil {
+		return err
+	} else {
+		for _, pointDB := range getPointDBs {
+			mssqlDBAll, err := gDB.ConnectDBOfPoint(&conf.MssqlDBPointAll, pointDB)
+			if err != nil {
+				log.Errorf("err: %v, val: %v, %v, %v, %v",
+					err, pointDB.ServerName, conf.MssqlDBPointAll.ID, conf.MssqlDBPointAll.Password, pointDB.DatabaseName)
+				return err
+			}
+
+			mssqlDBRead, err := gDB.ConnectDBOfPoint(&conf.MssqlDBPointRead, pointDB)
+			if err != nil {
+				log.Errorf("err: %v, val: %v, %v, %v, %v",
+					err, pointDB.ServerName, conf.MssqlDBPointRead.ID, conf.MssqlDBPointRead.Password, pointDB.DatabaseName)
+				return err
+			}
+
+			gDB.MssqlPointsAll[pointDB.DatabaseID] = mssqlDBAll
+			gDB.MssqlPointsRead[pointDB.DatabaseID] = mssqlDBRead
+		}
+	}
+	LoadDBPoint()
+	return nil
+}
+
+func LoadDBPoint() {
 	gDB.PointDoc = make(map[string]*MemberPointInfo)
 	gDB.ScanPointsMap = make(map[int64]PointInfo)
 	gDB.AppPointsMap = make(map[int64]*AppPointInfo)
 	gDB.AppCoins = make(map[int64][]*AppCoin)
 	gDB.Coins = make(map[int64]*Coin)
-	gDB.MssqlPoints = pointdbs
 
 	// sequence is important
 	gDB.GetPointList()
@@ -80,11 +128,37 @@ func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
 	gDB.GetAppPoints()
 }
 
-func GetDB() *DB {
-	return gDB
-}
-
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {
 	resp.Return = errCode
 	resp.Message = resultcode.ResultCodeText[errCode] + " : " + err.Error()
+}
+
+func (o *DB) ConnectDB(conf *baseconf.DBAuth) (*basedb.Mssql, error) {
+	port, _ := strconv.ParseInt(conf.Port, 10, 32)
+	mssqlDB, err := basedb.NewMssql(conf.Database, "", conf.ID, conf.Password, conf.Host, int(port))
+	if err != nil {
+		log.Errorf("err: %v, val: %v, %v, %v, %v, %v, %v",
+			err, conf.Host, conf.ID, conf.Password, conf.Database, conf.PoolSize, conf.IdleSize)
+		return nil, err
+	}
+
+	return mssqlDB, nil
+}
+
+func (o *DB) ConnectDBOfPoint(conf *baseconf.DBAuth, pointDB *context.PointDB) (*basedb.Mssql, error) {
+	port, _ := strconv.ParseInt(conf.Port, 10, 32)
+	mssqlDB, err := basedb.NewMssql(pointDB.DatabaseName,
+		"pointDB",
+		conf.ID,
+		conf.Password,
+		pointDB.ServerName,
+		int(port))
+
+	if err != nil {
+		log.Errorf("err: %v, val: %v, %v, %v, %v",
+			err, pointDB.ServerName, conf.ID, conf.Password, pointDB.DatabaseName)
+		return nil, err
+	}
+
+	return mssqlDB, nil
 }
