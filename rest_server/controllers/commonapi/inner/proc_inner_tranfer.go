@@ -2,6 +2,7 @@ package inner
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
@@ -79,6 +80,55 @@ func Transfer(params *context.ReqCoinTransfer) *base.BaseResponse {
 	}
 
 	resp.Value = params
+
+	return resp
+}
+
+func TransferResultDeposit(params *context.ReqCoinTransferResDeposit) *base.BaseResponse {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	// 입금 주소로 db 검색해서 AUID추출
+	// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
+
+	return resp
+}
+
+func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *base.BaseResponse {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	// tx로 redis 검색해서 load
+	tKey := model.MakeCoinTransferKeyByTxID(params.Txid)
+	transferInfo, err := model.GetDB().GetCacheCoinTransfer(tKey)
+	if err != nil {
+		// 존재 하지 않는 출금 정보 콜백을 받았다.
+		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Invalid_transfer_txid]+" txid:%v", params.Txid)
+		resp.SetReturn(resultcode.Result_Invalid_transfer_txid)
+		return resp
+	}
+
+	// 응답 status 성공 여부 체크
+	if strings.EqualFold(params.Status, "success") {
+		// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
+		_ = transferInfo
+	} else if strings.EqualFold(params.Status, "failure") {
+		// 실패 한 경우 두가지 redis 삭제만 유도한다.
+	}
+
+	// redis 두가지 삭제
+	model.GetDB().DelCacheCoinTransfer(tKey) // txid key redis delete
+	key := model.MakeCoinTransferKey(transferInfo.AUID)
+	Lockkey := model.MakeMemberPointListLockKey(transferInfo.AUID)
+	unLock, err := model.AutoLock(Lockkey)
+	if err != nil {
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
+	} else {
+		// 0-1. redis unlock
+		defer unLock()
+	}
+	model.GetDB().DelCacheCoinTransfer(key) // audi key redis delete
 
 	return resp
 }

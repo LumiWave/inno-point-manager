@@ -33,6 +33,7 @@ const (
 	Result_Error_Exchangeratio_ToPoint = 12103 // 포인트로 전환 비율 에러
 
 	Result_Error_Transfer_Inprogress = 12200 // 진행 중인 전송이 존재한다.
+	Result_Invalid_transfer_txid     = 12201 // 유효하지 않은 출금 txid
 
 	Result_RedisError_Lock_fail      = 18000 // redis lock error
 	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error

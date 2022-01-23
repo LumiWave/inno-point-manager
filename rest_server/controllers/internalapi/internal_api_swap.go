@@ -26,19 +26,3 @@ func (o *InternalAPI) PostPointCoinSwap(c echo.Context) error {
 
 	return commonapi.PostPointCoinSwap(params, ctx)
 }
-
-func (o *InternalAPI) PostCoinTransfer(c echo.Context) error {
-	ctx := base.GetContext(c).(*context.PointManagerContext)
-
-	params := context.NewReqCoinTransfer()
-	if err := ctx.EchoContext.Bind(params); err != nil {
-		log.Error(err)
-		return base.BaseJSONInternalServerError(c, err)
-	}
-
-	if err := params.CheckValidate(ctx); err != nil {
-		return c.JSON(http.StatusOK, err)
-	}
-
-	return commonapi.PostCoinTransfer(params, ctx)
-}

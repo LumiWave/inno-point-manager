@@ -11,10 +11,8 @@ import (
 )
 
 func (o *ExternalAPI) PostCoinTransferResultDeposit(c echo.Context) error {
-	ctx := base.GetContext(c).(*context.PointManagerContext)
-
 	params := context.NewReqCoinTransferResDeposit()
-	if err := ctx.EchoContext.Bind(params); err != nil {
+	if err := c.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
@@ -23,14 +21,12 @@ func (o *ExternalAPI) PostCoinTransferResultDeposit(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostCoinTransferResultDeposit(params, ctx)
+	return commonapi.PostCoinTransferResultDeposit(params, c)
 }
 
 func (o *ExternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
-	ctx := base.GetContext(c).(*context.PointManagerContext)
-
 	params := context.NewReqCoinTransferResWithdrawal()
-	if err := ctx.EchoContext.Bind(params); err != nil {
+	if err := c.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
@@ -39,5 +35,5 @@ func (o *ExternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostCoinTransferResultWithdrawal(params, ctx)
+	return commonapi.PostCoinTransferResultWithdrawal(params, c)
 }

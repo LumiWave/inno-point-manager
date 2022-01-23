@@ -96,3 +96,9 @@ func (o *DB) UpdateApplicationPoints(appId, pointId, adjustQuantity, adjustExcha
 
 	return dailyQuantity, dailyExchangeQuantity, resetDate, nil
 }
+
+func (o *DB) UpdateAccountCoins(auid, coinid int64, walletAddress string, previousCoinQuantity, adjustCoinQuantity, coinQuantity float64,
+	logID context.LogID_type, eventID context.EventID_type) error {
+
+	return nil
+}
