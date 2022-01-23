@@ -1,4 +1,4 @@
-package internalapi
+package externalapi
 
 import (
 	"net/http"
@@ -10,11 +10,10 @@ import (
 	"github.com/labstack/echo"
 )
 
-// app app 포인트 코인 swap 처리 요청
-func (o *InternalAPI) PostPointCoinSwap(c echo.Context) error {
+func (o *ExternalAPI) PostCoinTransferResultDeposit(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewReqSwapInfo()
+	params := context.NewReqCoinTransferResDeposit()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
@@ -24,21 +23,21 @@ func (o *InternalAPI) PostPointCoinSwap(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostPointCoinSwap(params, ctx)
+	return commonapi.PostCoinTransferResultDeposit(params, ctx)
 }
 
-func (o *InternalAPI) PostCoinTransfer(c echo.Context) error {
+func (o *ExternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewReqCoinTransfer()
+	params := context.NewReqCoinTransferResWithdrawal()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(ctx); err != nil {
+	if err := params.CheckValidate(); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostCoinTransfer(params, ctx)
+	return commonapi.PostCoinTransferResultWithdrawal(params, ctx)
 }

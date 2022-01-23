@@ -1,7 +1,8 @@
 package resultcode
 
 const (
-	Result_Success = 0
+	Result_Success            = 0
+	ResultInternalServerError = 500
 
 	Result_Require_PageInfo               = 10001 // 유효한 페이지 정보 필요
 	Result_Require_MemberIdx              = 11002 // 맴버 index 정보 푤이
@@ -31,7 +32,12 @@ const (
 	Result_Error_Exchangeratio_ToCoin  = 12102 // 코인으로 전환 비율 에러
 	Result_Error_Exchangeratio_ToPoint = 12103 // 포인트로 전환 비율 에러
 
-	Result_RedisError_Lock_fail       = 18000 // redis lock error
+	Result_Error_Transfer_Inprogress = 12200 // 진행 중인 전송이 존재한다.
+
+	Result_RedisError_Lock_fail      = 18000 // redis lock error
+	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error
+	Result_RedisError_SetTransfer_Tx = 18002 // redis set coin tranfer error
+
 	Result_Error_DB_GetPointAppList   = 18100 // db member point 조회 에러
 	Result_Error_DB_UpdateAppPoint    = 18101 // db point update 에러
 	Result_Error_DB_PostPointCoinSwap = 18102 // db swap 에러
@@ -52,7 +58,8 @@ const (
 )
 
 var ResultCodeText = map[int]string{
-	Result_Success: "success",
+	Result_Success:            "success",
+	ResultInternalServerError: "internal server error",
 
 	Result_Require_PageInfo:               "require page info",
 	Result_Require_MemberIdx:              "require member index",
@@ -72,7 +79,11 @@ var ResultCodeText = map[int]string{
 	Result_Error_Exchangeratio_ToCoin:        "Coin Exchange ratio error",
 	Result_Error_Exchangeratio_ToPoint:       "Point Exchange ratio error",
 
+	Result_Error_Transfer_Inprogress: "Transfer in progress",
+
 	Result_RedisError_Lock_fail:       "Redis lock error.",
+	Result_RedisError_SetTransfer:     "Redis Coin transfer set error",
+	Result_RedisError_SetTransfer_Tx:  "Redis Coin transfer by Txid set error",
 	Result_Error_DB_GetPointAppList:   "db member point scan error",
 	Result_Error_DB_UpdateAppPoint:    "db point update error",
 	Result_Error_DB_PostPointCoinSwap: "db swap error",

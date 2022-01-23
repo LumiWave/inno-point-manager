@@ -11,6 +11,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/externalapi"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/internalapi"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/token_manager_server"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/schedule"
 )
@@ -31,6 +32,8 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	if err := o.InitScheduler(); err != nil {
 		return err
 	}
+
+	o.InitTokenManagerServer(o.conf)
 
 	if err := o.NewDB(o.conf); err != nil {
 		return err
@@ -68,6 +71,17 @@ func (o *ServerApp) InitScheduler() error {
 	o.sysMonitor = schedule.GetSystemMonitor()
 
 	return nil
+}
+
+func (o *ServerApp) InitTokenManagerServer(conf *config.ServerConfig) {
+	pointMgrServer := conf.TokenMgrServer
+	hostInfo := token_manager_server.HostInfo{
+		IntHostUri: pointMgrServer.InternalpiDomain,
+		ExtHostUri: pointMgrServer.ExternalpiDomain,
+		IntVer:     pointMgrServer.InternalVer,
+		ExtVer:     pointMgrServer.ExternalVer,
+	}
+	token_manager_server.NewTokenManagerServerInfo("", hostInfo)
 }
 
 func (o *ServerApp) NewDB(conf *config.ServerConfig) error {

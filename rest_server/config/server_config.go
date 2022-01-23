@@ -30,15 +30,23 @@ type MssqlPoint struct {
 	Password string `json:"password" yaml:"password"`
 }
 
+type ApiTokenManagerServer struct {
+	InternalpiDomain string `yaml:"api_internal_domain"`
+	ExternalpiDomain string `yaml:"api_external_domain"`
+	InternalVer      string `yaml:"internal_ver"`
+	ExternalVer      string `yaml:"external_ver"`
+}
+
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager           PointManager    `yaml:"point_manager"`
-	MssqlDBAccountAll  baseconf.DBAuth `yaml:"mssql_db_account"`
-	MssqlDBAccountRead baseconf.DBAuth `yaml:"mssql_db_account_read"`
-	MssqlDBPointAll    baseconf.DBAuth `yaml:"mssql_db_point"`
-	MssqlDBPointRead   baseconf.DBAuth `yaml:"mssql_db_point_read"`
-	Auth               ApiAuth         `yaml:"api_auth"`
+	PManager           PointManager          `yaml:"point_manager"`
+	MssqlDBAccountAll  baseconf.DBAuth       `yaml:"mssql_db_account"`
+	MssqlDBAccountRead baseconf.DBAuth       `yaml:"mssql_db_account_read"`
+	MssqlDBPointAll    baseconf.DBAuth       `yaml:"mssql_db_point"`
+	MssqlDBPointRead   baseconf.DBAuth       `yaml:"mssql_db_point_read"`
+	Auth               ApiAuth               `yaml:"api_auth"`
+	TokenMgrServer     ApiTokenManagerServer `yaml:"api_token_manager_server"`
 }
 
 func GetInstance(filepath ...string) *ServerConfig {

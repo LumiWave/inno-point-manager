@@ -4,7 +4,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 )
 
-///////// member private 토큰 swap 요청
+///////// member app coin swap 요청
 type SwapPoint struct {
 	MUID                  int64 `json:"mu_id"`
 	AppID                 int64 `json:"app_id"` // 요청 인자
