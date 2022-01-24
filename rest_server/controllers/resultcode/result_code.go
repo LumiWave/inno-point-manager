@@ -39,9 +39,10 @@ const (
 	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error
 	Result_RedisError_SetTransfer_Tx = 18002 // redis set coin tranfer error
 
-	Result_Error_DB_GetPointAppList   = 18100 // db member point 조회 에러
-	Result_Error_DB_UpdateAppPoint    = 18101 // db point update 에러
-	Result_Error_DB_PostPointCoinSwap = 18102 // db swap 에러
+	Result_Error_DB_GetPointAppList               = 18100 // db member point 조회 에러
+	Result_Error_DB_UpdateAppPoint                = 18101 // db point update 에러
+	Result_Error_DB_PostPointCoinSwap             = 18102 // db swap 에러
+	Result_Error_DB_GetAccountCoinByWalletAddress = 18103 // db 지갑 주소 기중 acount coin 조회 에러
 
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
@@ -82,12 +83,14 @@ var ResultCodeText = map[int]string{
 
 	Result_Error_Transfer_Inprogress: "Transfer in progress",
 
-	Result_RedisError_Lock_fail:       "Redis lock error.",
-	Result_RedisError_SetTransfer:     "Redis Coin transfer set error",
-	Result_RedisError_SetTransfer_Tx:  "Redis Coin transfer by Txid set error",
-	Result_Error_DB_GetPointAppList:   "db member point scan error",
-	Result_Error_DB_UpdateAppPoint:    "db point update error",
-	Result_Error_DB_PostPointCoinSwap: "db swap error",
+	Result_RedisError_Lock_fail:      "Redis lock error.",
+	Result_RedisError_SetTransfer:    "Redis Coin transfer set error",
+	Result_RedisError_SetTransfer_Tx: "Redis Coin transfer by Txid set error",
+
+	Result_Error_DB_GetPointAppList:               "db member point scan error",
+	Result_Error_DB_UpdateAppPoint:                "db point update error",
+	Result_Error_DB_PostPointCoinSwap:             "db swap error",
+	Result_Error_DB_GetAccountCoinByWalletAddress: "db get coin info error",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",

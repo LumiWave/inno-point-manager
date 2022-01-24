@@ -3,6 +3,7 @@ package inner
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
@@ -23,7 +24,7 @@ func Transfer(params *context.ReqCoinTransfer) *base.BaseResponse {
 	//4. 콜백(internal api)으로 완료or실패 확인 후 db 프로지저 호출, redis 삭제
 
 	// 0. redis lock
-	Lockkey := model.MakeMemberPointListLockKey(params.AUID)
+	Lockkey := model.MakeCoinTransferLockKey(params.AUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
@@ -64,6 +65,8 @@ func Transfer(params *context.ReqCoinTransfer) *base.BaseResponse {
 		params.TransactionId = res.Value.TransactionId
 	}
 
+	params.ActionDate = time.Unix(time.Now().Unix(), 0)
+
 	//3. redis에 전송 정보 저장
 	if err := model.GetDB().SetCacheCoinTransfer(key, params); err != nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer])
@@ -89,8 +92,26 @@ func TransferResultDeposit(params *context.ReqCoinTransferResDeposit) *base.Base
 	resp.Success()
 
 	// 입금 주소로 db 검색해서 AUID추출
-	// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
+	meCoin, err := model.GetDB().GetAccountCoinsByWalletAddress(params.ToAddress)
+	if err != nil {
+		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+		return resp
+	}
 
+	// USPAU_Mod_AccountCoins 호출 하여 코인량 갱신
+	adjustQuantity, _ := strconv.ParseFloat(params.Amount, 64)
+
+	if err := model.GetDB().UpdateAccountCoins(
+		meCoin.AUID,
+		meCoin.CoinID,
+		params.ToAddress,
+		meCoin.Quantity,
+		adjustQuantity,
+		meCoin.Quantity+adjustQuantity,
+		context.LogID_external_wallet,
+		context.EventID_add); err != nil {
+		log.Errorf("UpdateAccountCoins error : %v", err)
+	}
 	return resp
 }
 
@@ -129,7 +150,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			transferInfo.CoinID,
 			meCoin.WalletAddress,
 			meCoin.Quantity,
-			-transferInfo.Quantity,
+			-transferInfo.TotalQuantity,
 			meCoin.Quantity-transferInfo.TotalQuantity,
 			context.LogID_external_wallet,
 			context.EventID_sub); err != nil {

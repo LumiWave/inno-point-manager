@@ -83,3 +83,12 @@ type AccountCoin struct {
 }
 
 ////////////////////////////////////////
+
+///////// 코인 정보 조회 by 지갑 주소
+type AccountCoinByWalletAddress struct {
+	AUID     int64   `json:"au_id"`
+	CoinID   int64   `json:"coin_id"`
+	Quantity float64 `json:"quantity"`
+}
+
+////////////////////////////////////////

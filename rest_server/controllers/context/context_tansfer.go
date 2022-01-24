@@ -1,6 +1,10 @@
 package context
 
-import "github.com/ONBUFF-IP-TOKEN/baseapp/base"
+import (
+	"time"
+
+	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+)
 
 ///////// 코인 외부 지갑 전송 요청
 type ReqCoinTransfer struct {
@@ -15,6 +19,8 @@ type ReqCoinTransfer struct {
 	TotalQuantity float64 `json:"total_quantity" url:"total_quantity"` // 보낼 코인량 + 전송 수수료
 	ReqId         string  `json:"reqid"`
 	TransactionId string  `json:"transaction_id"`
+
+	ActionDate time.Time `json:"action_date"`
 }
 
 func NewReqCoinTransfer() *ReqCoinTransfer {
