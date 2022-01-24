@@ -110,10 +110,34 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 
 	// 응답 status 성공 여부 체크
 	if strings.EqualFold(params.Status, "success") {
+		// from address, 이전 코인량 검색, 전송후 남은량 계산
+		_, coinsMap, err := model.GetDB().GetAccountCoins(transferInfo.AUID)
+		if err != nil {
+			log.Errorf("GetAccountCoins error : %v", err)
+			model.MakeDbError(resp, resultcode.Result_DBError, err)
+		}
+
+		meCoin, ok := coinsMap[transferInfo.CoinID]
+		if !ok {
+			log.Errorf("Not file my coinid : %v", transferInfo.CoinID)
+			return resp
+		}
+
 		// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
-		_ = transferInfo
+		if err := model.GetDB().UpdateAccountCoins(
+			transferInfo.AUID,
+			transferInfo.CoinID,
+			meCoin.WalletAddress,
+			meCoin.Quantity,
+			-transferInfo.Quantity,
+			meCoin.Quantity-transferInfo.TotalQuantity,
+			context.LogID_external_wallet,
+			context.EventID_sub); err != nil {
+			log.Errorf("UpdateAccountCoins error : %v", err)
+		}
 	} else if strings.EqualFold(params.Status, "failure") {
 		// 실패 한 경우 두가지 redis 삭제만 유도한다.
+		log.Warnf("coin withdrawal callback failure : %v", params.Txid)
 	}
 
 	// redis 두가지 삭제

@@ -4,7 +4,8 @@ import "github.com/ONBUFF-IP-TOKEN/baseapp/base"
 
 ///////// 코인 외부 지갑 전송 요청
 type ReqCoinTransfer struct {
-	AUID       int64   `json:"au_id" url:"au_id"`             // 계정의 UID (Access Token에서 가져옴)
+	AUID       int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
+	CoinID     int64   `json:"coin_id" url:"coin_id"`
 	CoinSymbol string  `json:"coin_symbol" url:"coin_symbol"` // 코인 심볼
 	ToAddress  string  `json:"to_address" url:"to_address"`   // 보낼 지갑 주소
 	Quantity   float64 `json:"quantity" url:"quantity"`       // 보낼 코인량

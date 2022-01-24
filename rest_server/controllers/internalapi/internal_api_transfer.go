@@ -25,3 +25,31 @@ func (o *InternalAPI) PostCoinTransfer(c echo.Context) error {
 
 	return commonapi.PostCoinTransfer(params, ctx)
 }
+
+func (o *InternalAPI) PostCoinTransferResultDeposit(c echo.Context) error {
+	params := context.NewReqCoinTransferResDeposit()
+	if err := c.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PostCoinTransferResultDeposit(params, c)
+}
+
+func (o *InternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
+	params := context.NewReqCoinTransferResWithdrawal()
+	if err := c.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PostCoinTransferResultWithdrawal(params, c)
+}

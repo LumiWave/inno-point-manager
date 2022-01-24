@@ -1,6 +1,8 @@
 package context
 
 import (
+	"time"
+
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
@@ -66,6 +68,18 @@ type WalletInfo struct {
 type ResPointMemberWallet struct {
 	AUID       int64        `json:"au_id"`
 	WalletInfo []WalletInfo `json:"wallet_info"`
+}
+
+////////////////////////////////////////
+
+///////// 코인 정보 조회
+type AccountCoin struct {
+	CoinID            int64     `json:"coin_id"`
+	WalletAddress     string    `json:"wallet_address"`
+	Quantity          float64   `json:"quantity"`
+	TodayAcqQuantity  float64   `json:"today_acq_quantity" query:"today_acq_quantity"`
+	TodayCnsmQuantity float64   `json:"today_cnsm_quantity" query:"today_cnsm_quantity"`
+	ResetDate         time.Time `json:"reset_date" query:"reset_date"`
 }
 
 ////////////////////////////////////////
