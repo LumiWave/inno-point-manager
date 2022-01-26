@@ -53,3 +53,22 @@ func (o *InternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
 
 	return commonapi.PostCoinTransferResultWithdrawal(params, c)
 }
+
+// tranfer 중인 상태 정보 요청
+func (o *InternalAPI) GetCoinTransferExistInProgress(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+	params := context.NewGetCoinTransferExistInProgress()
+
+	// Request json 파싱
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Errorf("%v", err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	// 유효성 체크
+	if err := params.CheckValidate(ctx); err != nil {
+		log.Errorf("%v", err)
+		return c.JSON(http.StatusOK, err)
+	}
+	return commonapi.GetCoinTransferExistInProgress(params, ctx)
+}

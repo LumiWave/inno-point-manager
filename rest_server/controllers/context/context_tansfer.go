@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
 ///////// 코인 외부 지갑 전송 요청
@@ -28,6 +29,24 @@ func NewReqCoinTransfer() *ReqCoinTransfer {
 }
 
 func (o *ReqCoinTransfer) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	return nil
+}
+
+////////////////////////////////////////
+
+///////// transfer 중인 상태 정보 요청
+type GetCoinTransferExistInProgress struct {
+	AUID int64 `json:"au_id" query:"au_id"`
+}
+
+func NewGetCoinTransferExistInProgress() *GetCoinTransferExistInProgress {
+	return new(GetCoinTransferExistInProgress)
+}
+
+func (o *GetCoinTransferExistInProgress) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
 	return nil
 }
 

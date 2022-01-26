@@ -177,3 +177,27 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 
 	return resp
 }
+
+func IsExistInprogressTransfer(params *context.GetCoinTransferExistInProgress) *base.BaseResponse {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	Lockkey := model.MakeCoinTransferLockKey(params.AUID)
+	unLock, err := model.AutoLock(Lockkey)
+	if err != nil {
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
+	} else {
+		// 0-1. redis unlock
+		defer unLock()
+	}
+
+	key := model.MakeCoinTransferKey(params.AUID)
+	reqCoinTransfer, err := model.GetDB().GetCacheCoinTransfer(key)
+	if err == nil {
+		// 전송중인 기존 정보가 있다면 값을 추가해준다.
+		resp.Value = reqCoinTransfer
+	}
+
+	return resp
+}

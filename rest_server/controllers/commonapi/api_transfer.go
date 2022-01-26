@@ -20,6 +20,17 @@ func PostCoinTransfer(params *context.ReqCoinTransfer, ctx *context.PointManager
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
 
+func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgress, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	if res := inner.IsExistInprogressTransfer(params); res != nil {
+		resp = res
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
 func PostCoinTransferResultDeposit(params *context.ReqCoinTransferResDeposit, c echo.Context) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
