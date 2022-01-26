@@ -18,14 +18,3 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
-
-func GetSwapExistInProgress(params *context.GetSwapExistInProgress, ctx *context.PointManagerContext) error {
-	resp := new(base.BaseResponse)
-	resp.Success()
-
-	if res := inner.IsExistInprogressSwap(params); res != nil {
-		resp = res
-	}
-
-	return ctx.EchoContext.JSON(http.StatusOK, resp)
-}
