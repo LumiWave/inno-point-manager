@@ -23,7 +23,7 @@ func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_Scan_DatabaseServers QueryContext error : %v", err)
 		return nil, err
 	}
 
@@ -45,7 +45,7 @@ func (o *DB) GetPointList() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Points, &rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_Scan_Points QueryContext error : %v", err)
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (o *DB) GetPointList() error {
 			}
 			o.ScanPointsMap[pointId] = info
 		} else {
-			log.Warn("GetPointList err :", err)
+			log.Warnf("USPAU_Scan_Points Scan err : %v", err)
 		}
 	}
 
@@ -163,7 +163,7 @@ func (o *DB) GetAppPoints() error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationPoints, &rs)
 	if err != nil {
-		log.Error("USPAU_Scan_ApplicationPoints QueryContext error : %v", err)
+		log.Errorf("USPAU_Scan_ApplicationPoints QueryContext error : %v", err)
 		return err
 	}
 

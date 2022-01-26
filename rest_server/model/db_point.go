@@ -31,15 +31,15 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
 		&rs); err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPPO_Rgstr_Members QueryContext error : %v", err)
 		return err
 	}
 
 	if rs == resultcode.Result_Error_duplicate_auid {
-		log.Error("returnStatus Result_Error_duplicate_auid : ", rs)
+		log.Errorf("USPPO_Rgstr_Members returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		log.Errorf("USPPO_Rgstr_Members returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
@@ -58,7 +58,7 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 		sql.Named("MUID", MUID),
 		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPPO_GetList_MemberPoints QueryContext error : %v", err)
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 		sql.Named("PointID", PointID),
 		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPPO_Get_MemberPoints QueryContext error : %v", err)
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error
 	}
 
 	if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		log.Errorf("USPPO_Get_MemberPoints returnStatus : %v", rs)
 		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
@@ -141,15 +141,15 @@ func (o *DB) InsertMemberPoints(dbID, muID, pointID, quantity int64) error {
 		sql.Named("PointID", pointID),
 		sql.Named("Quantity", quantity),
 		&rs); err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPPO_Add_MemberPoints QueryContext error : %v", err)
 		return err
 	}
 
 	if rs == resultcode.Result_Error_Invalid_data {
-		log.Error("returnStatus Result_Error_Invalid_data : ", rs)
+		log.Errorf("USPPO_Add_MemberPoints returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		log.Errorf("USPPO_Add_MemberPoints returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
@@ -178,15 +178,15 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		sql.Named("TodayLimitedQuantity", sql.Out{Dest: &todayLimitedQuantity}),
 		sql.Named("ResetDate", sql.Out{Dest: &resetDate}),
 		&rs); err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPPO_Mod_MemberPoints QueryContext error : %v", err)
 		return 0, "", err
 	}
 
 	if rs == resultcode.Result_Error_Invalid_data {
-		log.Error("returnStatus Result_Error_Invalid_data : ", rs)
+		log.Errorf("USPPO_Mod_MemberPoints returnStatus Result_Error_Invalid_data : %v", rs)
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
-		log.Error("returnStatus Result_DBError_Unknown : ", rs)
+		log.Errorf("USPPO_Mod_MemberPoints returnStatus Result_DBError_Unknown : %v", rs)
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 

@@ -249,7 +249,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 					if val, ok := accountPoint[point.PointID]; ok {
 						point.TodayQuantity = val.TodayLimitedQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
-							log.Error(err)
+							log.Errorf("time parese error :%v", err)
 						} else {
 							point.ResetDate = t.Format("2006-01-02")
 						}
