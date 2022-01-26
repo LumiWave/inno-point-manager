@@ -20,6 +20,7 @@ func PostCoinTransfer(params *context.ReqCoinTransfer, ctx *context.PointManager
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
 
+// 코인 외부 지갑 전송 중인 상태 정보 요청
 func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgress, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()

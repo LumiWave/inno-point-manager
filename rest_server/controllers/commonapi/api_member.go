@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
@@ -14,6 +15,7 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	log.Infof("register member [AUID:%v][MUDI:%v]", req.AUID, req.MUID)
 	if err := model.GetDB().InsertPointMember(req); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {

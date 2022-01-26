@@ -197,6 +197,9 @@ func IsExistInprogressTransfer(params *context.GetCoinTransferExistInProgress) *
 	if err == nil {
 		// 전송중인 기존 정보가 있다면 값을 추가해준다.
 		resp.Value = reqCoinTransfer
+	} else {
+		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_NotExistInprogress])
+		resp.SetReturn(resultcode.Result_Error_Transfer_NotExistInprogress)
 	}
 
 	return resp

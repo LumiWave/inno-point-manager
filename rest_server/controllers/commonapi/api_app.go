@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
@@ -13,6 +14,8 @@ import (
 
 // 맴버 포인트 리스트 정보 조회
 func GetPointAppList(req *context.ReqGetPointApp, ctx *context.PointManagerContext) error {
+	log.Debugf("GetPointAppList [AppID:%v][MUID:%v][PointID:%v]", req.AppId, req.MUID, req.PointID)
+
 	resp := new(base.BaseResponse)
 	resp.Success()
 

@@ -32,8 +32,9 @@ const (
 	Result_Error_Exchangeratio_ToCoin  = 12102 // 코인으로 전환 비율 에러
 	Result_Error_Exchangeratio_ToPoint = 12103 // 포인트로 전환 비율 에러
 
-	Result_Error_Transfer_Inprogress = 12200 // 진행 중인 전송이 존재한다.
-	Result_Invalid_transfer_txid     = 12201 // 유효하지 않은 출금 txid
+	Result_Error_Transfer_Inprogress         = 12200 // 진행 중인 전송이 존재한다.
+	Result_Error_Transfer_NotExistInprogress = 12201 // 진행 중인 전송이 존재하지 않는다.
+	Result_Invalid_transfer_txid             = 12202 // 유효하지 않은 출금 txid
 
 	Result_RedisError_Lock_fail      = 18000 // redis lock error
 	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error
@@ -81,7 +82,9 @@ var ResultCodeText = map[int]string{
 	Result_Error_Exchangeratio_ToCoin:        "Coin Exchange ratio error",
 	Result_Error_Exchangeratio_ToPoint:       "Point Exchange ratio error",
 
-	Result_Error_Transfer_Inprogress: "Transfer in progress",
+	Result_Error_Transfer_Inprogress:         "Transfer inprogress",
+	Result_Error_Transfer_NotExistInprogress: "Not exist transfer inprogress",
+	Result_Invalid_transfer_txid:             "Invalid txid",
 
 	Result_RedisError_Lock_fail:      "Redis lock error.",
 	Result_RedisError_SetTransfer:    "Redis Coin transfer set error",
