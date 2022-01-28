@@ -2,111 +2,176 @@ package model
 
 import (
 	originCtx "context"
+	"database/sql"
+	"errors"
+	"strconv"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
 
 const (
-	USPAU_Scan_DatabaseServers  = "[dbo].[USPAU_Scan_DatabaseServers]"
-	USPAU_Scan_Points           = "[dbo].[USPAU_Scan_Points]"
-	USPAU_Scan_ApplicationCoins = "[dbo].[USPAU_Scan_ApplicationCoins]"
-	USPAU_Scan_Coins            = "[dbo].[USPAU_Scan_Coins]"
+	USPAU_GetList_AccountPoints              = "[dbo].[USPAU_GetList_AccountPoints]"
+	USPAU_GetList_AccountCoins               = "[dbo].[USPAU_GetList_AccountCoins]"
+	USPAU_GetList_AccountCoins_By_CoinString = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
+	USPAU_Get_AccountCoins_By_WalletAddress  = "[dbo].[USPAU_Get_AccountCoins_By_WalletAddress]"
+	USPAU_Mod_AccountCoins                   = "[dbo].[USPAU_Mod_AccountCoins]"
 )
 
-// point database 리스트 요청
-func (o *DB) GetPointDatabases() (map[int64]*PointDB, error) {
+// 계정 일일 포인트량 조회
+func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountPoint, error) {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountPoints,
+		sql.Named("AUID", auid),
+		sql.Named("MUID", muid),
+		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_GetList_AccountPoints QueryContext err : %v", err)
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	pointdbs := make(map[int64]*PointDB)
-
-	pointdb := new(PointDB)
+	accountPoints := make(map[int64]*context.AccountPoint)
 	for rows.Next() {
-		rows.Scan(&pointdb.DatabaseID, &pointdb.DatabaseName, &pointdb.ServerName)
-		pointdbs[pointdb.DatabaseID] = pointdb
+		accountPoint := context.AccountPoint{}
+		if err := rows.Scan(&accountPoint.AppId, &accountPoint.PointId, &accountPoint.TodayLimitedQuantity,
+			&accountPoint.TodayAcqQuantity, &accountPoint.TodayCnsmQuantity, &accountPoint.ResetDate); err == nil {
+			accountPoints[accountPoint.PointId] = &accountPoint
+		}
+	}
+	if rs != 1 {
+		log.Errorf("USPAU_GetList_AccountPoints returnvalue error : %v", rs)
+		return nil, errors.New("USPAU_GetList_AccountPoints returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
-	return pointdbs, nil
+	return accountPoints, nil
 }
 
-// point 전체 list
-func (o *DB) GetPointList() error {
+// 코인 정보 조회
+func (o *DB) GetAccountCoins(auid int64) ([]*context.AccountCoin, map[int64]*context.AccountCoin, error) {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Points, &rs)
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins,
+		sql.Named("AUID", auid),
+		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
-		return err
+		log.Errorf("USPAU_GetList_AccountCoins QueryContext err : %v", err)
+		return nil, nil, err
 	}
 
 	defer rows.Close()
 
-	var pointId, appId int64
+	accountCoins := []*context.AccountCoin{}
+	accountCoinsMap := make(map[int64]*context.AccountCoin)
 	for rows.Next() {
-		if err := rows.Scan(&pointId, &appId); err == nil {
-			points := o.PointList[appId]
-			points.PointIds = append(points.PointIds, pointId)
-			o.PointList[appId] = points
+		accountCoin := &context.AccountCoin{}
+		if err := rows.Scan(&accountCoin.CoinID, &accountCoin.WalletAddress,
+			&accountCoin.Quantity, &accountCoin.TodayAcqQuantity, &accountCoin.TodayCnsmQuantity, &accountCoin.ResetDate); err == nil {
+			accountCoins = append(accountCoins, accountCoin)
+			accountCoinsMap[accountCoin.CoinID] = accountCoin
 		}
 	}
+	if rs != 1 {
+		log.Errorf("USPAU_GetList_AccountCoins returnvalue error : %v", rs)
+		return nil, nil, errors.New("USPAU_GetList_AccountCoins returnvalue error " + strconv.Itoa(int(rs)))
+	}
 
-	return nil
+	return accountCoins, accountCoinsMap, nil
 }
 
-// 전체 app coinid list
-func (o *DB) GetAppCoins() error {
+// 지갑 정보 조회
+func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID int64) (*context.ResPointMemberWallet, error) {
+	coinIds := ""
+	for _, coinId := range o.AppCoins[appID] {
+		coinIds += "/" + strconv.FormatInt(coinId.CoinId, 10)
+	}
+
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationCoins, &rs)
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountCoins_By_CoinString,
+		sql.Named("AUID", params.AUID),
+		sql.Named("CoinString", coinIds),
+		sql.Named("RowSeparator", "/"),
+		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
-		return err
+		log.Errorf("USPAU_GetList_AccountCoins_By_CoinString QueryContext err : %v", err)
+		return nil, err
 	}
 
 	defer rows.Close()
 
+	walletInfos := &context.ResPointMemberWallet{
+		AUID: params.AUID,
+	}
+	WalletInfo := context.WalletInfo{}
 	for rows.Next() {
-		appCoin := &AppCoin{}
-		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinID); err == nil {
-			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], appCoin)
+		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
+			WalletInfo.CoinSymbol = o.Coins[WalletInfo.CoinID].CoinSymbol
+			walletInfos.WalletInfo = append(walletInfos.WalletInfo, WalletInfo)
 		}
 	}
 
-	return nil
+	if rs != 1 {
+		log.Errorf("USPAU_GetList_AccountCoins_By_CoinString returnvalue error : %v", rs)
+		return nil, errors.New("USPAU_GetList_AccountCoins_By_CoinString returnvalue error " + strconv.Itoa(int(rs)))
+	}
+
+	return walletInfos, nil
 }
 
-// 전체 coin info list
-func (o *DB) GetCoins() error {
+// 지갑 주소로 AUID, coinID 검색
+func (o *DB) GetAccountCoinsByWalletAddress(walletAddress string) (*context.AccountCoinByWalletAddress, error) {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccount.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Coins, &rs)
+	var auID, coinID int64
+	var quantity float64
+	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountCoins_By_WalletAddress,
+		sql.Named("WalletAddress", walletAddress),
+		sql.Named("AUID", sql.Out{Dest: &auID}),
+		sql.Named("CoinID", sql.Out{Dest: &coinID}),
+		sql.Named("Quantity", sql.Out{Dest: &quantity}),
+		&rs)
 	if err != nil {
-		log.Error("QueryContext err : ", err)
+		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress QueryContext err : %v", err)
+		return nil, err
+	}
+
+	meCoin := &context.AccountCoinByWalletAddress{
+		AUID:     auID,
+		CoinID:   coinID,
+		Quantity: quantity,
+	}
+
+	if rs != 1 {
+		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error : %v", rs)
+		return nil, errors.New("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error " + strconv.Itoa(int(rs)))
+	}
+
+	return meCoin, nil
+}
+
+// 내 코인 정보 수정
+func (o *DB) UpdateAccountCoins(auid, coinid int64, walletAddress string, previousCoinQuantity, adjustCoinQuantity, coinQuantity float64,
+	logID context.LogID_type, eventID context.EventID_type) error {
+
+	var rs orginMssql.ReturnStatus
+	_, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
+		sql.Named("AUID", auid),
+		sql.Named("CoinID", coinid),
+		sql.Named("WalletAddress", walletAddress),
+		sql.Named("PreQuantity", previousCoinQuantity),
+		sql.Named("AdjQuantity", adjustCoinQuantity),
+		sql.Named("Quantity", coinQuantity),
+		sql.Named("LogID", logID),
+		sql.Named("EventID", eventID),
+		&rs)
+	if err != nil {
+		log.Errorf("USPAU_Mod_AccountCoins QueryContext err : %v", err)
 		return err
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		coin := &Coin{}
-		if err := rows.Scan(&coin.CoinID, &coin.CoinName); err == nil {
-			o.Coins[coin.CoinID] = coin
-		}
-	}
-
-	for _, appCoins := range o.AppCoins {
-		for _, appCoin := range appCoins {
-			for coinId, coin := range o.Coins {
-				if appCoin.CoinID == coinId {
-					appCoin.CoinName = coin.CoinName
-					break
-				}
-			}
-		}
+	if rs != 1 {
+		log.Errorf("USPAU_Mod_AccountCoins returnvalue error : %v", rs)
+		return errors.New("USPAU_Mod_AccountCoins returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return nil

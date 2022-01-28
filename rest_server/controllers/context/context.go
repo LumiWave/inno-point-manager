@@ -18,7 +18,7 @@ func NewPointManagerContext(baseCtx *base.BaseContext) interface{} {
 
 	ctx := new(PointManagerContext)
 	ctx.BaseContext = baseCtx
-
+	ctx.VerifyValue = new(auth.VerifyAuthToken)
 	return ctx
 }
 

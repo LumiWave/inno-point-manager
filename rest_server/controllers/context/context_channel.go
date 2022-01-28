@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	TokenChannel = "TokenChannel"
+	Channel_AppPoint = "AppPoint"
 )
 
 var gContext *ChanContext
@@ -15,7 +15,7 @@ var gOnceChan sync.Once
 func GetChanInstance() *ChanContext {
 	gOnceChan.Do(func() {
 		gContext = &ChanContext{}
-		context.data = make(map[string]interface{})
+		gContext.data = make(map[string]interface{})
 	})
 
 	return gContext

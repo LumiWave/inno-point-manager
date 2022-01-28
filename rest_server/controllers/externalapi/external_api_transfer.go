@@ -10,12 +10,9 @@ import (
 	"github.com/labstack/echo"
 )
 
-// private 토큰 swap 요청
-func (o *ExternalAPI) PostPointTokenSwap(c echo.Context) error {
-	ctx := base.GetContext(c).(*context.PointManagerContext)
-
-	params := context.NewPostPointTokenSwap()
-	if err := ctx.EchoContext.Bind(params); err != nil {
+func (o *ExternalAPI) PostCoinTransferResultDeposit(c echo.Context) error {
+	params := context.NewReqCoinTransferResDeposit()
+	if err := c.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
@@ -24,15 +21,12 @@ func (o *ExternalAPI) PostPointTokenSwap(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostPointTokenSwap(params, ctx)
+	return commonapi.PostCoinTransferResultDeposit(params, c)
 }
 
-// private token swap 이력
-func (o *ExternalAPI) GetPointTokenSwapHistory(c echo.Context) error {
-	ctx := base.GetContext(c).(*context.PointManagerContext)
-
-	params := context.NewPointMemberTokenSwapHistory()
-	if err := ctx.EchoContext.Bind(params); err != nil {
+func (o *ExternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
+	params := context.NewReqCoinTransferResWithdrawal()
+	if err := c.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
 	}
@@ -41,5 +35,5 @@ func (o *ExternalAPI) GetPointTokenSwapHistory(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.GetPointTokenSwapHistory(params, ctx)
+	return commonapi.PostCoinTransferResultWithdrawal(params, c)
 }

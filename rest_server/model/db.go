@@ -1,24 +1,40 @@
 package model
 
 import (
+	"strconv"
+
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/basedb"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
-type PointDB struct {
-	DatabaseID   int64
-	DatabaseName string
-	ServerName   string
+type PointInfo struct {
+	PointId              int64   `json:"point_id,omitempty"`
+	PointName            string  `json:"point_name,omitempty"`
+	IconUrl              string  `json:"icon_url,omitempty"`
+	MinExchangeQuantity  int64   `json:"minimum_exchange_quantity"`
+	ExchangeRatio        float64 `json:"exchange_ratio"`
+	DaliyLimitedQuantity int64   `json:"daliy_limited_quantity,omitempty"`
 }
 
-type Point struct {
-	PointIds []int64
+type AppPointInfo struct {
+	AppId     int64                `json:"app_id,omitempty"`
+	AppName   string               `json:"app_name,omitempty"`
+	IconUrl   string               `json:"icon_url"`
+	Points    []*PointInfo         `json:"points"`
+	PointsMap map[int64]*PointInfo `json:"-"` // key pointId
 }
 
 type Coin struct {
-	CoinID   int64  `json:"coin_id"`
-	CoinName string `json:"coin_symbol"`
+	CoinId          int64   `json:"coin_id,omitempty"`
+	CoinSymbol      string  `json:"coin_symbol,omitempty"`
+	ContractAddress string  `json:"contract_address,omitempty"`
+	IconUrl         string  `json:"icon_url,omitempty"`
+	ExchangeFees    float64 `json:"exchange_fees"`
 }
 
 type AppCoin struct {
@@ -27,46 +43,122 @@ type AppCoin struct {
 }
 
 type DB struct {
-	Mysql        *basedb.Mysql
-	MssqlAccount *basedb.Mssql
-	Cache        *basedb.Cache
+	MssqlAccountAll  *basedb.Mssql
+	MssqlAccountRead *basedb.Mssql
+	Cache            *basedb.Cache
 
-	MssqlPoints map[int64]*basedb.Mssql
+	MssqlPointsAll  map[int64]*basedb.Mssql
+	MssqlPointsRead map[int64]*basedb.Mssql
 
 	PointDoc map[string]*MemberPointInfo
 
-	PointList map[int64]Point      // 전체 포인트 종류
-	AppCoins  map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
-	Coins     map[int64]*Coin      // 전체 coin 정보
+	//PointList     map[int64]PointInfo // 전체 포인트 종류
+	ScanPointsMap map[int64]PointInfo // 전체 포인트 종류 : key PointId
+
+	AppPointsMap map[int64]*AppPointInfo // 전체 app과 포인트 : key AppId
+
+	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
+	Coins    map[int64]*Coin      // 전체 coin 정보
 }
 
 var gDB *DB
-
-func SetDB(db *basedb.Mssql, cache *basedb.Cache, pointdbs map[int64]*basedb.Mssql) {
-	gDB = &DB{
-		MssqlAccount: db,
-		Cache:        cache,
-		MssqlPoints:  pointdbs,
-	}
-}
-
-func SetDBPoint(pointdbs map[int64]*basedb.Mssql) {
-	gDB.PointDoc = make(map[string]*MemberPointInfo)
-	gDB.PointList = make(map[int64]Point)
-	gDB.AppCoins = make(map[int64][]*AppCoin)
-	gDB.Coins = make(map[int64]*Coin)
-	gDB.MssqlPoints = pointdbs
-
-	gDB.GetPointList()
-	gDB.GetAppCoins()
-	gDB.GetCoins()
-}
 
 func GetDB() *DB {
 	return gDB
 }
 
+func InitDB(conf *config.ServerConfig) (err error) {
+	cache := basedb.GetCache(&conf.Cache)
+	gDB = &DB{
+		Cache: cache,
+	}
+
+	gDB.MssqlAccountAll, err = gDB.ConnectDB(&conf.MssqlDBAccountAll)
+	if err != nil {
+		return err
+	}
+
+	gDB.MssqlAccountRead, err = gDB.ConnectDB(&conf.MssqlDBAccountRead)
+	if err != nil {
+		return err
+	}
+
+	// point db create
+	gDB.MssqlPointsAll = make(map[int64]*basedb.Mssql)
+	gDB.MssqlPointsRead = make(map[int64]*basedb.Mssql)
+
+	if getPointDBs, err := gDB.GetPointDatabases(); err != nil {
+		return err
+	} else {
+		for _, pointDB := range getPointDBs {
+			mssqlDBAll, err := gDB.ConnectDBOfPoint(&conf.MssqlDBPointAll, pointDB)
+			if err != nil {
+				log.Errorf("err: %v, val: %v, %v, %v, %v",
+					err, pointDB.ServerName, conf.MssqlDBPointAll.ID, conf.MssqlDBPointAll.Password, pointDB.DatabaseName)
+				return err
+			}
+
+			mssqlDBRead, err := gDB.ConnectDBOfPoint(&conf.MssqlDBPointRead, pointDB)
+			if err != nil {
+				log.Errorf("err: %v, val: %v, %v, %v, %v",
+					err, pointDB.ServerName, conf.MssqlDBPointRead.ID, conf.MssqlDBPointRead.Password, pointDB.DatabaseName)
+				return err
+			}
+
+			gDB.MssqlPointsAll[pointDB.DatabaseID] = mssqlDBAll
+			gDB.MssqlPointsRead[pointDB.DatabaseID] = mssqlDBRead
+		}
+	}
+	LoadDBPoint()
+	return nil
+}
+
+func LoadDBPoint() {
+	gDB.PointDoc = make(map[string]*MemberPointInfo)
+	gDB.ScanPointsMap = make(map[int64]PointInfo)
+	gDB.AppPointsMap = make(map[int64]*AppPointInfo)
+	gDB.AppCoins = make(map[int64][]*AppCoin)
+	gDB.Coins = make(map[int64]*Coin)
+
+	// sequence is important
+	gDB.GetPointList()
+	gDB.GetAppCoins()
+	gDB.GetCoins()
+	gDB.GetApps()
+	gDB.GetAppPoints()
+}
+
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {
 	resp.Return = errCode
 	resp.Message = resultcode.ResultCodeText[errCode] + " : " + err.Error()
+}
+
+func (o *DB) ConnectDB(conf *baseconf.DBAuth) (*basedb.Mssql, error) {
+	port, _ := strconv.ParseInt(conf.Port, 10, 32)
+	mssqlDB, err := basedb.NewMssql(conf.Database, "", conf.ID, conf.Password, conf.Host, int(port))
+	if err != nil {
+		log.Errorf("err: %v, val: %v, %v, %v, %v, %v, %v",
+			err, conf.Host, conf.ID, conf.Password, conf.Database, conf.PoolSize, conf.IdleSize)
+		return nil, err
+	}
+
+	return mssqlDB, nil
+}
+
+func (o *DB) ConnectDBOfPoint(conf *baseconf.DBAuth, pointDB *context.PointDB) (*basedb.Mssql, error) {
+	port, _ := strconv.ParseInt(conf.Port, 10, 32)
+	mssqlDB, err := basedb.NewMssql(pointDB.DatabaseName,
+		"pointDB",
+		conf.ID,
+		conf.Password,
+		pointDB.ServerName,
+		int(port))
+
+	if err != nil {
+		log.Errorf("err: %v, val: %v, %v, %v, %v",
+			err, pointDB.ServerName, conf.ID, conf.Password, pointDB.DatabaseName)
+		return nil, err
+	}
+
+	return mssqlDB, nil
 }

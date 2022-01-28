@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
@@ -14,15 +15,16 @@ func PostPointMemberRegister(req *context.ReqPointMemberRegister, ctx *context.P
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	log.Infof("register member [AUID:%v][MUDI:%v]", req.AUID, req.MUID)
 	if err := model.GetDB().InsertPointMember(req); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		// 강제로 0 point 업데이트
-		for _, pointID := range model.GetDB().PointList[req.AppID].PointIds {
-			model.GetDB().UpdateAppPoint(req.MUID, pointID, 0, req.DatabaseID)
+		for _, pointInfo := range model.GetDB().AppPointsMap[req.AppID].Points {
+			model.GetDB().InsertMemberPoints(req.DatabaseID, req.MUID, pointInfo.PointId, 0)
 		}
 		// 포인트 정보 조회
-		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID); err != nil {
+		if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID, req.AppID); err != nil {
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		} else {
 			pointInfos := context.ResPointMemberRegister{
@@ -39,7 +41,7 @@ func GetPointMemberWallet(req *context.ReqPointMemberWallet, ctx *context.PointM
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if wallets, err := model.GetDB().GetPointMemberWallet(req, ctx.VerifyValue.AppID); err != nil {
+	if wallets, err := model.GetDB().GetPointMemberWallet(req, ctx.GetValue().AppID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		resp.Value = wallets
