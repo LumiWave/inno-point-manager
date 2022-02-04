@@ -1,6 +1,9 @@
 # Change Log
 =======
 
+## v2.0.1 (2022-02-04)
+- :hammer: Point Redis Expire 버그 수정
+
 ## v2.0.0 (2022-01-28)
 - :hammer: 환경별 빌드 및 배포 스크립트 개선
 - :hammer: Point 업데이트 로직 개선
