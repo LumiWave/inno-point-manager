@@ -91,16 +91,15 @@ func (o *MemberPointInfo) UpdateRun() {
 
 						point.AdjustQuantity = 0
 						point.PreQuantity = point.Quantity
+
+						o.PointInfo = pointInfo
+
+						// redis 에 write
+						if err := GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
+							log.Errorf("SetCacheMemberPointList [err:%v]", err)
+						}
 					}
 				}
-			}
-
-			//6. local save
-			o.PointInfo = pointInfo
-
-			// 7. redis 에 write
-			if err := GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
-				log.Errorf("SetCacheMemberPointList [err:%v]", err)
 			}
 
 			timer.Stop()
