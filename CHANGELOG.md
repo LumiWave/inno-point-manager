@@ -1,6 +1,9 @@
 # Change Log
 =======
 
+## v2.0.2 (2022-02-07)
+- :heavy_plus_sign: CoinName 정보 추가
+
 ## v2.0.1 (2022-02-04)
 - :hammer: Point Redis Expire 버그 수정
 
