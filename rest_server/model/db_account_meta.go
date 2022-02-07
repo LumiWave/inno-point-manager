@@ -109,7 +109,7 @@ func (o *DB) GetCoins() error {
 
 	for rows.Next() {
 		coin := &Coin{}
-		if err := rows.Scan(&coin.CoinId, &coin.CoinSymbol, &coin.ContractAddress, &coin.IconUrl, &coin.ExchangeFees); err == nil {
+		if err := rows.Scan(&coin.CoinId, &coin.CoinName, &coin.CoinSymbol, &coin.ContractAddress, &coin.IconUrl, &coin.ExchangeFees); err == nil {
 			o.Coins[coin.CoinId] = coin
 		} else {
 			log.Errorf("USPAU_Scan_Coins Scan error : %v", err)
@@ -120,6 +120,7 @@ func (o *DB) GetCoins() error {
 		for _, appCoin := range appCoins {
 			for _, coin := range o.Coins {
 				if appCoin.CoinId == coin.CoinId {
+					appCoin.CoinName = coin.CoinName
 					appCoin.CoinSymbol = coin.CoinSymbol
 					appCoin.ContractAddress = coin.ContractAddress
 					appCoin.IconUrl = coin.IconUrl
