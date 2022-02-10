@@ -73,7 +73,7 @@ func (o *SystemMonitor) CheckMetricInfo() *context.NodeMetric {
 
 func (o *SystemMonitor) getCpuUsage() uint64 {
 	percent, err := cpu.Percent(0, false)
-	if err != nil {
+	if err != nil || len(percent) <= 0 {
 		return 0
 	}
 
@@ -82,7 +82,7 @@ func (o *SystemMonitor) getCpuUsage() uint64 {
 
 func (o *SystemMonitor) getMemoryUsage() (uint64, uint64, float32) {
 	vmStat, err := mem.VirtualMemory()
-	if err != nil {
+	if err != nil || vmStat == nil {
 		return 0, 0, 0
 	}
 
