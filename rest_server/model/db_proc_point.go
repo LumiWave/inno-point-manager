@@ -60,7 +60,7 @@ func (o *MemberPointInfo) UpdateRun() {
 			pointInfo, err := GetDB().GetCacheMemberPointList(key)
 			if err != nil {
 				unLock() // redis unlock
-				log.Errorf("GetCacheMemberPointList [key:%v][err:%v]", key, err)
+				log.Infof("GetCacheMemberPointList [key:%v][err:%v]", key, err)
 				return
 			}
 			//4. myuuid check else go func end
