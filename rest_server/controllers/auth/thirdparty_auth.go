@@ -40,7 +40,7 @@ func CheckAuthToken(authToken string) (bool, *VerifyAuthToken, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+authToken)
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: 60 * time.Second}
 	resp, err := client.Do(req)
 
 	if err != nil {
