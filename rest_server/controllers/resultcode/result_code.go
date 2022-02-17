@@ -27,10 +27,12 @@ const (
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
 	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
 
-	Result_Error_MinPointQuantity      = 12100 // 포인트 최소 보유 수량 에러
-	Result_Error_MinCoinQuantity       = 12101 // 코인 최소 보유 수량 에러
-	Result_Error_Exchangeratio_ToCoin  = 12102 // 코인으로 전환 비율 에러
-	Result_Error_Exchangeratio_ToPoint = 12103 // 포인트로 전환 비율 에러
+	Result_Error_MinPointQuantity             = 12100 // 포인트 최소 보유 수량 에러
+	Result_Error_MinCoinQuantity              = 12101 // 코인 최소 보유 수량 에러
+	Result_Error_Exchangeratio_ToCoin         = 12102 // 코인으로 전환 비율 에러
+	Result_Error_Exchangeratio_ToPoint        = 12103 // 포인트로 전환 비율 에러
+	Result_Error_Exceed_DailyLimitedSwapPoint = 12104 // 일일 최대 포인트 전환량 초과
+	Result_Error_Exceed_DailyLimitedSwapCoin  = 12105 // 일일 최대 코인 전환량 초과
 
 	Result_Error_Transfer_Inprogress         = 12200 // 진행 중인 전송이 존재한다.
 	Result_Error_Transfer_NotExistInprogress = 12201 // 진행 중인 전송이 존재하지 않는다.
@@ -74,13 +76,15 @@ var ResultCodeText = map[int]string{
 	Result_Require_AdjustPointAmount:      "require adjust point amount",
 	Result_Require_PrivateTokenAmount:     "require private token amount",
 
-	Result_Error_LatestPointAmountIsDiffrent: "latest point information is different",
-	Result_Error_NotExistMember:              "Not exist member",
-	Result_Error_LackOfTokenQuantity:         "Lack of token quantity",
-	Result_Error_NotEqual_PreviousQuantity:   "not equal previous quantity",
-	Result_Error_Exceeded_TodayPoints_earned: "Exceeded today points earned",
-	Result_Error_Exchangeratio_ToCoin:        "Coin Exchange ratio error",
-	Result_Error_Exchangeratio_ToPoint:       "Point Exchange ratio error",
+	Result_Error_LatestPointAmountIsDiffrent:  "latest point information is different",
+	Result_Error_NotExistMember:               "Not exist member",
+	Result_Error_LackOfTokenQuantity:          "Lack of token quantity",
+	Result_Error_NotEqual_PreviousQuantity:    "not equal previous quantity",
+	Result_Error_Exceeded_TodayPoints_earned:  "Exceeded today points earned",
+	Result_Error_Exchangeratio_ToCoin:         "Coin Exchange ratio error",
+	Result_Error_Exchangeratio_ToPoint:        "Point Exchange ratio error",
+	Result_Error_Exceed_DailyLimitedSwapPoint: "daily points swap limit exceeded",
+	Result_Error_Exceed_DailyLimitedSwapCoin:  "daily coins swap limit exceeded",
 
 	Result_Error_Transfer_Inprogress:         "Transfer inprogress",
 	Result_Error_Transfer_NotExistInprogress: "Not exist transfer inprogress",

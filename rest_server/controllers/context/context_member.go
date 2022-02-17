@@ -74,12 +74,14 @@ type ResPointMemberWallet struct {
 
 ///////// 코인 정보 조회
 type AccountCoin struct {
-	CoinID            int64     `json:"coin_id"`
-	WalletAddress     string    `json:"wallet_address"`
-	Quantity          float64   `json:"quantity"`
-	TodayAcqQuantity  float64   `json:"today_acq_quantity" query:"today_acq_quantity"`
-	TodayCnsmQuantity float64   `json:"today_cnsm_quantity" query:"today_cnsm_quantity"`
-	ResetDate         time.Time `json:"reset_date" query:"reset_date"`
+	CoinID                    int64     `json:"coin_id"`
+	WalletAddress             string    `json:"wallet_address"`
+	Quantity                  float64   `json:"quantity"`
+	TodayAcqQuantity          float64   `json:"today_acq_quantity" query:"today_acq_quantity"`
+	TodayCnsmQuantity         float64   `json:"today_cnsm_quantity" query:"today_cnsm_quantity"`
+	TodayAcqExchangeQuantity  float64   `json:"today_acq_exchange_quantity" query:"today_acq_exchange_quantity"`
+	TodayCnsmExchangeQuantity float64   `json:"today_cnsm_exchange_quantity" query:"today_cnsm_exchange_quantity"`
+	ResetDate                 time.Time `json:"reset_date" query:"reset_date"`
 }
 
 ////////////////////////////////////////

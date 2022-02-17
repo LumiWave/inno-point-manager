@@ -13,12 +13,13 @@ import (
 )
 
 type PointInfo struct {
-	PointId              int64   `json:"point_id,omitempty"`
-	PointName            string  `json:"point_name,omitempty"`
-	IconUrl              string  `json:"icon_url,omitempty"`
-	MinExchangeQuantity  int64   `json:"minimum_exchange_quantity"`
-	ExchangeRatio        float64 `json:"exchange_ratio"`
-	DaliyLimitedQuantity int64   `json:"daliy_limited_quantity,omitempty"`
+	PointId                         int64   `json:"point_id,omitempty"`
+	PointName                       string  `json:"point_name,omitempty"`
+	IconUrl                         string  `json:"icon_url,omitempty"`
+	MinExchangeQuantity             int64   `json:"minimum_exchange_quantity"`
+	ExchangeRatio                   float64 `json:"exchange_ratio"`
+	DaliyLimitedAcqQuantity         int64   `json:"daliy_limited_acq_quantity,omitempty"`
+	DailyLimitedAcqExchangeQuantity int64   `json:"daily_limited_acq_exchange_quantity,omitempty"`
 }
 
 type AppPointInfo struct {
@@ -30,12 +31,13 @@ type AppPointInfo struct {
 }
 
 type Coin struct {
-	CoinId          int64   `json:"coin_id,omitempty"`
-	CoinName        string  `json:"coin_name"`
-	CoinSymbol      string  `json:"coin_symbol,omitempty"`
-	ContractAddress string  `json:"contract_address,omitempty"`
-	IconUrl         string  `json:"icon_url,omitempty"`
-	ExchangeFees    float64 `json:"exchange_fees"`
+	CoinId                          int64   `json:"coin_id,omitempty"`
+	CoinName                        string  `json:"coin_name"`
+	CoinSymbol                      string  `json:"coin_symbol,omitempty"`
+	ContractAddress                 string  `json:"contract_address,omitempty"`
+	IconUrl                         string  `json:"icon_url,omitempty"`
+	DailyLimitedAcqExchangeQuantity float64 `json:"daily_limited_acq_exchange_quantity"`
+	ExchangeFees                    float64 `json:"exchange_fees"`
 }
 
 type AppCoin struct {
@@ -59,7 +61,7 @@ type DB struct {
 	AppPointsMap map[int64]*AppPointInfo // 전체 app과 포인트 : key AppId
 
 	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
-	Coins    map[int64]*Coin      // 전체 coin 정보
+	Coins    map[int64]*Coin      // 전체 coin 정보 : key coinID
 }
 
 var gDB *DB

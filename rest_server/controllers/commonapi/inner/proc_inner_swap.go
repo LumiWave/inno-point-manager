@@ -81,14 +81,14 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			}
 
 			if point.AdjustQuantity != 0 {
-				if todayLimitedQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
+				if todayAcqQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
 					point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
 					log.Errorf("UpdateAppPoint error : %v", err)
 					resp.SetReturn(resultcode.Result_Error_DB_UpdateAppPoint)
 					return resp
 				} else {
 					//현재 일일 누적량, 날짜 업데이트
-					point.TodayQuantity = todayLimitedQuantity
+					point.TodayQuantity = todayAcqQuantity
 					point.ResetDate = resetDate
 
 					point.AdjustQuantity = 0
@@ -110,6 +110,25 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 	pointInfo := model.GetDB().AppPointsMap[params.AppID].PointsMap[params.PointID]
 	if params.EventID == context.EventID_toCoin {
 		// 코인으로 전환시 체크
+		// 당일 누적 코인 전환 수량이 넘었는지 체크
+		if _, coinsMap, err := model.GetDB().GetAccountCoins(params.AUID); err != nil {
+			log.Errorf("GetAccountCoins error : %v", err)
+			resp.SetReturn(resultcode.Result_DBError)
+			return resp
+		} else {
+			if val, ok := coinsMap[params.CoinID]; ok {
+				if val.TodayAcqExchangeQuantity+params.AdjustCoinQuantity > model.GetDB().Coins[params.CoinID].DailyLimitedAcqExchangeQuantity {
+					// error
+					log.Errorf("Result_Error_Exceed_DailyLimitedSwapCoin auid:%v", params.AUID)
+					resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapCoin)
+					return resp
+				}
+			} else {
+				log.Errorf("coinsMap not exist coinID : %v, auid:%v", params.PointID, params.AUID)
+				resp.SetReturn(resultcode.Result_DBError)
+				return resp
+			}
+		}
 		// 포인트 보유수량이 전환량 보다 큰지 확인
 		absAdjustPointQuantity := int64(math.Abs(float64(params.AdjustPointQuantity)))
 		if params.PreviousPointQuantity <= 0 || // 보유 포인트량이 0일경우
@@ -129,6 +148,26 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		}
 
 	} else if params.EventID == context.EventID_toPoint {
+		// 당일 누적 포인트 전환 최대 수량이 넘었는지 체크
+		if accountPoint, err := model.GetDB().GetListAccountPoints(0, params.MUID); err != nil {
+			log.Errorf("GetListAccountPoints error : %v", err)
+			resp.SetReturn(resultcode.Result_DBError)
+			return resp
+		} else {
+			if val, ok := accountPoint[params.PointID]; ok {
+				if val.TodayAcqExchangeQuantity+params.AdjustPointQuantity > model.GetDB().AppPointsMap[params.AppID].PointsMap[params.PointID].DailyLimitedAcqExchangeQuantity {
+					// error
+					log.Errorf("Result_Error_Exceed_DailyLimitedSwapPoint auid:%v", params.AUID)
+					resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
+					return resp
+				}
+			} else {
+				log.Errorf("accountPoint not exist pointid : %v, auid:%v", params.PointID, params.AUID)
+				resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
+				return resp
+			}
+		}
+
 		// 코인 보유 수량이 전환량 보다 큰지 확인
 		absAdjustCoinQuantity := math.Abs(params.AdjustCoinQuantity)
 		if params.PreviousCoinQuantity <= 0 || // 보유 코인량이 0인경우

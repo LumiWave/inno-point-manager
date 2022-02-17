@@ -11,7 +11,7 @@ type SwapPoint struct {
 	DatabaseID            int64 `json:"database_id"`
 	PointID               int64 `json:"point_id"` // 요청 인자
 	PreviousPointQuantity int64 `json:"previous_point_quantity"`
-	AdjustPointQuantity   int64 `json:"adjust_point_quantity"` // 요청 이니자
+	AdjustPointQuantity   int64 `json:"adjust_point_quantity"` // 요청 인자
 	PointQuantity         int64 `json:"point_quantity"`
 }
 

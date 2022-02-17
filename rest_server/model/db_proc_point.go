@@ -78,7 +78,7 @@ func (o *MemberPointInfo) UpdateRun() {
 					} else {
 						eventID = context.EventID_sub
 					}
-					if todayLimitedQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
+					if todayAcqQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
 						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
 						log.Errorf("UpdateAppPoint [err:%v]", err)
 					} else {
@@ -86,7 +86,7 @@ func (o *MemberPointInfo) UpdateRun() {
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
 
 						//현재 일일 누적량, 날짜 업데이트
-						point.TodayQuantity = todayLimitedQuantity
+						point.TodayQuantity = todayAcqQuantity
 						point.ResetDate = resetDate
 
 						point.AdjustQuantity = 0

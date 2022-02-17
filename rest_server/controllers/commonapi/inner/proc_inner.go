@@ -39,7 +39,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayAcqQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -181,7 +181,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayAcqQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
@@ -247,7 +247,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 				// merge
 				for _, point := range points {
 					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayLimitedQuantity
+						point.TodayQuantity = val.TodayAcqQuantity
 						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
 							log.Errorf("time parese error :%v", err)
 						} else {
@@ -313,13 +313,13 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 
 func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {
 	if strings.EqualFold(point.ResetDate, time.Now().Format("2006-01-02")) { // 날짜가 바뀌었는지 체크
-		if point.TodayQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
+		if point.TodayQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
 			// 이미 다 채운 상태라면 에러 리턴
 			return false
 		} else {
-			if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity {
+			if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
 				// 초과시 가능 포인트만 적립
-				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedQuantity - point.TodayQuantity
+				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
 			}
 		}
 	}
