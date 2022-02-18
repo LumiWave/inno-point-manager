@@ -2,6 +2,7 @@ package model
 
 import (
 	"strconv"
+	"sync"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
@@ -53,7 +54,8 @@ type DB struct {
 	MssqlPointsAll  map[int64]*basedb.Mssql
 	MssqlPointsRead map[int64]*basedb.Mssql
 
-	PointDoc map[string]*MemberPointInfo
+	PointDoc    map[string]*MemberPointInfo
+	PointDocMtx sync.Mutex
 
 	//PointList     map[int64]PointInfo // 전체 포인트 종류
 	ScanPointsMap map[int64]PointInfo // 전체 포인트 종류 : key PointId

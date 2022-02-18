@@ -40,7 +40,9 @@ func (o *MemberPointInfo) UpdateRun() {
 
 		defer func() {
 			key := MakeMemberPointListKey(o.MUID)
+			GetDB().PointDocMtx.Lock()
 			delete(GetDB().PointDoc, key)
+			GetDB().PointDocMtx.Unlock()
 		}()
 
 		for {

@@ -20,7 +20,9 @@ func GetPointAppMonitoring(req *context.ReqPointAppMonitoring, ctx *context.Poin
 			}
 		}
 	} else {
+		model.GetDB().PointDocMtx.Lock()
 		resp.Value = model.GetDB().PointDoc
+		model.GetDB().PointDocMtx.Unlock()
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

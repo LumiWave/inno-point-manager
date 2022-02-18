@@ -103,7 +103,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 			}
 
 			// 2-3. redis update thread 생성
+			model.GetDB().PointDocMtx.Lock()
 			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, false)
+			model.GetDB().PointDocMtx.Unlock()
 		}
 	} else {
 		// redis 에 존재하면 업데이트
@@ -205,7 +207,9 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 			}
 
 			// 2-3. redis update thread 생성
+			model.GetDB().PointDocMtx.Lock()
 			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
+			model.GetDB().PointDocMtx.Unlock()
 		}
 	} else {
 		// redis에 존재 한다면 내가 관리하는 thread check, 내 관리가 아니면 그냥 값만 리턴
@@ -271,7 +275,9 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 			}
 
 			// 2-3. redis update thread 생성
+			model.GetDB().PointDocMtx.Lock()
 			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
+			model.GetDB().PointDocMtx.Unlock()
 
 			// 2-4. 요청한 point id만 응답해준다.
 			temp := context.Point{}
