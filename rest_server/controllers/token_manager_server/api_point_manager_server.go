@@ -12,7 +12,7 @@ func (o *TokenManagerServerInfo) PostSendFromParentWallet(req *ReqSendFromParent
 	pbytes, _ := json.Marshal(req)
 	buff := bytes.NewBuffer(pbytes)
 
-	data, err := HttpCall(callUrl, o.ApiKey, "POST", Api_post_sendfrom_parentwallet, buff, nil)
+	data, err := HttpCall(callUrl, o.ApiKey, "POST", Api_post_sendfrom_parentwallet, buff, nil, &ResSendFromParentWallet{})
 	if err != nil {
 		return nil, err
 	}

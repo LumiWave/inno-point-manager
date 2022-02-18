@@ -2,6 +2,7 @@ package token_manager_server
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -42,11 +43,16 @@ func MakeHttpClient(callUrl string, auth string, method string, body *bytes.Buff
 		req.URL.RawQuery = queryStr
 	}
 
-	client := &http.Client{Timeout: 60 * time.Second}
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
 	return client, req
 }
 
-func HttpCall(callUrl string, auth string, method string, kind api_kind, body *bytes.Buffer, queryStruct interface{}) (interface{}, error) {
+func HttpCall(callUrl string, auth string, method string, kind api_kind, body *bytes.Buffer, queryStruct interface{}, response interface{}) (interface{}, error) {
 
 	var v url.Values
 	var queryStr string
@@ -61,7 +67,7 @@ func HttpCall(callUrl string, auth string, method string, kind api_kind, body *b
 		return nil, err
 	}
 
-	data, err := ParseResponse(resp, kind)
+	data, err := ParseResponse(resp, kind, response)
 	if err != nil {
 		return nil, err
 	}
@@ -69,17 +75,15 @@ func HttpCall(callUrl string, auth string, method string, kind api_kind, body *b
 	return data, nil
 }
 
-func ParseResponse(resp *http.Response, kind api_kind) (interface{}, error) {
+func ParseResponse(resp *http.Response, kind api_kind, response interface{}) (interface{}, error) {
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, errors.New(resp.Status)
 	}
 
 	decoder := json.NewDecoder(resp.Body)
-
-	strc := ApiList[kind]
-	err := decoder.Decode(strc.ResponseType)
+	err := decoder.Decode(response)
 	if err != nil {
 		return nil, err
 	}
-	return strc.ResponseType, err
+	return response, err
 }
