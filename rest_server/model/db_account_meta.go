@@ -155,7 +155,8 @@ func (o *DB) GetApps() error {
 	o.AppPointsMap = make(map[int64]*AppPointInfo)
 	for rows.Next() {
 		appInfo := &AppPointInfo{}
-		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl); err == nil {
+		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl,
+			&appInfo.GooglePlayPath, &appInfo.AppleStorePath, &appInfo.BrandingPagePath); err == nil {
 			o.AppPointsMap[appInfo.AppId] = appInfo
 			o.AppPointsMap[appInfo.AppId].PointsMap = make(map[int64]*PointInfo)
 		} else {

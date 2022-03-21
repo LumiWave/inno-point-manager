@@ -24,11 +24,14 @@ type PointInfo struct {
 }
 
 type AppPointInfo struct {
-	AppId     int64                `json:"app_id,omitempty"`
-	AppName   string               `json:"app_name,omitempty"`
-	IconUrl   string               `json:"icon_url"`
-	Points    []*PointInfo         `json:"points"`
-	PointsMap map[int64]*PointInfo `json:"-"` // key pointId
+	AppId            int64                `json:"app_id,omitempty"`
+	AppName          string               `json:"app_name,omitempty"`
+	IconUrl          string               `json:"icon_url"`
+	GooglePlayPath   string               `json:"google_play_path"`
+	AppleStorePath   string               `json:"apple_store_path"`
+	BrandingPagePath string               `json:"branding_page_path"`
+	Points           []*PointInfo         `json:"points"`
+	PointsMap        map[int64]*PointInfo `json:"-"` // key pointId
 }
 
 type Coin struct {
