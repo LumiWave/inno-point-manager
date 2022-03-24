@@ -196,7 +196,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 }
 
 func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
+	return int(num + math.Copysign(0, num))
 }
 
 func toFixed(num float64, precision int) float64 {
