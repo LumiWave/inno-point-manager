@@ -75,7 +75,7 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet) *
 	}
 
 	//4. redis에 전송 정보 transaction id key로 다시 한번더 저장 : 추후 콜백 api를 통해 검증하기 위해서
-	tKey := model.MakeCoinTransferFromParentWalletKeyByTxID(params.TransactionId)
+	tKey := model.MakeCoinTransferKeyByTxID(params.TransactionId)
 	if err := model.GetDB().SetCacheCoinTransferFromParentWallet(tKey, params); err != nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
@@ -151,7 +151,7 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet) *base
 	}
 
 	//4. redis에 전송 정보 transaction id key로 다시 한번더 저장 : 추후 콜백 api를 통해 검증하기 위해서
-	tKey := model.MakeCoinTransferFromUserWalletKeyByTxID(params.TransactionId)
+	tKey := model.MakeCoinTransferKeyByTxID(params.TransactionId)
 	if err := model.GetDB().SetCacheCoinTransferFromUserWallet(tKey, params); err != nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
@@ -199,39 +199,55 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 	resp.Success()
 
 	// tx로 redis 검색해서 load
-	tKey := model.MakeCoinTransferFromUserWalletKeyByTxID(params.Txid)
-	transferInfo, err := model.GetDB().GetCacheCoinTransferFromUserWallet(tKey)
-	if err != nil {
+	tKey := model.MakeCoinTransferKeyByTxID(params.Txid)
+
+	// 부모지갑에서 출금된건지 특정 지갑에서 출금된건지 모르기 때문에 둘다 체크
+	var AUID, CoinID int64
+	var TotalQuantity float64
+	transferInfoFromParent, err1 := model.GetDB().GetCacheCoinTransferFromParentWallet(tKey)
+	transferInfoFromUser, err2 := model.GetDB().GetCacheCoinTransferFromUserWallet(tKey)
+	if err1 != nil && err2 != nil {
 		// 존재 하지 않는 출금 정보 콜백을 받았다.
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Invalid_transfer_txid]+" txid:%v", params.Txid)
 		resp.SetReturn(resultcode.Result_Invalid_transfer_txid)
 		return resp
 	}
 
+	if err1 == nil {
+		// 부모지갑에서 출금된 정보
+		AUID = transferInfoFromParent.AUID
+		CoinID = transferInfoFromParent.CoinID
+		TotalQuantity = transferInfoFromParent.TotalQuantity
+	} else if err2 == nil {
+		AUID = transferInfoFromUser.AUID
+		CoinID = transferInfoFromUser.CoinID
+		TotalQuantity = transferInfoFromUser.TotalQuantity
+	}
+
 	// 응답 status 성공 여부 체크
 	if strings.EqualFold(params.Status, "success") {
 		// from address, 이전 코인량 검색, 전송후 남은량 계산
-		_, coinsMap, err := model.GetDB().GetAccountCoins(transferInfo.AUID)
+		_, coinsMap, err := model.GetDB().GetAccountCoins(AUID)
 		if err != nil {
 			log.Errorf("GetAccountCoins error : %v", err)
 			model.MakeDbError(resp, resultcode.Result_DBError, err)
 		}
 
-		meCoin, ok := coinsMap[transferInfo.CoinID]
+		meCoin, ok := coinsMap[CoinID]
 		if !ok {
-			log.Errorf("Not file my coinid : %v", transferInfo.CoinID)
+			log.Errorf("Not file my coinid : %v", CoinID)
 			return resp
 		}
 
 		// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
 		if err := model.GetDB().UpdateAccountCoins(
-			transferInfo.AUID,
-			transferInfo.CoinID,
+			AUID,
+			CoinID,
 			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
 			meCoin.WalletAddress,
 			meCoin.Quantity,
-			-transferInfo.TotalQuantity,
-			meCoin.Quantity-transferInfo.TotalQuantity,
+			-TotalQuantity,
+			meCoin.Quantity-TotalQuantity,
 			context.LogID_external_wallet,
 			context.EventID_sub); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v", err)
@@ -242,9 +258,12 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 	}
 
 	// redis 두가지 삭제
-	model.GetDB().DelCacheCoinTransferFromUserWallet(tKey) // txid key redis delete
-	key := model.MakeCoinTransferFromUserWalletKey(transferInfo.AUID)
-	Lockkey := model.MakeMemberPointListLockKey(transferInfo.AUID)
+	model.GetDB().DelCacheCoinTransfer(tKey) // txid key redis delete
+
+	keyFromParent := model.MakeCoinTransferFromParentWalletKey(AUID)
+	keyFromUser := model.MakeCoinTransferFromUserWalletKey(AUID)
+
+	Lockkey := model.MakeMemberPointListLockKey(AUID)
 	unLock, err := model.AutoLock(Lockkey)
 	if err != nil {
 		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
@@ -253,7 +272,8 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 		// 0-1. redis unlock
 		defer unLock()
 	}
-	model.GetDB().DelCacheCoinTransferFromUserWallet(key) // audi key redis delete
+	model.GetDB().DelCacheCoinTransfer(keyFromParent) // audi key redis delete
+	model.GetDB().DelCacheCoinTransfer(keyFromUser)   // audi key redis delete
 
 	return resp
 }

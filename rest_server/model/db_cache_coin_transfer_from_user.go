@@ -18,9 +18,9 @@ func MakeCoinTransferFromUserWalletKey(AUID int64) string {
 	return config.GetInstance().DBPrefix + ":COIN-TRANSFER-USER:" + strconv.FormatInt(AUID, 10)
 }
 
-func MakeCoinTransferFromUserWalletKeyByTxID(transactionID string) string {
-	return config.GetInstance().DBPrefix + ":COIN-TX:" + transactionID
-}
+// func MakeCoinTransferFromUserWalletKeyByTxID(transactionID string) string {
+// 	return config.GetInstance().DBPrefix + ":COIN-TX:" + transactionID
+// }
 
 func (o *DB) GetCacheCoinTransferFromUserWallet(key string) (*context.ReqCoinTransferFromUserWallet, error) {
 	if !o.Cache.Enable() {
@@ -42,6 +42,6 @@ func (o *DB) SetCacheCoinTransferFromUserWallet(key string, reqCoinTransfer *con
 	return o.Cache.Set(key, reqCoinTransfer, -1)
 }
 
-func (o *DB) DelCacheCoinTransferFromUserWallet(key string) error {
-	return o.Cache.Del(key)
-}
+// func (o *DB) DelCacheCoinTransferFromUserWallet(key string) error {
+// 	return o.Cache.Del(key)
+// }
