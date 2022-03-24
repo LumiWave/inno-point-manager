@@ -84,7 +84,7 @@ func (o *DB) GetAppCoins() error {
 
 	for rows.Next() {
 		appCoin := &AppCoin{}
-		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId); err == nil {
+		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId, &appCoin.BaseCoinID); err == nil {
 			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], appCoin)
 		} else {
 			log.Errorf("USPAU_Scan_ApplicationCoins Scan error : %v", err)
@@ -110,6 +110,7 @@ func (o *DB) GetCoins() error {
 	for rows.Next() {
 		coin := &Coin{}
 		if err := rows.Scan(&coin.CoinId,
+			&coin.BaseCoinID,
 			&coin.CoinName,
 			&coin.CoinSymbol,
 			&coin.ContractAddress,

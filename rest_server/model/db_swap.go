@@ -22,6 +22,7 @@ func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
 		sql.Named("AppID", params.AppID),
 		sql.Named("DatabaseID", params.DatabaseID),
 		sql.Named("CoinID", params.CoinID),
+		sql.Named("BaseCoinID", params.BaseCoinID),
 		sql.Named("WalletAddress", params.WalletAddress),
 		sql.Named("PreCoinQuantity", params.PreviousCoinQuantity),
 		sql.Named("AdjCoinQuantity", params.AdjustCoinQuantity),

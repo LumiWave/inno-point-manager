@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	USPAU_GetList_AccountPoints              = "[dbo].[USPAU_GetList_AccountPoints]"
-	USPAU_GetList_AccountCoins               = "[dbo].[USPAU_GetList_AccountCoins]"
-	USPAU_GetList_AccountCoins_By_CoinString = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
-	USPAU_Get_AccountCoins_By_WalletAddress  = "[dbo].[USPAU_Get_AccountCoins_By_WalletAddress]"
-	USPAU_Mod_AccountCoins                   = "[dbo].[USPAU_Mod_AccountCoins]"
+	USPAU_GetList_AccountPoints                 = "[dbo].[USPAU_GetList_AccountPoints]"
+	USPAU_GetList_AccountCoins                  = "[dbo].[USPAU_GetList_AccountCoins]"
+	USPAU_GetList_AccountCoins_By_CoinString    = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
+	USPAU_Get_AccountBaseCoins_By_WalletAddress = "[dbo].[USPAU_Get_AccountBaseCoins_By_WalletAddress]"
+	USPAU_Mod_AccountCoins                      = "[dbo].[USPAU_Mod_AccountCoins]"
 )
 
 // 계정 일일 포인트량 조회
@@ -140,7 +140,7 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 	var rs orginMssql.ReturnStatus
 	var auID, coinID int64
 	var quantity float64
-	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountCoins_By_WalletAddress,
+	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountBaseCoins_By_WalletAddress,
 		sql.Named("WalletAddress", walletAddress),
 		sql.Named("CoinSymbol", coinSymbol),
 		sql.Named("AUID", sql.Out{Dest: &auID}),
@@ -148,7 +148,7 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 		sql.Named("Quantity", sql.Out{Dest: &quantity}),
 		&rs)
 	if err != nil {
-		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress QueryContext err : %v", err)
+		log.Errorf("USPAU_Get_AccountBaseCoins_By_WalletAddress QueryContext err : %v", err)
 		return nil, err
 	}
 
@@ -159,8 +159,8 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 	}
 
 	if rs != 1 {
-		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error : %v", rs)
-		return nil, errors.New("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Get_AccountBaseCoins_By_WalletAddress returnvalue error : %v", rs)
+		return nil, errors.New("USPAU_Get_AccountBaseCoins_By_WalletAddress returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return meCoin, nil
