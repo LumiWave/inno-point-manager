@@ -10,10 +10,10 @@ import (
 	"github.com/labstack/echo"
 )
 
-func (o *InternalAPI) PostCoinTransfer(c echo.Context) error {
+func (o *InternalAPI) PostCoinTransferFromParentWallet(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewReqCoinTransfer()
+	params := context.NewReqCoinTransferFromParentWallet()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
@@ -23,7 +23,24 @@ func (o *InternalAPI) PostCoinTransfer(c echo.Context) error {
 		return c.JSON(http.StatusOK, err)
 	}
 
-	return commonapi.PostCoinTransfer(params, ctx)
+	return commonapi.PostCoinTransferFromParentWallet(params, ctx)
+}
+
+// 코인 외부 지갑 전송 요청 : 특정지갑
+func (o *InternalAPI) PostCoinTransferFromUserWallet(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqCoinTransferFromUserWallet()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(ctx); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PostCoinTransferFromUserWallet(params, ctx)
 }
 
 // tranfer 중인 상태 정보 요청

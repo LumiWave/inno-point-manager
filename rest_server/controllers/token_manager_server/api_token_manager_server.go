@@ -19,3 +19,18 @@ func (o *TokenManagerServerInfo) PostSendFromParentWallet(req *ReqSendFromParent
 
 	return data.(*ResSendFromParentWallet), nil
 }
+
+func (o *TokenManagerServerInfo) PostSendFromUserWallet(req *ReqSendFromUserWallet) (*ResSendFromUserWallet, error) {
+	urlInfo := ApiList[Api_post_sendfrom_userWallet]
+	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, urlInfo.Uri)
+
+	pbytes, _ := json.Marshal(req)
+	buff := bytes.NewBuffer(pbytes)
+
+	data, err := HttpCall(callUrl, o.ApiKey, "POST", urlInfo.ApiType, buff, nil, urlInfo.ResponseFuncType())
+	if err != nil {
+		return nil, err
+	}
+
+	return data.(*ResSendFromUserWallet), nil
+}

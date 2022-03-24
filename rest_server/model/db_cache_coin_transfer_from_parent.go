@@ -9,32 +9,32 @@ import (
 )
 
 // redis coin transfer lock key generate
-func MakeCoinTransferLockKey(AUID int64) string {
-	return config.GetInstance().DBPrefix + "-COIN-TRANSFER-" + strconv.FormatInt(AUID, 10) + "-lock"
+func MakeCoinTransferFromParentWalletLockKey(AUID int64) string {
+	return config.GetInstance().DBPrefix + "-COIN-TRANSFER-PARENT" + strconv.FormatInt(AUID, 10) + "-lock"
 }
 
 // redis coin transfer key generate
-func MakeCoinTransferKey(AUID int64) string {
+func MakeCoinTransferFromParentWalletKey(AUID int64) string {
 	return config.GetInstance().DBPrefix + ":COIN-TRANSFER:" + strconv.FormatInt(AUID, 10)
 }
 
-func MakeCoinTransferKeyByTxID(transactionID string) string {
+func MakeCoinTransferFromParentWalletKeyByTxID(transactionID string) string {
 	return config.GetInstance().DBPrefix + ":COIN-TX:" + transactionID
 }
 
-func (o *DB) GetCacheCoinTransfer(key string) (*context.ReqCoinTransfer, error) {
+func (o *DB) GetCacheCoinTransferFromParentWallet(key string) (*context.ReqCoinTransferFromParentWallet, error) {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
 
-	reqCoinTransfer := new(context.ReqCoinTransfer)
+	reqCoinTransfer := new(context.ReqCoinTransferFromParentWallet)
 
 	err := o.Cache.Get(key, reqCoinTransfer)
 
 	return reqCoinTransfer, err
 }
 
-func (o *DB) SetCacheCoinTransfer(key string, reqCoinTransfer *context.ReqCoinTransfer) error {
+func (o *DB) SetCacheCoinTransferFromParentWallet(key string, reqCoinTransfer *context.ReqCoinTransferFromParentWallet) error {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
 	}
@@ -42,6 +42,6 @@ func (o *DB) SetCacheCoinTransfer(key string, reqCoinTransfer *context.ReqCoinTr
 	return o.Cache.Set(key, reqCoinTransfer, -1)
 }
 
-func (o *DB) DelCacheCoinTransfer(key string) error {
+func (o *DB) DelCacheCoinTransferFromParentWallet(key string) error {
 	return o.Cache.Del(key)
 }

@@ -60,6 +60,7 @@ func (o *ReqPointMemberWallet) CheckValidate() *base.BaseResponse {
 
 type WalletInfo struct {
 	CoinID        int64  `json:"coin_id"`
+	BaseCoinID    int64  `json:"base_coin_id"`
 	CoinSymbol    string `json:"coin_symbol"`
 	WalletAddress string `json:"wallet_address"`
 	CoinQuantity  string `json:"coin_quantity"`
@@ -75,6 +76,7 @@ type ResPointMemberWallet struct {
 ///////// 코인 정보 조회
 type AccountCoin struct {
 	CoinID                    int64     `json:"coin_id"`
+	BaseCoinID                int64     `json:"base_coin_id"`
 	WalletAddress             string    `json:"wallet_address"`
 	Quantity                  float64   `json:"quantity"`
 	TodayAcqQuantity          float64   `json:"today_acq_quantity" query:"today_acq_quantity"`

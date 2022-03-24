@@ -16,16 +16,19 @@ type api_kind int
 
 const (
 	Api_post_sendfrom_parentwallet = 0 // 대표지갑에서 출금 PostSendFromParentWallet
+	Api_post_sendfrom_userWallet   = 1 // 특정지갑에서 출금 PostSendFromUserWallet
 )
 
 type ApiInfo struct {
-	ApiType      api_kind
-	Uri          string
-	ResponseType interface{}
+	ApiType          api_kind
+	Uri              string
+	ResponseType     interface{}
+	ResponseFuncType func() interface{}
 }
 
 var ApiList = map[api_kind]ApiInfo{
-	Api_post_sendfrom_parentwallet: ApiInfo{ApiType: Api_post_sendfrom_parentwallet, Uri: "/token/transfer", ResponseType: new(ResSendFromParentWallet)},
+	Api_post_sendfrom_parentwallet: ApiInfo{ApiType: Api_post_sendfrom_parentwallet, Uri: "/token/transfer", ResponseType: new(ResSendFromParentWallet), ResponseFuncType: func() interface{} { return new(ResSendFromParentWallet) }},
+	Api_post_sendfrom_userWallet:   ApiInfo{ApiType: Api_post_sendfrom_userWallet, Uri: "/token/transfer/user", ResponseType: new(ResSendFromUserWallet), ResponseFuncType: func() interface{} { return new(ResSendFromUserWallet) }},
 }
 
 func MakeHttpClient(callUrl string, auth string, method string, body *bytes.Buffer, queryStr string) (*http.Client, *http.Request) {

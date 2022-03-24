@@ -35,6 +35,7 @@ type AppPointInfo struct {
 }
 
 type Coin struct {
+	BaseCoinID                      int64   `json:"base_coin_id"`
 	CoinId                          int64   `json:"coin_id,omitempty"`
 	CoinName                        string  `json:"coin_name"`
 	CoinSymbol                      string  `json:"coin_symbol,omitempty"`

@@ -24,3 +24,24 @@ type ResSendFromParentWallet struct {
 }
 
 ////////////////////////////////////////
+
+///////// 특정 지갑에서 전송 요청
+type ReqSendFromUserWallet struct {
+	Symbol         string `json:"symbol"`
+	BaseCoinSymbol string `json:"base_coin_symbol"`
+	FromAddress    string `json:"from_address"`
+	ToAddress      string `json:"to_address"`
+	Amount         string `json:"amount"`
+	Memo           string `json:"memo"`
+}
+
+type ResSendFromUserWalletValue struct {
+	TransactionHash string `json:"transaction_hash"`
+}
+
+type ResSendFromUserWallet struct {
+	Common
+	Value ResSendFromUserWalletValue `json:"value"`
+}
+
+////////////////////////////////////////

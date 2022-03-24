@@ -9,11 +9,22 @@ import (
 	"github.com/labstack/echo"
 )
 
-func PostCoinTransfer(params *context.ReqCoinTransfer, ctx *context.PointManagerContext) error {
+func PostCoinTransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.Transfer(params); err != nil {
+	if err := inner.TransferFromParentWallet(params); err != nil {
+		resp = err
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+func PostCoinTransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	if err := inner.TransferFromUserWallet(params); err != nil {
 		resp = err
 	}
 
@@ -25,7 +36,10 @@ func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgre
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if res := inner.IsExistInprogressTransfer(params); res != nil {
+	if res := inner.IsExistInprogressTransferFromParentWallet(params); res != nil {
+		resp = res
+	}
+	if res := inner.IsExistInprogressTransferFromUserWallet(params); res != nil {
 		resp = res
 	}
 

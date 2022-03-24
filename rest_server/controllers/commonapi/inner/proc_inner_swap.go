@@ -16,7 +16,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 
 	// coin -> point 전환시 이미 transfer 중인 정보가 있다면 처리되지 않도록 한다.
 	if params.EventID == context.EventID_toPoint {
-		Lockkey := model.MakeCoinTransferLockKey(params.AUID)
+		Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
 		unLock, err := model.AutoLock(Lockkey)
 		if err != nil {
 			resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
@@ -27,8 +27,8 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		}
 
 		// 1. redis에 외부 전송 정보 존재하는지 check
-		key := model.MakeCoinTransferKey(params.AUID)
-		_, err = model.GetDB().GetCacheCoinTransfer(key)
+		key := model.MakeCoinTransferFromUserWalletKey(params.AUID)
+		_, err = model.GetDB().GetCacheCoinTransferFromUserWallet(key)
 		if err == nil {
 			// 전송중인 기존 정보가 있다면 에러를 리턴한다.
 			log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
@@ -196,7 +196,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 }
 
 func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
+	return int(num + math.Copysign(0, num))
 }
 
 func toFixed(num float64, precision int) float64 {
