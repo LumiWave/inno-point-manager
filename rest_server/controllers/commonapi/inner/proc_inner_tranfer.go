@@ -217,11 +217,11 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 		// 부모지갑에서 출금된 정보
 		AUID = transferInfoFromParent.AUID
 		CoinID = transferInfoFromParent.CoinID
-		TotalQuantity = transferInfoFromParent.TotalQuantity
+		TotalQuantity = transferInfoFromParent.TotalQuantity // 부모지갑에서 출금할때는 수수료 제외한다.
 	} else if err2 == nil {
 		AUID = transferInfoFromUser.AUID
 		CoinID = transferInfoFromUser.CoinID
-		TotalQuantity = transferInfoFromUser.TotalQuantity
+		TotalQuantity = transferInfoFromUser.Quantity
 	}
 
 	// 응답 status 성공 여부 체크
