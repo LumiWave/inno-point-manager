@@ -41,8 +41,10 @@ func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgre
 	if res := inner.IsExistInprogressTransferFromParentWallet(params); res != nil {
 		resp = res
 	}
-	if res := inner.IsExistInprogressTransferFromUserWallet(params); res != nil {
-		resp = res
+	if resp.Return != 0 {
+		if res := inner.IsExistInprogressTransferFromUserWallet(params); res != nil {
+			resp = res
+		}
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
