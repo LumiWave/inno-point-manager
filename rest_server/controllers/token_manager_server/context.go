@@ -45,3 +45,23 @@ type ResSendFromUserWallet struct {
 }
 
 ////////////////////////////////////////
+
+///////// 코인 가스비 요청
+type ReqCoinFee struct {
+	Symbol string `query:"symbol"`
+}
+
+type ResCoinFeeInfoValue struct {
+	Fast    string `json:"fast"`
+	Slow    string `json:"slow"`
+	Average string `json:"average"`
+	BaseFee string `json:"basefee"`
+	Fastest string `json:"fastest"`
+}
+
+type ResCoinFeeInfo struct {
+	Common
+	ResCoinFeeInfoValue `json:"value"`
+}
+
+////////////////////////////////////////

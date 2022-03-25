@@ -26,6 +26,7 @@ const (
 	Result_Require_DatabaseID     = 12003 // 유효한 database_id 정보 필요
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
 	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
+	Result_Require_Symbol         = 12006 // 유효한 coin symbol 정보 필요
 
 	Result_Error_MinPointQuantity             = 12100 // 포인트 최소 보유 수량 에러
 	Result_Error_MinCoinQuantity              = 12101 // 코인 최소 보유 수량 에러
@@ -112,6 +113,7 @@ var ResultCodeText = map[int]string{
 	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
 	Result_Require_PointID:        "Requires valid 'point_id' information.",
 	Result_Require_AdjustQuantity: "Requires valid 'adjust_quantity' information.",
+	Result_Require_Symbol:         "Requires valid 'symbol' information.",
 
 	Result_Error_MinPointQuantity: "lack of minimum point quantity",
 	Result_Error_MinCoinQuantity:  "lack of munimum coin quantity",

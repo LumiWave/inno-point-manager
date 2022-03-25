@@ -7,12 +7,13 @@ import (
 )
 
 func (o *TokenManagerServerInfo) PostSendFromParentWallet(req *ReqSendFromParentWallet) (*ResSendFromParentWallet, error) {
-	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, ApiList[Api_post_sendfrom_parentwallet].Uri)
+	urlInfo := ApiList[Api_post_sendfrom_parentwallet]
+	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, urlInfo.Uri)
 
 	pbytes, _ := json.Marshal(req)
 	buff := bytes.NewBuffer(pbytes)
 
-	data, err := HttpCall(callUrl, o.ApiKey, "POST", Api_post_sendfrom_parentwallet, buff, nil, &ResSendFromParentWallet{})
+	data, err := HttpCall(callUrl, o.ApiKey, urlInfo.Method, urlInfo.ApiType, buff, nil, urlInfo.ResponseFuncType())
 	if err != nil {
 		return nil, err
 	}
@@ -27,10 +28,22 @@ func (o *TokenManagerServerInfo) PostSendFromUserWallet(req *ReqSendFromUserWall
 	pbytes, _ := json.Marshal(req)
 	buff := bytes.NewBuffer(pbytes)
 
-	data, err := HttpCall(callUrl, o.ApiKey, "POST", urlInfo.ApiType, buff, nil, urlInfo.ResponseFuncType())
+	data, err := HttpCall(callUrl, o.ApiKey, urlInfo.Method, urlInfo.ApiType, buff, nil, urlInfo.ResponseFuncType())
 	if err != nil {
 		return nil, err
 	}
 
 	return data.(*ResSendFromUserWallet), nil
+}
+
+func (o *TokenManagerServerInfo) GetCoinFee(req *ReqCoinFee) (*ResCoinFeeInfo, error) {
+	urlInfo := ApiList[Api_get_coin_fee]
+	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, urlInfo.Uri)
+
+	data, err := HttpCall(callUrl, o.ApiKey, urlInfo.Method, urlInfo.ApiType, bytes.NewBuffer(nil), req, urlInfo.ResponseFuncType())
+	if err != nil {
+		return nil, err
+	}
+
+	return data.(*ResCoinFeeInfo), nil
 }

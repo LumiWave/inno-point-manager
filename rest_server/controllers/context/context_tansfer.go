@@ -135,3 +135,30 @@ func (o *ReqCoinTransferResWithdrawal) CheckValidate() *base.BaseResponse {
 }
 
 ////////////////////////////////////////
+
+///////// 코인 수수료
+type ReqCoinFee struct {
+	Symbol string `query:"symbol"`
+}
+
+func NewReqCoinFee() *ReqCoinFee {
+	return new(ReqCoinFee)
+}
+
+func (o *ReqCoinFee) CheckValidate() *base.BaseResponse {
+	if len(o.Symbol) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_Symbol)
+	}
+
+	return nil
+}
+
+type ResCoinFeeInfo struct {
+	Fast    string `json:"fast"`
+	Slow    string `json:"slow"`
+	Average string `json:"average"`
+	BaseFee string `json:"basefee"`
+	Fastest string `json:"fastest"`
+}
+
+////////////////////////////////////////

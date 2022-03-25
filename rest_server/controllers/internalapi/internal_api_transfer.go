@@ -89,3 +89,17 @@ func (o *InternalAPI) PostCoinTransferResultWithdrawal(c echo.Context) error {
 
 	return commonapi.PostCoinTransferResultWithdrawal(params, c)
 }
+
+func (o *InternalAPI) GetCoinFee(c echo.Context) error {
+	params := context.NewReqCoinFee()
+	if err := c.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetCoinFee(params, c)
+}

@@ -6,6 +6,8 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/token_manager_server"
 	"github.com/labstack/echo"
 )
 
@@ -63,6 +65,28 @@ func PostCoinTransferResultWithdrawal(params *context.ReqCoinTransferResWithdraw
 
 	if err := inner.TransferResultWithdrawal(params); err != nil {
 		resp = err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func GetCoinFee(params *context.ReqCoinFee, c echo.Context) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	req := &token_manager_server.ReqCoinFee{
+		Symbol: params.Symbol,
+	}
+
+	if res, err := token_manager_server.GetInstance().GetCoinFee(req); err != nil {
+		resp.SetReturn(resultcode.ResultInternalServerError)
+	} else {
+		if res.Return != 0 { // token manager 전송 에러
+			resp.Return = res.Return
+			resp.Message = res.Message
+		} else {
+			resp.Value = res.ResCoinFeeInfoValue
+		}
 	}
 
 	return c.JSON(http.StatusOK, resp)
