@@ -127,6 +127,7 @@ func (o *DB) GetCoins() error {
 		for _, appCoin := range appCoins {
 			for _, coin := range o.Coins {
 				if appCoin.CoinId == coin.CoinId {
+					appCoin.BaseCoinID = coin.BaseCoinID
 					appCoin.CoinName = coin.CoinName
 					appCoin.CoinSymbol = coin.CoinSymbol
 					appCoin.ContractAddress = coin.ContractAddress
