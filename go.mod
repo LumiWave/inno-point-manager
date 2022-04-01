@@ -3,9 +3,9 @@ module github.com/ONBUFF-IP-TOKEN/inno-point-manager
 go 1.17
 
 require (
-	github.com/ONBUFF-IP-TOKEN/baseapp v1.0.9
-	github.com/ONBUFF-IP-TOKEN/basedb v1.1.3
-	github.com/ONBUFF-IP-TOKEN/baseutil v1.0.1
+	github.com/ONBUFF-IP-TOKEN/baseapp v1.0.13
+	github.com/ONBUFF-IP-TOKEN/basedb v1.1.8
+	github.com/ONBUFF-IP-TOKEN/baseutil v1.0.7
 	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/google/go-querystring v1.1.0
 	github.com/labstack/echo v3.3.10+incompatible
@@ -14,11 +14,15 @@ require (
 )
 
 require (
-	github.com/ONBUFF-IP-TOKEN/basenet v1.0.2 // indirect
+	github.com/ONBUFF-IP-TOKEN/basenet v1.0.3 // indirect
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/couchbase/gocb v1.6.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/go-redis/redis/v8 v8.11.4 // indirect
+	github.com/go-redsync/redsync/v4 v4.4.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
 	github.com/golang/snappy v0.0.3 // indirect
@@ -26,7 +30,8 @@ require (
 	github.com/googollee/go-engine.io v1.0.1 // indirect
 	github.com/googollee/go-socket.io v1.0.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f // indirect
 	github.com/lestrrat/go-strftime v0.0.0-20180220042222-ba3bf9c1d042 // indirect
@@ -47,7 +52,6 @@ require (
 	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/couchbase/gocbcore.v7 v7.1.18 // indirect
 	gopkg.in/couchbaselabs/gocbconnstr.v1 v1.0.4 // indirect
 	gopkg.in/couchbaselabs/jsonx.v1 v1.0.0 // indirect

@@ -22,6 +22,7 @@ const (
 func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
+
 	if err != nil {
 		log.Errorf("USPAU_Scan_DatabaseServers QueryContext error : %v", err)
 		return nil, err
@@ -84,7 +85,7 @@ func (o *DB) GetAppCoins() error {
 
 	for rows.Next() {
 		appCoin := &AppCoin{}
-		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId); err == nil {
+		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId, &appCoin.BaseCoinID); err == nil {
 			o.AppCoins[appCoin.AppID] = append(o.AppCoins[appCoin.AppID], appCoin)
 		} else {
 			log.Errorf("USPAU_Scan_ApplicationCoins Scan error : %v", err)
@@ -110,6 +111,7 @@ func (o *DB) GetCoins() error {
 	for rows.Next() {
 		coin := &Coin{}
 		if err := rows.Scan(&coin.CoinId,
+			&coin.BaseCoinID,
 			&coin.CoinName,
 			&coin.CoinSymbol,
 			&coin.ContractAddress,
@@ -126,6 +128,7 @@ func (o *DB) GetCoins() error {
 		for _, appCoin := range appCoins {
 			for _, coin := range o.Coins {
 				if appCoin.CoinId == coin.CoinId {
+					appCoin.BaseCoinID = coin.BaseCoinID
 					appCoin.CoinName = coin.CoinName
 					appCoin.CoinSymbol = coin.CoinSymbol
 					appCoin.ContractAddress = coin.ContractAddress
@@ -155,7 +158,8 @@ func (o *DB) GetApps() error {
 	o.AppPointsMap = make(map[int64]*AppPointInfo)
 	for rows.Next() {
 		appInfo := &AppPointInfo{}
-		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl); err == nil {
+		if err := rows.Scan(&appInfo.AppId, &appInfo.AppName, &appInfo.IconUrl,
+			&appInfo.GooglePlayPath, &appInfo.AppleStorePath, &appInfo.BrandingPagePath); err == nil {
 			o.AppPointsMap[appInfo.AppId] = appInfo
 			o.AppPointsMap[appInfo.AppId].PointsMap = make(map[int64]*PointInfo)
 		} else {

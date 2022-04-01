@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	USPAU_GetList_AccountPoints              = "[dbo].[USPAU_GetList_AccountPoints]"
-	USPAU_GetList_AccountCoins               = "[dbo].[USPAU_GetList_AccountCoins]"
-	USPAU_GetList_AccountCoins_By_CoinString = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
-	USPAU_Get_AccountCoins_By_WalletAddress  = "[dbo].[USPAU_Get_AccountCoins_By_WalletAddress]"
-	USPAU_Mod_AccountCoins                   = "[dbo].[USPAU_Mod_AccountCoins]"
+	USPAU_GetList_AccountPoints                 = "[dbo].[USPAU_GetList_AccountPoints]"
+	USPAU_GetList_AccountCoins                  = "[dbo].[USPAU_GetList_AccountCoins]"
+	USPAU_GetList_AccountCoins_By_CoinString    = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
+	USPAU_Get_AccountBaseCoins_By_WalletAddress = "[dbo].[USPAU_Get_AccountBaseCoins_By_WalletAddress]"
+	USPAU_Mod_AccountCoins                      = "[dbo].[USPAU_Mod_AccountCoins]"
 )
 
 // 계정 일일 포인트량 조회
@@ -74,6 +74,7 @@ func (o *DB) GetAccountCoins(auid int64) ([]*context.AccountCoin, map[int64]*con
 	for rows.Next() {
 		accountCoin := &context.AccountCoin{}
 		if err := rows.Scan(&accountCoin.CoinID,
+			&accountCoin.BaseCoinID,
 			&accountCoin.WalletAddress,
 			&accountCoin.Quantity,
 			&accountCoin.TodayAcqQuantity,
@@ -120,7 +121,7 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 	}
 	WalletInfo := context.WalletInfo{}
 	for rows.Next() {
-		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
+		if err := rows.Scan(&WalletInfo.CoinID, &WalletInfo.BaseCoinID, &WalletInfo.WalletAddress, &WalletInfo.CoinQuantity); err == nil {
 			WalletInfo.CoinSymbol = o.Coins[WalletInfo.CoinID].CoinSymbol
 			walletInfos.WalletInfo = append(walletInfos.WalletInfo, WalletInfo)
 		}
@@ -135,18 +136,19 @@ func (o *DB) GetPointMemberWallet(params *context.ReqPointMemberWallet, appID in
 }
 
 // 지갑 주소로 AUID, coinID 검색
-func (o *DB) GetAccountCoinsByWalletAddress(walletAddress string) (*context.AccountCoinByWalletAddress, error) {
+func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*context.AccountCoinByWalletAddress, error) {
 	var rs orginMssql.ReturnStatus
 	var auID, coinID int64
 	var quantity float64
-	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountCoins_By_WalletAddress,
+	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountBaseCoins_By_WalletAddress,
 		sql.Named("WalletAddress", walletAddress),
+		sql.Named("CoinSymbol", coinSymbol),
 		sql.Named("AUID", sql.Out{Dest: &auID}),
 		sql.Named("CoinID", sql.Out{Dest: &coinID}),
 		sql.Named("Quantity", sql.Out{Dest: &quantity}),
 		&rs)
 	if err != nil {
-		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress QueryContext err : %v", err)
+		log.Errorf("USPAU_Get_AccountBaseCoins_By_WalletAddress QueryContext err : %v", err)
 		return nil, err
 	}
 
@@ -157,21 +159,22 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress string) (*context.Acco
 	}
 
 	if rs != 1 {
-		log.Errorf("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error : %v", rs)
-		return nil, errors.New("USPAU_Get_AccountCoins_By_WalletAddress returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Get_AccountBaseCoins_By_WalletAddress returnvalue error : %v", rs)
+		return nil, errors.New("USPAU_Get_AccountBaseCoins_By_WalletAddress returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return meCoin, nil
 }
 
 // 내 코인 정보 수정
-func (o *DB) UpdateAccountCoins(auid, coinid int64, walletAddress string, previousCoinQuantity, adjustCoinQuantity, coinQuantity float64,
+func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress string, previousCoinQuantity, adjustCoinQuantity, coinQuantity float64,
 	logID context.LogID_type, eventID context.EventID_type) error {
 
 	var rs orginMssql.ReturnStatus
-	_, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
 		sql.Named("AUID", auid),
 		sql.Named("CoinID", coinid),
+		sql.Named("BaseCoinID", baseCoinID),
 		sql.Named("WalletAddress", walletAddress),
 		sql.Named("PreQuantity", previousCoinQuantity),
 		sql.Named("AdjQuantity", adjustCoinQuantity),
@@ -183,6 +186,8 @@ func (o *DB) UpdateAccountCoins(auid, coinid int64, walletAddress string, previo
 		log.Errorf("USPAU_Mod_AccountCoins QueryContext err : %v", err)
 		return err
 	}
+
+	defer rows.Close()
 
 	if rs != 1 {
 		log.Errorf("USPAU_Mod_AccountCoins returnvalue error : %v", rs)

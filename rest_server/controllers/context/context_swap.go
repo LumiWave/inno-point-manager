@@ -16,7 +16,8 @@ type SwapPoint struct {
 }
 
 type SwapCoin struct {
-	CoinID               int64   `json:"coin_id"` // 요청 인자
+	CoinID               int64   `json:"coin_id"`      // 요청 인자
+	BaseCoinID           int64   `json:"base_coin_id"` // 요청 인자
 	WalletAddress        string  `json:"walletaddress"`
 	PreviousCoinQuantity float64 `json:"previous_coin_quantity"`
 	AdjustCoinQuantity   float64 `json:"adjust_coin_quantity"` // 요청 인자
