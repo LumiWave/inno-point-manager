@@ -153,7 +153,7 @@ func (o *DB) ConnectDB(conf *baseconf.DBAuth) (*basedb.Mssql, error) {
 	}
 	idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
 	mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
-	mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
+	//mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
 
 	return mssqlDB, nil
 }
@@ -171,7 +171,7 @@ func (o *DB) ConnectDBOfPoint(conf *baseconf.DBAuth, pointDB *context.PointDB) (
 
 	idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
 	mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
-	mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
+	//mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
 
 	return mssqlDB, nil
 }
