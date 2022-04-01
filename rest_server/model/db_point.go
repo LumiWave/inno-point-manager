@@ -66,8 +66,8 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 
 	points := []*context.Point{}
 
-	point := new(context.Point)
 	for rows.Next() {
+		point := new(context.Point)
 		point.PointID = 0
 		point.Quantity = 0
 		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
