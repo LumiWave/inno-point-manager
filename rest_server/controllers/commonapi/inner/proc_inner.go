@@ -328,6 +328,11 @@ func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64
 				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
 			}
 		}
+	} else {
+		if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
+			// 초과시 가능 포인트만 적립
+			*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
+		}
 	}
 
 	return true
