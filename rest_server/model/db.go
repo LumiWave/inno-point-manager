@@ -151,8 +151,8 @@ func (o *DB) ConnectDB(conf *baseconf.DBAuth) (*basedb.Mssql, error) {
 			err, conf.Host, conf.ID, conf.Password, conf.Database, conf.PoolSize, conf.IdleSize)
 		return nil, err
 	}
-	//idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
-	//mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
+	idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
+	mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
 
 	return mssqlDB, nil
 }
