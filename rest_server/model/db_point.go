@@ -26,13 +26,15 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 	var rs orginMssql.ReturnStatus
-	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
+	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
 		&rs); err != nil {
 		log.Errorf("USPPO_Rgstr_Members QueryContext error : %v", err)
 		return err
+	} else {
+		defer rows.Close()
 	}
 
 	if rs == resultcode.Result_Error_duplicate_auid {
@@ -136,13 +138,15 @@ func (o *DB) InsertMemberPoints(dbID, muID, pointID, quantity int64) error {
 	}
 
 	var rs orginMssql.ReturnStatus
-	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Add_MemberPoints,
+	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Add_MemberPoints,
 		sql.Named("MUID", muID),
 		sql.Named("PointID", pointID),
 		sql.Named("Quantity", quantity),
 		&rs); err != nil {
 		log.Errorf("USPPO_Add_MemberPoints QueryContext error : %v", err)
 		return err
+	} else {
+		defer rows.Close()
 	}
 
 	if rs == resultcode.Result_Error_Invalid_data {
@@ -166,7 +170,7 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 	var todayAcqQuantity int64
 	var resetDate string
 	var rs orginMssql.ReturnStatus
-	if _, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
+	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Mod_MemberPoints,
 		sql.Named("MUID", muID),
 		sql.Named("PointID", pointID),
 		sql.Named("PreQuantity", preQuantity),
@@ -180,6 +184,8 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		&rs); err != nil {
 		log.Errorf("USPPO_Mod_MemberPoints QueryContext error : %v", err)
 		return 0, "", err
+	} else {
+		defer rows.Close()
 	}
 
 	if rs == resultcode.Result_Error_Invalid_data {

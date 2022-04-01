@@ -22,6 +22,7 @@ const (
 func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
+
 	if err != nil {
 		log.Errorf("USPAU_Scan_DatabaseServers QueryContext error : %v", err)
 		return nil, err

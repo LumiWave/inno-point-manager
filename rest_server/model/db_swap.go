@@ -16,7 +16,7 @@ const (
 // 지갑 정보 조회
 func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
 	var rs orginMssql.ReturnStatus
-	_, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Exchange_Goods,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Exchange_Goods,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
@@ -38,6 +38,8 @@ func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
 		log.Errorf("USPAU_Exchange_Goods QueryContext err : %v", err)
 		return err
 	}
+
+	defer rows.Close()
 
 	return nil
 }

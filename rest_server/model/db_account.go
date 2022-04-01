@@ -171,7 +171,7 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 	logID context.LogID_type, eventID context.EventID_type) error {
 
 	var rs orginMssql.ReturnStatus
-	_, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
 		sql.Named("AUID", auid),
 		sql.Named("CoinID", coinid),
 		sql.Named("BaseCoinID", baseCoinID),
@@ -186,6 +186,8 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 		log.Errorf("USPAU_Mod_AccountCoins QueryContext err : %v", err)
 		return err
 	}
+
+	defer rows.Close()
 
 	if rs != 1 {
 		log.Errorf("USPAU_Mod_AccountCoins returnvalue error : %v", rs)
