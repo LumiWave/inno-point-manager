@@ -4,6 +4,7 @@ import (
 	originCtx "context"
 	"database/sql"
 	"errors"
+	"strconv"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
@@ -13,6 +14,7 @@ import (
 
 const (
 	USPPO_Rgstr_Members        = "[dbo].[USPPO_Rgstr_Members]"
+	USPPO_Add_Members          = "[dbo].[USPPO_Add_Members]"
 	USPPO_GetList_MemberPoints = "[dbo].[USPPO_GetList_MemberPoints]"
 	USPPO_Get_MemberPoints     = "[dbo].[USPPO_Get_MemberPoints]"
 	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
@@ -25,11 +27,23 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 	if !ok {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
+
+	pointStr := ""
+	separator := ","
+	for _, pointInfo := range o.AppPointsMap[params.AppID].Points {
+		if len(pointStr) > 0 {
+			pointStr += separator
+		}
+		pointStr += strconv.FormatInt(pointInfo.PointId, 10)
+	}
+
 	var rs orginMssql.ReturnStatus
-	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Rgstr_Members,
+	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Add_Members,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
+		sql.Named("PointString", pointStr),
+		sql.Named("RowSeparator", separator),
 		&rs); err != nil {
 		log.Errorf("USPPO_Rgstr_Members QueryContext error : %v", err)
 		return err
