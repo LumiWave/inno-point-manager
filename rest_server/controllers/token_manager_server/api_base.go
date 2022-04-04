@@ -27,19 +27,38 @@ type ApiInfo struct {
 	Uri              string
 	ResponseType     interface{}
 	ResponseFuncType func() interface{}
+	client           *http.Client
 }
 
 var ApiList = map[api_kind]ApiInfo{
-	Api_post_sendfrom_parentwallet: ApiInfo{ApiType: Api_post_sendfrom_parentwallet, Method: "POST", Uri: "/token/transfer", ResponseType: new(ResSendFromParentWallet), ResponseFuncType: func() interface{} { return new(ResSendFromParentWallet) }},
-	Api_post_sendfrom_userWallet:   ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "POST", Uri: "/token/transfer/user", ResponseType: new(ResSendFromUserWallet), ResponseFuncType: func() interface{} { return new(ResSendFromUserWallet) }},
+	Api_post_sendfrom_parentwallet: ApiInfo{ApiType: Api_post_sendfrom_parentwallet, Method: "POST", Uri: "/token/transfer", ResponseType: new(ResSendFromParentWallet),
+		ResponseFuncType: func() interface{} { return new(ResSendFromParentWallet) }, client: NewClient()},
+	Api_post_sendfrom_userWallet: ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "POST", Uri: "/token/transfer/user", ResponseType: new(ResSendFromUserWallet),
+		ResponseFuncType: func() interface{} { return new(ResSendFromUserWallet) }, client: NewClient()},
 
-	Api_get_coin_fee: ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "GET", Uri: "/token/coin/fee", ResponseType: new(ResCoinFeeInfo), ResponseFuncType: func() interface{} { return new(ResCoinFeeInfo) }},
+	Api_get_coin_fee: ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "GET", Uri: "/token/coin/fee", ResponseType: new(ResCoinFeeInfo),
+		ResponseFuncType: func() interface{} { return new(ResCoinFeeInfo) }, client: NewClient()},
 }
 
-func MakeHttpClient(callUrl string, auth string, method string, body *bytes.Buffer, queryStr string) (*http.Client, *http.Request) {
+func NewClient() *http.Client {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.MaxIdleConns = 100
+	t.MaxIdleConnsPerHost = 100
+	t.IdleConnTimeout = 30 * time.Second
+	t.DisableKeepAlives = false
+	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: t,
+	}
+	return client
+}
+
+func MakeHttp(callUrl string, auth string, method string, body *bytes.Buffer, queryStr string) *http.Request {
 	req, err := http.NewRequest(method, callUrl, body)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
 	req.Header.Add("Accept", "application/json")
@@ -51,17 +70,10 @@ func MakeHttpClient(callUrl string, auth string, method string, body *bytes.Buff
 		req.URL.RawQuery = queryStr
 	}
 
-	client := &http.Client{
-		Timeout: 60 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-	return client, req
+	return req
 }
 
-func HttpCall(callUrl string, auth string, method string, kind api_kind, body *bytes.Buffer, queryStruct interface{}, response interface{}) (interface{}, error) {
-
+func HttpCall(client *http.Client, callUrl string, auth string, method string, kind api_kind, body *bytes.Buffer, queryStruct interface{}, response interface{}) (interface{}, error) {
 	var v url.Values
 	var queryStr string
 	if queryStruct != nil {
@@ -69,7 +81,7 @@ func HttpCall(callUrl string, auth string, method string, kind api_kind, body *b
 		queryStr = v.Encode()
 	}
 
-	client, req := MakeHttpClient(callUrl, auth, method, body, queryStr)
+	req := MakeHttp(callUrl, auth, method, body, queryStr)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

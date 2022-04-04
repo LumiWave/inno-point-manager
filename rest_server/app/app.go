@@ -7,6 +7,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/auth"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/externalapi"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/internalapi"
@@ -32,7 +33,7 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	// if err := o.InitScheduler(); err != nil {
 	// 	return err
 	// }
-
+	auth.InitHttpClient()
 	o.InitTokenManagerServer(o.conf)
 
 	if err := o.NewDB(o.conf); err != nil {
