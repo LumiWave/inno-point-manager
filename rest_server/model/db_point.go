@@ -45,17 +45,17 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 		sql.Named("PointString", pointStr),
 		sql.Named("RowSeparator", separator),
 		&rs); err != nil {
-		log.Errorf("USPPO_Rgstr_Members QueryContext error : %v", err)
+		log.Errorf("USPPO_Add_Members QueryContext error : %v", err)
 		return err
 	} else {
 		defer rows.Close()
 	}
 
 	if rs == resultcode.Result_Error_duplicate_auid {
-		log.Errorf("USPPO_Rgstr_Members returnStatus : %v", rs)
+		log.Errorf("USPPO_Add_Members returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
 	} else if rs != 1 {
-		log.Errorf("USPPO_Rgstr_Members returnStatus : %v", rs)
+		log.Errorf("USPPO_Add_Members returnStatus : %v", rs)
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
