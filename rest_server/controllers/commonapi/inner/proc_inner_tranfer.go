@@ -176,6 +176,13 @@ func TransferResultDeposit(params *context.ReqCoinTransferResDeposit) *base.Base
 		return resp
 	}
 
+	if meCoin.CoinID == 0 {
+		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
+			params.FromAddress, params.ToAddress, params.CoinSymbol, params.Amount)
+		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+		return resp
+	}
+
 	// USPAU_Mod_AccountCoins 호출 하여 코인량 갱신
 	adjustQuantity, _ := strconv.ParseFloat(params.Amount, 64)
 

@@ -142,7 +142,7 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 	var rs orginMssql.ReturnStatus
 	var auID, coinID int64
 	var quantity float64
-	_, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountBaseCoins_By_WalletAddress,
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Get_AccountBaseCoins_By_WalletAddress,
 		sql.Named("WalletAddress", walletAddress),
 		sql.Named("CoinSymbol", coinSymbol),
 		sql.Named("AUID", sql.Out{Dest: &auID}),
@@ -153,6 +153,8 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 		log.Errorf("USPAU_Get_AccountBaseCoins_By_WalletAddress QueryContext err : %v", err)
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	meCoin := &context.AccountCoinByWalletAddress{
 		AUID:     auID,
