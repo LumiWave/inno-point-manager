@@ -4,9 +4,10 @@ go 1.17
 
 require (
 	github.com/ONBUFF-IP-TOKEN/baseapp v1.0.13
-	github.com/ONBUFF-IP-TOKEN/basedb v1.1.8
+	github.com/ONBUFF-IP-TOKEN/basedb v1.1.10
 	github.com/ONBUFF-IP-TOKEN/baseutil v1.0.7
 	github.com/denisenkom/go-mssqldb v0.11.0
+	github.com/go-redsync/redsync/v4 v4.4.2
 	github.com/google/go-querystring v1.1.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/satori/go.uuid v1.2.0
@@ -22,7 +23,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
-	github.com/go-redsync/redsync/v4 v4.4.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
 	github.com/golang/snappy v0.0.3 // indirect
