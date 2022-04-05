@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 	orginMssql "github.com/denisenkom/go-mssqldb"
@@ -209,6 +211,20 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		log.Errorf("USPPO_Mod_MemberPoints returnStatus Result_DBError_Unknown : %v", rs)
 		return 0, "", errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
+
+	apiParams := &api_inno_log.MemberPointsLog{
+		LogDt:   time.Now().Format("2006-01-02 15:04:05.000"),
+		LogID:   int64(logID),
+		EventID: int64(eventID),
+		//AUID:    auid,
+		MUID: muID,
+		//AppID: appid,
+		PointID:     pointID,
+		PreQuantity: preQuantity,
+		AdjQuantity: adjQuantity,
+		Quantity:    quantity,
+	}
+	go api_inno_log.GetInstance().PostMemberPoints(apiParams)
 
 	return todayAcqQuantity, resetDate, nil
 }

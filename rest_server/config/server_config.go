@@ -37,6 +37,13 @@ type ApiTokenManagerServer struct {
 	ExternalVer      string `yaml:"external_ver"`
 }
 
+type ApiInno struct {
+	InternalpiDomain string `yaml:"api_internal_domain"`
+	ExternalpiDomain string `yaml:"api_external_domain"`
+	InternalVer      string `yaml:"internal_ver"`
+	ExternalVer      string `yaml:"external_ver"`
+}
+
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
@@ -47,6 +54,7 @@ type ServerConfig struct {
 	MssqlDBPointRead   baseconf.DBAuth       `yaml:"mssql_db_point_read"`
 	Auth               ApiAuth               `yaml:"api_auth"`
 	TokenMgrServer     ApiTokenManagerServer `yaml:"api_token_manager_server"`
+	InnoLog            ApiInno               `yaml:"inno-log"`
 }
 
 func GetInstance(filepath ...string) *ServerConfig {

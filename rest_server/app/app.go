@@ -7,6 +7,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/auth"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/externalapi"
@@ -39,6 +40,8 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	if err := o.NewDB(o.conf); err != nil {
 		return err
 	}
+
+	o.InitLogServer(o.conf)
 
 	return err
 }
@@ -87,4 +90,15 @@ func (o *ServerApp) InitTokenManagerServer(conf *config.ServerConfig) {
 
 func (o *ServerApp) NewDB(conf *config.ServerConfig) error {
 	return model.InitDB(conf)
+}
+
+func (o *ServerApp) InitLogServer(conf *config.ServerConfig) {
+	confLog := conf.InnoLog
+	hostInfo := api_inno_log.HostInfo{
+		IntHostUri: confLog.InternalpiDomain,
+		ExtHostUri: confLog.ExternalpiDomain,
+		IntVer:     confLog.InternalVer,
+		ExtVer:     confLog.ExternalVer,
+	}
+	api_inno_log.NewServerInfo("", hostInfo)
 }

@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
@@ -193,6 +195,20 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 		log.Errorf("USPAU_Mod_AccountCoins returnvalue error : %v", rs)
 		return errors.New("USPAU_Mod_AccountCoins returnvalue error " + strconv.Itoa(int(rs)))
 	}
+
+	apiParams := &api_inno_log.AccountCoinLog{
+		LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+		LogID:         int64(logID),
+		EventID:       int64(eventID),
+		AUID:          auid,
+		CoinID:        coinid,
+		BaseCoinID:    baseCoinID,
+		WalletAddress: walletAddress,
+		PreQuantity:   previousCoinQuantity,
+		AdjQuantity:   adjustCoinQuantity,
+		Quantity:      coinQuantity,
+	}
+	go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 
 	return nil
 }

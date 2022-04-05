@@ -3,8 +3,10 @@ package model
 import (
 	originCtx "context"
 	"database/sql"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
@@ -40,6 +42,26 @@ func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
 	}
 
 	defer rows.Close()
+
+	apiParams := &api_inno_log.ExchangeGoodsLog{
+		LogDt:            time.Now().Format("2006-01-02 15:04:05.000"),
+		LogID:            int64(params.LogID),
+		EventID:          int64(params.EventID),
+		AUID:             params.AUID,
+		MUID:             params.MUID,
+		AppID:            params.AppID,
+		CoinID:           params.CoinID,
+		BaseCoinID:       params.BaseCoinID,
+		WalletAddress:    params.WalletAddress,
+		PreCoinQuantity:  params.PreviousCoinQuantity,
+		AdjCoinQuantity:  params.AdjustCoinQuantity,
+		CoinQuantity:     params.CoinQuantity,
+		PointID:          params.PointID,
+		PrePointQuantity: params.PreviousPointQuantity,
+		AdjPointQuantity: params.AdjustPointQuantity,
+		PointQuantity:    params.PointQuantity,
+	}
+	go api_inno_log.GetInstance().PostExchangeGoods(apiParams)
 
 	return nil
 }
