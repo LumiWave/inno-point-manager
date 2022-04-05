@@ -13,7 +13,7 @@ func AutoLock(key string) (func() error, error) {
 	opts := new(basedb.LockOptions)
 	opts.LockTimeout = 5 * time.Second
 	opts.WaitTimeout = 10 * time.Second
-	opts.WaitRetry = 500 * time.Millisecond
+	opts.WaitRetry = 10 * time.Millisecond
 	unLock, err := GetDB().Cache.AutoLock(key, opts)
 
 	if err != nil {
