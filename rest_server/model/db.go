@@ -12,6 +12,8 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 )
 
 type PointInfo struct {
@@ -54,7 +56,7 @@ type AppCoin struct {
 type DB struct {
 	MssqlAccountAll  *basedb.Mssql
 	MssqlAccountRead *basedb.Mssql
-	Cache            *basedb.Cache
+	Cache            *basedb.CacheV8
 
 	MssqlPointsAll  map[int64]*basedb.Mssql
 	MssqlPointsRead map[int64]*basedb.Mssql
@@ -69,6 +71,8 @@ type DB struct {
 
 	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
 	Coins    map[int64]*Coin      // 전체 coin 정보 : key coinID
+
+	RedSync *redsync.Redsync
 }
 
 var gDB *DB
@@ -78,10 +82,12 @@ func GetDB() *DB {
 }
 
 func InitDB(conf *config.ServerConfig) (err error) {
-	cache := basedb.GetCache(&conf.Cache)
+	cache := basedb.GetCacheV8(&conf.Cache)
 	gDB = &DB{
 		Cache: cache,
 	}
+	pool := goredis.NewPool(cache.GetDB().RedisClient())
+	gDB.RedSync = redsync.New(pool)
 
 	gDB.MssqlAccountAll, err = gDB.ConnectDB(&conf.MssqlDBAccountAll)
 	if err != nil {

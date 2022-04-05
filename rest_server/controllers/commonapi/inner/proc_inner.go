@@ -15,13 +15,18 @@ import (
 func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point, error) {
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(req.MUID)
-	unLock, err := model.AutoLock(Lockkey)
-	if err != nil {
-		return nil, err
-	}
+	// unLock, err := model.AutoLock(Lockkey)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// 1-1. redis unlock
-	defer unLock()
+	// // 1-1. redis unlock
+	// defer unLock()
+
+	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+	if err := mutex.Lock(); err != nil {
+		panic(err)
+	}
 
 	respPoint := new(context.Point)
 	// 2. redis에 해당 포인트 정보 존재하는지 check
@@ -160,13 +165,24 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(MUID)
-	unLock, err := model.AutoLock(Lockkey)
-	if err != nil {
-		return nil, err
+	// unLock, err := model.AutoLock(Lockkey)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // 1-1. redis unlock
+	// defer unLock()
+
+	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+	if err := mutex.Lock(); err != nil {
+		log.Error(err)
 	}
 
-	// 1-1. redis unlock
-	defer unLock()
+	defer func() {
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			panic("unlock failed")
+		}
+	}()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(MUID)
@@ -207,9 +223,9 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 			}
 
 			// 2-3. redis update thread 생성
-			model.GetDB().PointDocMtx.Lock()
-			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
-			model.GetDB().PointDocMtx.Unlock()
+			// model.GetDB().PointDocMtx.Lock()
+			// model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
+			// model.GetDB().PointDocMtx.Unlock()
 		}
 	} else {
 		// redis에 존재 한다면 내가 관리하는 thread check, 내 관리가 아니면 그냥 값만 리턴
@@ -220,14 +236,14 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 
 func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, error) {
 	// 1. redis lock
-	Lockkey := model.MakeMemberPointListLockKey(MUID)
-	unLock, err := model.AutoLock(Lockkey)
-	if err != nil {
-		return nil, err
-	}
+	// Lockkey := model.MakeMemberPointListLockKey(MUID)
+	// unLock, err := model.AutoLock(Lockkey)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// 1-1. redis unlock
-	defer unLock()
+	// // 1-1. redis unlock
+	// defer unLock()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(MUID)

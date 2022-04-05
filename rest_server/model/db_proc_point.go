@@ -51,24 +51,32 @@ func (o *MemberPointInfo) UpdateRun() {
 
 			//2. redis lock
 			Lockkey := MakeMemberPointListLockKey(o.MUID)
-			unLock, err := AutoLock(Lockkey)
-			if err != nil {
-				log.Errorf("redis lock fail [lockkey:%v][err:%v]", Lockkey, err)
-				return
+			mutex := GetDB().RedSync.NewMutex(Lockkey)
+			if err := mutex.Lock(); err != nil {
+				panic(err)
 			}
+			// unLock, err := AutoLock(Lockkey)
+			// if err != nil {
+			// 	log.Errorf("redis lock fail [lockkey:%v][err:%v]", Lockkey, err)
+			// 	return
+			// }
 
 			key := MakeMemberPointListKey(o.MUID)
 			//3. redis read
 			pointInfo, err := GetDB().GetCacheMemberPointList(key)
 			if err != nil {
-				unLock() // redis unlock
+				if ok, err := mutex.Unlock(); !ok || err != nil {
+					panic("unlock failed")
+				}
 				log.Infof("GetCacheMemberPointList [key:%v][err:%v]", key, err)
 				return
 			}
 			//4. myuuid check else go func end
 			if !strings.EqualFold(o.MyUuid, pointInfo.MyUuid) {
 				log.Errorf("Myuuid diffrent [my_uuid:%v][cache_uuid:%v]", o.MyUuid, pointInfo.MyUuid)
-				unLock() // redis unlock
+				if ok, err := mutex.Unlock(); !ok || err != nil {
+					panic("unlock failed")
+				}
 				return
 			}
 			//5. db update
@@ -105,7 +113,9 @@ func (o *MemberPointInfo) UpdateRun() {
 			}
 
 			timer.Stop()
-			unLock() // redis unlock
+			if ok, err := mutex.Unlock(); !ok || err != nil {
+				panic("unlock failed")
+			}
 		}
 	}()
 }

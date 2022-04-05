@@ -11,7 +11,8 @@ import (
 
 // redis member point lock key generate
 func MakeMemberPointListLockKey(MUID int64) string {
-	return config.GetInstance().DBPrefix + "-MEMBER-POINT-" + strconv.FormatInt(MUID, 10) + "-lock"
+	//return config.GetInstance().DBPrefix + "-MEMBER-POINT-" + strconv.FormatInt(MUID, 10) + "-lock"
+	return strconv.FormatInt(MUID, 10) + "-point-lock"
 }
 
 // redis member point key generate
