@@ -19,16 +19,18 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
 		mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 		if err := mutex.Lock(); err != nil {
-			panic(err)
+			log.Error("redis lock err:%v", err)
+			resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+			return resp
 		}
-		// unLock, err := model.AutoLock(Lockkey)
-		// if err != nil {
-		// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-		// 	return resp
-		// } else {
-		// 	// 0-1. redis unlock
-		// 	defer unLock()
-		// }
+
+		defer func() {
+			if ok, err := mutex.Unlock(); !ok || err != nil {
+				if err != nil {
+					log.Errorf("unlock err : %v", err)
+				}
+			}
+		}()
 
 		// 1. redis에 외부 전송 정보 존재하는지 check
 		key := model.MakeCoinTransferFromUserWalletKey(params.AUID)
@@ -46,19 +48,21 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(params.MUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// }
-
-	// // 1-1. redis unlock
-	// defer unLock()
-
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	// 2. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(params.MUID)

@@ -15,18 +15,19 @@ import (
 func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point, error) {
 	// 1. redis lock
 	Lockkey := model.MakeMemberPointListLockKey(req.MUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // 1-1. redis unlock
-	// defer unLock()
-
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error(err)
+		return nil, err
 	}
+
+	defer func() {
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	respPoint := new(context.Point)
 	// 2. redis에 해당 포인트 정보 존재하는지 check
@@ -66,12 +67,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 							break
 						}
 
-						// if points[idx].PreQuantity == 0 {
-						// 	points[idx].PreQuantity = req.PreQuantity
-						// }
-
 						points[idx].AdjustQuantity += req.AdjustQuantity
 						points[idx].Quantity += req.AdjustQuantity
+						points[idx].TodayQuantity += req.AdjustQuantity
 
 						find = true
 						findIdx = idx
@@ -129,11 +127,9 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 						break
 					}
 
-					// if points[idx].PreQuantity == 0 {
-					// 	points[idx].PreQuantity = req.PreQuantity
-					// }
 					points[idx].AdjustQuantity += req.AdjustQuantity
 					points[idx].Quantity += req.AdjustQuantity
+					points[idx].TodayQuantity += req.AdjustQuantity
 					find = true
 					findIdx = idx
 				} else {
@@ -163,28 +159,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 }
 
 func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
-	// 1. redis lock
-	Lockkey := model.MakeMemberPointListLockKey(MUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // 1-1. redis unlock
-	// defer unLock()
-
-	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
-	if err := mutex.Lock(); err != nil {
-		log.Error(err)
-	}
-
-	defer func() {
-		if ok, err := mutex.Unlock(); !ok || err != nil {
-			panic("unlock failed")
-		}
-	}()
-
-	// 2. redis에 해당 포인트 정보 존재하는지 check
+	// 1. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(MUID)
 	pointInfo, err := model.GetDB().GetCacheMemberPointList(key)
 	if err != nil {
@@ -216,16 +191,6 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 				MUID:   MUID,
 				Points: points,
 			}
-
-			// 2-2. redis 에 write
-			if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
-				return nil, err
-			}
-
-			// 2-3. redis update thread 생성
-			// model.GetDB().PointDocMtx.Lock()
-			// model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
-			// model.GetDB().PointDocMtx.Unlock()
 		}
 	} else {
 		// redis에 존재 한다면 내가 관리하는 thread check, 내 관리가 아니면 그냥 값만 리턴
@@ -235,17 +200,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 }
 
 func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, error) {
-	// 1. redis lock
-	// Lockkey := model.MakeMemberPointListLockKey(MUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // 1-1. redis unlock
-	// defer unLock()
-
-	// 2. redis에 해당 포인트 정보 존재하는지 check
+	// 1. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(MUID)
 	pointInfo, err := model.GetDB().GetCacheMemberPointList(key)
 	if err != nil {
@@ -285,16 +240,6 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 				Points: points,
 			}
 
-			// 2-2. redis 에 write
-			if err := model.GetDB().SetCacheMemberPointList(key, pointInfo); err != nil {
-				return nil, err
-			}
-
-			// 2-3. redis update thread 생성
-			model.GetDB().PointDocMtx.Lock()
-			model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
-			model.GetDB().PointDocMtx.Unlock()
-
 			// 2-4. 요청한 point id만 응답해준다.
 			temp := context.Point{}
 			bFind := false
@@ -312,7 +257,6 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 			}
 		}
 	} else {
-		// redis에 존재 한다면 내가 관리하는 thread check
 		// 요청한 point id만 응답해준다.
 		temp := context.Point{}
 		bFind := false
@@ -338,17 +282,12 @@ func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64
 		if point.TodayQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
 			// 이미 다 채운 상태라면 에러 리턴
 			return false
-		} else {
-			if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
-				// 초과시 가능 포인트만 적립
-				*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
-			}
 		}
-	} else {
-		if point.TodayQuantity + +point.AdjustQuantity + *reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
-			// 초과시 가능 포인트만 적립
-			*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
-		}
+	}
+
+	// 초과시 최대 가능 포인트만 적립
+	if point.TodayQuantity+point.AdjustQuantity+*reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
+		*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
 	}
 
 	return true

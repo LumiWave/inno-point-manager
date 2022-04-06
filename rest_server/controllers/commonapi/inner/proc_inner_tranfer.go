@@ -25,19 +25,21 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet) *
 
 	// 0. redis lock
 	Lockkey := model.MakeCoinTransferFromParentWalletLockKey(params.AUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// } else {
-	// 	// 0-1. redis unlock
-	// 	defer unLock()
-	// }
-
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	// 1. redis에 외부 전송 정보 존재하는지 check
 	key := model.MakeCoinTransferFromParentWalletKey(params.AUID)
@@ -104,18 +106,21 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet) *base
 
 	// 0. redis lock
 	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// } else {
-	// 	// 0-1. redis unlock
-	// 	defer unLock()
-	// }
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	// 1. redis에 외부 전송 정보 존재하는지 check
 	key := model.MakeCoinTransferFromUserWalletKey(params.AUID)
@@ -280,18 +285,21 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 	keyFromUser := model.MakeCoinTransferFromUserWalletKey(AUID)
 
 	Lockkey := model.MakeMemberPointListLockKey(AUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// } else {
-	// 	// 0-1. redis unlock
-	// 	defer unLock()
-	// }
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 	model.GetDB().DelCacheCoinTransfer(keyFromParent) // audi key redis delete
 	model.GetDB().DelCacheCoinTransfer(keyFromUser)   // audi key redis delete
 
@@ -303,18 +311,21 @@ func IsExistInprogressTransferFromParentWallet(params *context.GetCoinTransferEx
 	resp.Success()
 
 	Lockkey := model.MakeCoinTransferFromParentWalletLockKey(params.AUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// } else {
-	// 	// 0-1. redis unlock
-	// 	defer unLock()
-	// }
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	key := model.MakeCoinTransferFromParentWalletKey(params.AUID)
 	reqCoinTransfer, err := model.GetDB().GetCacheCoinTransferFromParentWallet(key)
@@ -334,18 +345,20 @@ func IsExistInprogressTransferFromUserWallet(params *context.GetCoinTransferExis
 	resp.Success()
 
 	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
-	// unLock, err := model.AutoLock(Lockkey)
-	// if err != nil {
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// } else {
-	// 	// 0-1. redis unlock
-	// 	defer unLock()
-	// }
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		panic(err)
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
 	}
+
+	defer func() {
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
 
 	key := model.MakeCoinTransferFromUserWalletKey(params.AUID)
 	reqCoinTransfer, err := model.GetDB().GetCacheCoinTransferFromUserWallet(key)
