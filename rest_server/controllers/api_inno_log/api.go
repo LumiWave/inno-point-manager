@@ -52,7 +52,7 @@ func (o *ServerInfo) PostAccountCoins(req *AccountCoinLog) (*Common, error) {
 }
 
 func (o *ServerInfo) PostMemberPoints(req *MemberPointsLog) (*Common, error) {
-	api := ApiList[Api_post_account_coins]
+	api := ApiList[Api_post_member_points]
 	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, api.Uri)
 
 	pbytes, _ := json.Marshal(req)

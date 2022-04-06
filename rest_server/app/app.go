@@ -36,12 +36,11 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	// }
 	auth.InitHttpClient()
 	o.InitTokenManagerServer(o.conf)
+	o.InitLogServer(o.conf)
 
 	if err := o.NewDB(o.conf); err != nil {
 		return err
 	}
-
-	o.InitLogServer(o.conf)
 
 	return err
 }
