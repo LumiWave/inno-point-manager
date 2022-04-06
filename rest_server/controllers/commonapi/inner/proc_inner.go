@@ -175,8 +175,7 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	if err := mutex.Lock(); err != nil {
-		log.Errorf("redis lock err:%v", err)
-		return nil, err
+		log.Error(err)
 	}
 
 	defer func() {
@@ -227,8 +226,6 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 			// model.GetDB().PointDocMtx.Lock()
 			// model.GetDB().PointDoc[key] = model.NewMemberPointInfo(pointInfo, appId, true)
 			// model.GetDB().PointDocMtx.Unlock()
-
-			model.NewMemberPointInfo(pointInfo, appId, true)
 		}
 	} else {
 		// redis에 존재 한다면 내가 관리하는 thread check, 내 관리가 아니면 그냥 값만 리턴
@@ -315,6 +312,7 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 			}
 		}
 	} else {
+		// redis에 존재 한다면 내가 관리하는 thread check
 		// 요청한 point id만 응답해준다.
 		temp := context.Point{}
 		bFind := false
