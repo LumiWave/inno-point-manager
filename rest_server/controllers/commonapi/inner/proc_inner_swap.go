@@ -174,11 +174,11 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 					resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
 					return resp
 				}
-			} else {
-				log.Errorf("accountPoint not exist pointid : %v, auid:%v", params.PointID, params.AUID)
-				resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
-				return resp
-			}
+			} // else {
+			// 	log.Errorf("accountPoint not exist pointid : %v, auid:%v, muid:%v", params.PointID, params.AUID, params.MUID)
+			// 	resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
+			// 	return resp
+			// }
 		}
 
 		// 코인 보유 수량이 전환량 보다 큰지 확인
