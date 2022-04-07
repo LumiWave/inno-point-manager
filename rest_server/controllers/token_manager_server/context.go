@@ -36,7 +36,7 @@ type ReqSendFromUserWallet struct {
 }
 
 type ResSendFromUserWalletValue struct {
-	TransactionHash string `json:"transaction_hash"`
+	TransactionHash string `json:"transactionHash"`
 }
 
 type ResSendFromUserWallet struct {

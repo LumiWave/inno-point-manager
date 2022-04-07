@@ -151,6 +151,9 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet) *base
 			return resp
 		}
 
+		if len(res.Value.TransactionHash) == 0 {
+			log.Errorf("PostSendFromUserWallet txid null")
+		}
 		//params.ReqId = res.Value.ReqId
 		params.TransactionId = res.Value.TransactionHash
 	}
