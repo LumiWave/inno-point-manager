@@ -220,6 +220,7 @@ func (o *DB) GetAppPoints() error {
 
 			o.AppPointsMap[appId.Int64].Points = append(o.AppPointsMap[appId.Int64].Points, &temp)
 			o.AppPointsMap[appId.Int64].PointsMap[pointId.Int64] = &temp
+			o.ScanPointsOfApp[pointId.Int64] = o.AppPointsMap[appId.Int64]
 		} else {
 			log.Errorf("USPAU_Scan_ApplicationPoints Scan error : %v", err)
 		}

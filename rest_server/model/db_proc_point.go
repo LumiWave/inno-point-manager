@@ -88,6 +88,7 @@ func (o *MemberPointInfo) UpdateRun() {
 					} else {
 						eventID = context.EventID_sub
 					}
+
 					if todayAcqQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
 						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
 						log.Errorf("UpdateAppPoint [err:%v]", err)

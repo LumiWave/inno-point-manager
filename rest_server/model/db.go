@@ -65,7 +65,8 @@ type DB struct {
 	PointDocMtx sync.Mutex
 
 	//PointList     map[int64]PointInfo // 전체 포인트 종류
-	ScanPointsMap map[int64]PointInfo // 전체 포인트 종류 : key PointId
+	ScanPointsMap   map[int64]PointInfo     // 전체 포인트 종류 : key PointId
+	ScanPointsOfApp map[int64]*AppPointInfo // 포인트별 app 정보 key pointID
 
 	AppPointsMap map[int64]*AppPointInfo // 전체 app과 포인트 : key AppId
 
@@ -136,6 +137,7 @@ func InitDB(conf *config.ServerConfig) (err error) {
 func LoadDBPoint() {
 	gDB.PointDoc = make(map[string]*MemberPointInfo)
 	gDB.ScanPointsMap = make(map[int64]PointInfo)
+	gDB.ScanPointsOfApp = make(map[int64]*AppPointInfo)
 	gDB.AppPointsMap = make(map[int64]*AppPointInfo)
 	gDB.AppCoins = make(map[int64][]*AppCoin)
 	gDB.Coins = make(map[int64]*Coin)
