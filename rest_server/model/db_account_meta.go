@@ -16,6 +16,7 @@ const (
 	USPAU_Scan_ApplicationPoints = "[dbo].[USPAU_Scan_ApplicationPoints]"
 	USPAU_Scan_Applications      = "[dbo].[USPAU_Scan_Applications]"
 	USPAU_Scan_Coins             = "[dbo].[USPAU_Scan_Coins]"
+	USPAU_Scan_BaseCoins         = "[dbo].[USPAU_Scan_BaseCoins]"
 )
 
 // point database 리스트 요청
@@ -138,6 +139,32 @@ func (o *DB) GetCoins() error {
 					break
 				}
 			}
+		}
+	}
+
+	return nil
+}
+
+// 전체 base coin list 조회
+func (o *DB) GetBaseCoins() error {
+	var rs orginMssql.ReturnStatus
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_BaseCoins, &rs)
+	if err != nil {
+		log.Error("QueryContext err : ", err)
+		return err
+	}
+
+	defer rows.Close()
+
+	o.BaseCoinMapByCoinID = make(map[int64]*context.BaseCoinInfo)
+	o.BaseCoinMapBySymbol = make(map[string]*context.BaseCoinInfo)
+	o.BaseCoins.Coins = nil
+	for rows.Next() {
+		baseCoin := &context.BaseCoinInfo{}
+		if err := rows.Scan(&baseCoin.BaseCoinID, &baseCoin.BaseCoinName, &baseCoin.BaseCoinSymbol, &baseCoin.IsUsedParentWallet); err == nil {
+			o.BaseCoinMapByCoinID[baseCoin.BaseCoinID] = baseCoin
+			o.BaseCoinMapBySymbol[baseCoin.BaseCoinSymbol] = baseCoin
+			o.BaseCoins.Coins = append(o.BaseCoins.Coins, baseCoin)
 		}
 	}
 

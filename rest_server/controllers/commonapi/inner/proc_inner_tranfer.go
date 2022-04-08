@@ -227,26 +227,18 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 
 	// 부모지갑에서 출금된건지 특정 지갑에서 출금된건지 모르기 때문에 둘다 체크
 	var AUID, CoinID int64
-	var TotalQuantity float64
-	transferInfoFromParent, err1 := model.GetDB().GetCacheCoinTransferFromParentWallet(tKey)
-	transferInfoFromUser, err2 := model.GetDB().GetCacheCoinTransferFromUserWallet(tKey)
-	if err1 != nil && err2 != nil {
+	var transferQuantity float64
+	transferInfoFromUser, err := model.GetDB().GetCacheCoinTransferFromUserWallet(tKey)
+	if err != nil {
 		// 존재 하지 않는 출금 정보 콜백을 받았다.
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Invalid_transfer_txid]+" txid:%v", params.Txid)
 		resp.SetReturn(resultcode.Result_Invalid_transfer_txid)
 		return resp
 	}
 
-	if err1 == nil {
-		// 부모지갑에서 출금된 정보
-		AUID = transferInfoFromParent.AUID
-		CoinID = transferInfoFromParent.CoinID
-		TotalQuantity = transferInfoFromParent.TotalQuantity // 부모지갑에서 출금할때는 수수료 제외한다.
-	} else if err2 == nil {
-		AUID = transferInfoFromUser.AUID
-		CoinID = transferInfoFromUser.CoinID
-		TotalQuantity = transferInfoFromUser.Quantity
-	}
+	AUID = transferInfoFromUser.AUID
+	CoinID = transferInfoFromUser.CoinID
+	transferQuantity = transferInfoFromUser.Quantity
 
 	// 응답 status 성공 여부 체크
 	if strings.EqualFold(params.Status, "success") {
@@ -270,11 +262,36 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
 			meCoin.WalletAddress,
 			meCoin.Quantity,
-			-TotalQuantity,
-			meCoin.Quantity-TotalQuantity,
+			-transferQuantity,
+			meCoin.Quantity-transferQuantity,
 			context.LogID_external_wallet,
 			context.EventID_sub); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v", err)
+		}
+		meCoin.Quantity = meCoin.Quantity - transferQuantity // 정보 갱신
+
+		// 자기 지갑에서 수수료 빼기
+		gasFeeCoinID := int64(0)
+		for _, coin := range model.GetDB().Coins {
+			if coin.CoinSymbol == model.GetDB().BaseCoinMapByCoinID[meCoin.BaseCoinID].BaseCoinSymbol {
+				gasFeeCoinID = coin.CoinId
+				break
+			}
+		}
+		gasCoin := coinsMap[gasFeeCoinID]
+		// 가스비 차감
+		gasFee, _ := strconv.ParseFloat(params.ActualFee, 64)
+		if err := model.GetDB().UpdateAccountCoins(
+			AUID,
+			gasFeeCoinID,
+			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+			gasCoin.WalletAddress,
+			gasCoin.Quantity,
+			-gasFee,
+			gasCoin.Quantity-gasFee,
+			context.LogID_external_wallet,
+			context.EventID_sub); err != nil {
+			log.Errorf("UpdateAccountCoins gasfee error : %v", err)
 		}
 	} else if strings.EqualFold(params.Status, "failure") {
 		// 실패 한 경우 두가지 redis 삭제만 유도한다.
@@ -284,7 +301,6 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 	// redis 두가지 삭제
 	model.GetDB().DelCacheCoinTransfer(tKey) // txid key redis delete
 
-	keyFromParent := model.MakeCoinTransferFromParentWalletKey(AUID)
 	keyFromUser := model.MakeCoinTransferFromUserWalletKey(AUID)
 
 	Lockkey := model.MakeMemberPointListLockKey(AUID)
@@ -303,8 +319,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			}
 		}
 	}()
-	model.GetDB().DelCacheCoinTransfer(keyFromParent) // audi key redis delete
-	model.GetDB().DelCacheCoinTransfer(keyFromUser)   // audi key redis delete
+	model.GetDB().DelCacheCoinTransfer(keyFromUser) // audi key redis delete
 
 	return resp
 }

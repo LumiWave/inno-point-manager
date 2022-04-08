@@ -72,6 +72,10 @@ type DB struct {
 	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
 	Coins    map[int64]*Coin      // 전체 coin 정보 : key coinID
 
+	BaseCoinMapByCoinID map[int64]*context.BaseCoinInfo  // 전체 base coin 정보 : key coin symbol
+	BaseCoinMapBySymbol map[string]*context.BaseCoinInfo // 전체 base coin 정보 : key coin symbol
+	BaseCoins           context.BaseCoinList
+
 	RedSync *redsync.Redsync
 }
 
@@ -135,6 +139,8 @@ func LoadDBPoint() {
 	gDB.AppPointsMap = make(map[int64]*AppPointInfo)
 	gDB.AppCoins = make(map[int64][]*AppCoin)
 	gDB.Coins = make(map[int64]*Coin)
+	gDB.BaseCoinMapByCoinID = make(map[int64]*context.BaseCoinInfo)
+	gDB.BaseCoinMapBySymbol = make(map[string]*context.BaseCoinInfo)
 
 	// sequence is important
 	gDB.GetPointList()
@@ -142,6 +148,7 @@ func LoadDBPoint() {
 	gDB.GetCoins()
 	gDB.GetApps()
 	gDB.GetAppPoints()
+	gDB.GetBaseCoins()
 }
 
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {
