@@ -22,7 +22,7 @@ const (
 // point database 리스트 요청
 func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_DatabaseServers, &rs)
 
 	if err != nil {
 		log.Errorf("USPAU_Scan_DatabaseServers QueryContext error : %v", err)
@@ -45,7 +45,7 @@ func (o *DB) GetPointDatabases() (map[int64]*context.PointDB, error) {
 // point 전체 list
 func (o *DB) GetPointList() error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Points, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_Points, &rs)
 	if err != nil {
 		log.Errorf("USPAU_Scan_Points QueryContext error : %v", err)
 		return err
@@ -76,7 +76,7 @@ func (o *DB) GetPointList() error {
 // 전체 app coinid list
 func (o *DB) GetAppCoins() error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_ApplicationCoins, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_ApplicationCoins, &rs)
 	if err != nil {
 		log.Errorf("USPAU_Scan_ApplicationCoins QueryContext error : %v", err)
 		return err
@@ -99,7 +99,7 @@ func (o *DB) GetAppCoins() error {
 // 전체 coin info list
 func (o *DB) GetCoins() error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Coins, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_Coins, &rs)
 	if err != nil {
 		log.Errorf("USPAU_Scan_Coins QueryContext error : %v", err)
 		return err
@@ -148,7 +148,7 @@ func (o *DB) GetCoins() error {
 // 전체 base coin list 조회
 func (o *DB) GetBaseCoins() error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_BaseCoins, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_BaseCoins, &rs)
 	if err != nil {
 		log.Error("QueryContext err : ", err)
 		return err
@@ -174,7 +174,7 @@ func (o *DB) GetBaseCoins() error {
 // 전체 app list 조회
 func (o *DB) GetApps() error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_Scan_Applications, &rs)
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_Scan_Applications, &rs)
 	if err != nil {
 		log.Errorf("USPAU_Scan_Applications QueryContext error : %v", err)
 		return err
