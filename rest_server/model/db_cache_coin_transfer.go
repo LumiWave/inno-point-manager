@@ -10,10 +10,6 @@ func MakeCoinTransferKeyByTxID(transactionID string) string {
 	return config.GetInstance().DBPrefix + ":COIN-TX:" + transactionID
 }
 
-func (o *DB) DelCacheCoinTransfer(key string) error {
-	return o.Cache.Del(key)
-}
-
 func (o *DB) GetCacheCoinTransferTx(key string) (*context.TxType, error) {
 	if !o.Cache.Enable() {
 		log.Warnf("redis disable")
@@ -32,4 +28,8 @@ func (o *DB) SetCacheCoinTransferTx(key string, txType *context.TxType) error {
 	}
 
 	return o.Cache.Set(key, txType, -1)
+}
+
+func (o *DB) DelCacheCoinTransfer(key string) error {
+	return o.Cache.Del(key)
 }

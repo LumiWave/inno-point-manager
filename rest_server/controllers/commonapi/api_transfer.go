@@ -15,7 +15,7 @@ func PostCoinTransferFromParentWallet(params *context.ReqCoinTransferFromParentW
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.TransferFromParentWallet(params); err != nil {
+	if err := inner.TransferFromParentWallet(params, true); err != nil {
 		resp = err
 	}
 
@@ -26,7 +26,8 @@ func PostCoinTransferFromUserWallet(params *context.ReqCoinTransferFromUserWalle
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.TransferFromUserWallet(params); err != nil {
+	params.Target = context.From_user_to_other_wallet
+	if err := inner.TransferFromUserWallet(params, true); err != nil {
 		resp = err
 	}
 

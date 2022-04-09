@@ -2,16 +2,13 @@ package inner
 
 import (
 	"math"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/token_manager_server"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
@@ -27,7 +24,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 	// 5. point->coin 시 부모지갑에 수수료 전송
 	// 6. coin->point 시 부모지갑에 코인 전송
 	// 6. swap 정보 redis 저장
-	// 7. 부모입금 callback 기다림
+	// 00. 부모입금 callback 기다림
 
 	// 0. 포인트 누적이 연속적으로 처리 되지 못하도록 한다.
 	Lockkey := model.MakeMemberPointListLockKey(params.MUID)
@@ -121,6 +118,8 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 				params.PointQuantity = params.PreviousPointQuantity + params.AdjustPointQuantity
 			}
 		}
+
+		model.GetDB().DelCacheMemberPointList(pointKey)
 	}
 
 	// 4. 전환 정보 검증
@@ -216,9 +215,18 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 	// 5. point->coin 시 부모지갑에 수수료 전송
 	if params.EventID == context.EventID_toCoin {
 		target = context.From_user_to_fee_wallet
+		//수수로 전송을 위해 basecoin 정보를 찾아서 입력한다.
+		baseCoinId := int64(0)
+		for _, coin := range model.GetDB().Coins {
+			if coin.CoinSymbol == params.BaseCoinSymbol {
+				baseCoinId = coin.CoinId
+				break
+			}
+		}
+
 		transInfo = &context.ReqCoinTransferFromUserWallet{
 			AUID:           params.AUID,
-			CoinID:         params.BaseCoinID,
+			CoinID:         baseCoinId,
 			CoinSymbol:     params.BaseCoinSymbol,
 			BaseCoinSymbol: params.BaseCoinSymbol,
 			FromAddress:    params.WalletAddress,
@@ -238,50 +246,17 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			Quantity:       params.AdjustCoinQuantity,
 			Target:         target,
 		}
-	}
-	req := &token_manager_server.ReqSendFromUserWallet{
-		BaseCoinSymbol: transInfo.BaseCoinSymbol,
-		Symbol:         transInfo.CoinSymbol,
-		FromAddress:    transInfo.FromAddress,
-		ToAddress:      transInfo.ToAddress,
-		Amount:         strconv.FormatFloat(transInfo.Quantity, 'f', -1, 64),
-		Memo:           strconv.FormatInt(transInfo.AUID, 10),
-	}
-	//main net 전송
-	if res, err := token_manager_server.GetInstance().PostSendFromUserWallet(req); err != nil {
-		resp.SetReturn(resultcode.ResultInternalServerError)
-		return resp
-	} else {
-		if res.Return != 0 { // token manager 전송 에러
-			resp.Return = res.Return
-			resp.Message = res.Message
-			return resp
-		}
 
-		if len(res.Value.TransactionHash) == 0 {
-			log.Errorf("PostSendFromUserWallet txid null")
-		}
-
-		transInfo.TransactionId = res.Value.TransactionHash
+		transInfo.Quantity = math.Abs(params.AdjustCoinQuantity) // swap 시 음수로 넘어온다.
 	}
 
-	transInfo.ActionDate = time.Unix(time.Now().Unix(), 0)
+	resp = TransferFromUserWallet(transInfo, false)
 
-	// 6. swap 정보 redis 저장
-	//tx redis에 는 전송 타입만 기록한다. 추후 콜백에서 tx redis을 읽고 다음 키를 찾아 쓰도록 한다.
-	tKey := model.MakeCoinTransferKeyByTxID(transInfo.TransactionId)
-	txType := &context.TxType{
-		Target: context.From_user_to_parent_wallet,
-	}
-	if err := model.GetDB().SetCacheCoinTransferTx(tKey, txType); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
-		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
-		return resp
-	}
-	// from user redis 에 저장
-	if err := model.GetDB().SetCacheCoinTransferFromUserWallet(key, transInfo); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
-		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
+	// swap 임시 정보 redis에 저장
+	swapKey := model.MakeSwapKey(params.AUID)
+	if err := model.GetDB().SetCacheSwapInfo(swapKey, params); err != nil {
+		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+		resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 		return resp
 	}
 

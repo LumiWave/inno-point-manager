@@ -9,12 +9,16 @@ import (
 
 const (
 	From_user_to_fee_wallet    = int64(0) // 유저 지갑에서 수수료 지갑으로 전송
-	From_user_to_other_wallet  = int64(1) // 유저 지갑에서 지갑으로 전송
-	From_user_to_parent_wallet = int64(2) // 유저 지갑에서 부모 지갑으로 전송
+	From_user_to_parent_wallet = int64(1) // 유저 지갑에서 부모 지갑으로 전송
+	From_user_to_other_wallet  = int64(2) // 유저 지갑에서 다른 지갑으로 전송
+
+	From_parent_to_other_wallet = int64(3) // 부모 지갑에서 다른 지갑으로 전송
 )
 
 type TxType struct {
 	Target int64 `json:"target"`
+	AUID   int64 `json:"au_id"`
+	CoinID int64 `json:"coin_id"`
 }
 
 ///////// 코인 부모 지갑 전송 요청 : to 부모지갑

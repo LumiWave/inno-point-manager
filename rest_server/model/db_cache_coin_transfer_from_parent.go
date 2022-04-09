@@ -42,6 +42,6 @@ func (o *DB) SetCacheCoinTransferFromParentWallet(key string, reqCoinTransfer *c
 	return o.Cache.Set(key, reqCoinTransfer, -1)
 }
 
-// func (o *DB) DelCacheCoinTransferFromParentWallet(key string) error {
-// 	return o.Cache.Del(key)
-// }
+func (o *DB) DelCacheCoinTransferFromParentWallet(key string) error {
+	return o.Cache.Del(key)
+}

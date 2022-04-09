@@ -42,6 +42,7 @@ const (
 	Result_RedisError_Lock_fail      = 18000 // redis lock error
 	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error
 	Result_RedisError_SetTransfer_Tx = 18002 // redis set coin tranfer error
+	Result_RedisError_SetSwapInfo    = 18003 // redis set swap info error
 
 	Result_Error_DB_GetPointAppList               = 18100 // db member point 조회 에러
 	Result_Error_DB_UpdateAppPoint                = 18101 // db point update 에러
@@ -94,6 +95,7 @@ var ResultCodeText = map[int]string{
 	Result_RedisError_Lock_fail:      "Redis lock error.",
 	Result_RedisError_SetTransfer:    "Redis Coin transfer set error",
 	Result_RedisError_SetTransfer_Tx: "Redis Coin transfer by Txid set error",
+	Result_RedisError_SetSwapInfo:    "Redis Swap set error",
 
 	Result_Error_DB_GetPointAppList:               "db member point scan error",
 	Result_Error_DB_UpdateAppPoint:                "db point update error",
