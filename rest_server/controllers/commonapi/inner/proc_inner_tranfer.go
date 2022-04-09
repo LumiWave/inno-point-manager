@@ -394,6 +394,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 		model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
 		userKey := model.MakeCoinTransferFromUserWalletKey(txType.AUID)
 		model.GetDB().DelCacheCoinTransferFromUserWallet(userKey) // from user 삭제
+		model.GetDB().DelCacheSwapInfo(swapKey)
 	} else if txType.Target == context.From_user_to_other_wallet { // 자식지갑에서 다른 지갑으로 코인 전송
 
 	}
