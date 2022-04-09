@@ -44,6 +44,12 @@ type ApiInno struct {
 	ExternalVer      string `yaml:"external_ver"`
 }
 
+type Wallets struct {
+	Name             string `yaml:"name"`
+	FeeWalletAddr    string `yaml:"fee_wallet"`
+	ParentWalletAddr string `yaml:"parent_wallet"`
+}
+
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
@@ -52,6 +58,7 @@ type ServerConfig struct {
 	MssqlDBAccountRead baseconf.DBAuth       `yaml:"mssql_db_account_read"`
 	MssqlDBPointAll    baseconf.DBAuth       `yaml:"mssql_db_point"`
 	MssqlDBPointRead   baseconf.DBAuth       `yaml:"mssql_db_point_read"`
+	ParentWallets      []Wallets             `yaml:"parent_wallet_info"`
 	Auth               ApiAuth               `yaml:"api_auth"`
 	TokenMgrServer     ApiTokenManagerServer `yaml:"api_token_manager_server"`
 	InnoLog            ApiInno               `yaml:"inno-log"`

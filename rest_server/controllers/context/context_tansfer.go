@@ -7,6 +7,41 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
+const (
+	From_user_to_fee_wallet    = int64(0) // 유저 지갑에서 수수료 지갑으로 전송
+	From_user_to_other_wallet  = int64(1) // 유저 지갑에서 지갑으로 전송
+	From_user_to_parent_wallet = int64(2) // 유저 지갑에서 부모 지갑으로 전송
+)
+
+type TxType struct {
+	Target int64 `json:"target"`
+}
+
+///////// 코인 부모 지갑 전송 요청 : to 부모지갑
+type ReqCoinTransferToParentWallet struct {
+	AUID       int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
+	CoinID     int64   `json:"coin_id" url:"coin_id"`
+	CoinSymbol string  `json:"coin_symbol" url:"coin_symbol"` // 코인 심볼
+	ToAddress  string  `json:"to_address" url:"to_address"`   // 보낼 지갑 주소
+	Quantity   float64 `json:"quantity" url:"quantity"`       // 보낼 코인량
+
+	// internal used
+	ReqId         string `json:"reqid"`
+	TransactionId string `json:"transaction_id"`
+
+	ActionDate time.Time `json:"action_date"`
+}
+
+func NewReqCoinTransferToParentWallet() *ReqCoinTransferToParentWallet {
+	return new(ReqCoinTransferToParentWallet)
+}
+
+func (o *ReqCoinTransferToParentWallet) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	return nil
+}
+
+////////////////////////////////////////
+
 ///////// 코인 외부 지갑 전송 요청 : 부모지갑
 type ReqCoinTransferFromParentWallet struct {
 	AUID       int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
@@ -16,10 +51,8 @@ type ReqCoinTransferFromParentWallet struct {
 	Quantity   float64 `json:"quantity" url:"quantity"`       // 보낼 코인량
 
 	// internal used
-	TransferFee   float64 `json:"transfer_fee" url:"transfer_fee"`     // 전송 수수료
-	TotalQuantity float64 `json:"total_quantity" url:"total_quantity"` // 보낼 코인량 + 전송 수수료
-	ReqId         string  `json:"reqid"`
-	TransactionId string  `json:"transaction_id"`
+	ReqId         string `json:"reqid"`
+	TransactionId string `json:"transaction_id"`
 
 	ActionDate time.Time `json:"action_date"`
 }
@@ -45,10 +78,8 @@ type ReqCoinTransferFromUserWallet struct {
 	Quantity       float64 `json:"quantity" url:"quantity"`                 // 보낼 코인량
 
 	// internal used
-	TransferFee   float64 `json:"transfer_fee" url:"transfer_fee"`     // 전송 수수료
-	TotalQuantity float64 `json:"total_quantity" url:"total_quantity"` // 보낼 코인량 + 전송 수수료
-	ReqId         string  `json:"reqid"`
-	TransactionId string  `json:"transaction_id"`
+	Target        int64  `json:"target"` //0 : to fee wallet, 1:external wallet
+	TransactionId string `json:"transaction_id"`
 
 	ActionDate time.Time `json:"action_date"`
 }

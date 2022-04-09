@@ -10,12 +10,12 @@ import (
 
 // redis coin transfer lock key generate
 func MakeCoinTransferFromParentWalletLockKey(AUID int64) string {
-	return config.GetInstance().DBPrefix + "-COIN-TRANSFER-PARENT" + strconv.FormatInt(AUID, 10) + "-lock"
+	return config.GetInstance().DBPrefix + "-COIN-TRANSFER-FROM-PARENT" + strconv.FormatInt(AUID, 10) + "-lock"
 }
 
 // redis coin transfer key generate
 func MakeCoinTransferFromParentWalletKey(AUID int64) string {
-	return config.GetInstance().DBPrefix + ":COIN-TRANSFER-PARENT:" + strconv.FormatInt(AUID, 10)
+	return config.GetInstance().DBPrefix + ":COIN-TRANSFER-FROM-PARENT:" + strconv.FormatInt(AUID, 10)
 }
 
 // func MakeCoinTransferFromParentWalletKeyByTxID(transactionID string) string {
