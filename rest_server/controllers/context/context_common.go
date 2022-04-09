@@ -8,6 +8,8 @@ const (
 	LogID_cp              = 1 // 고객사
 	LogID_exchange        = 2 // 전환
 	LogID_external_wallet = 3 // 외부지갑
+
+	LogID_wallet_sync = 6
 )
 
 type EventID_type int

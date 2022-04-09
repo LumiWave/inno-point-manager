@@ -21,6 +21,7 @@ const (
 	USPPO_Get_MemberPoints     = "[dbo].[USPPO_Get_MemberPoints]"
 	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
 	USPPO_Add_MemberPoints     = "[dbo].[USPPO_Add_MemberPoints]"
+	USPPO_Get_Members          = "[dbo].[USPPO_Get_Members]"
 )
 
 // 포인트 맴버 등록
@@ -227,4 +228,32 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 	go api_inno_log.GetInstance().PostMemberPoints(apiParams)
 
 	return todayAcqQuantity, resetDate, nil
+}
+
+// 회원 정보
+func (o *DB) GetMembers(dbID, muID int64) (int64, error) {
+	mssql, ok := o.MssqlPointsAll[dbID]
+	if !ok {
+		return 0, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	var auID int64
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Get_Members,
+		sql.Named("MUID", muID),
+		sql.Named("AUID", sql.Out{Dest: &auID}),
+		&rs)
+	if err != nil {
+		log.Errorf("USPPO_Get_Members QueryContext error : %v", err)
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	if rs != 1 {
+		log.Errorf("USPPO_Get_Members returnStatus : %v", rs)
+		return 0, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	return auID, nil
 }

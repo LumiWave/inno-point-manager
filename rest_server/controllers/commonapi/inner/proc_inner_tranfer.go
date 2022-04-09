@@ -228,7 +228,8 @@ func TransferResultDeposit(params *context.ReqCoinTransferResDeposit) *base.Base
 		adjustQuantity,
 		meCoin.Quantity+adjustQuantity,
 		context.LogID_external_wallet,
-		context.EventID_add); err != nil {
+		context.EventID_add,
+		params.TxId); err != nil {
 		log.Errorf("UpdateAccountCoins error : %v", err)
 	}
 	return resp
@@ -291,7 +292,8 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			-(amount + fee), // 전송 수수료 + amount
 			meCoin.Quantity-(amount+fee),
 			context.LogID_external_wallet,
-			context.EventID_sub); err != nil {
+			context.EventID_sub,
+			params.Txid); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
 			return resp
 		}
@@ -325,6 +327,17 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			log.Errorf("GetCacheSwapInfo err => audi:%v txid:%v", err, txType.AUID, params.Txid)
 			return resp
 		} else {
+			// 외부지갑에서 코인을 추가 했을 경우를 대비해서 본인의 코인 정보를 다시 가져와서 swap 정보를 갱신한다.
+			_, coinsMap, err := model.GetDB().GetAccountCoins(txType.AUID)
+			if err != nil {
+				log.Errorf("GetAccountCoins error : %v, audi:%v txid:%v", err, txType.AUID, params.Txid)
+				model.MakeDbError(resp, resultcode.Result_DBError, err)
+				return resp
+			}
+			meCoin := coinsMap[reqSwapInfo.CoinID]
+			reqSwapInfo.PreviousCoinQuantity = meCoin.Quantity
+			reqSwapInfo.CoinQuantity = meCoin.Quantity - reqSwapInfo.AdjustCoinQuantity
+
 			if err := model.GetDB().PostPointCoinSwap(reqSwapInfo); err != nil {
 				resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 			}
@@ -374,7 +387,8 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			-fee, // amount
 			meBaseCoin.Quantity-fee,
 			context.LogID_external_wallet,
-			context.EventID_sub); err != nil {
+			context.EventID_sub,
+			params.Txid); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
 			return resp
 		}
@@ -386,6 +400,11 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			log.Errorf("GetCacheSwapInfo err => audi:%v txid:%v", err, txType.AUID, params.Txid)
 			return resp
 		} else {
+			// 외부지갑에서 코인을 추가 했을 경우를 대비해서 본인의 코인 정보를 다시 가져와서 swap 정보를 갱신한다.
+			meCoin := coinsMap[reqSwapInfo.CoinID]
+			reqSwapInfo.PreviousCoinQuantity = meCoin.Quantity
+			reqSwapInfo.CoinQuantity = meCoin.Quantity - reqSwapInfo.AdjustCoinQuantity
+
 			if err := model.GetDB().PostPointCoinSwap(reqSwapInfo); err != nil {
 				resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 			}
@@ -434,7 +453,8 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			-amount, // amount
 			meCoin.Quantity-amount,
 			context.LogID_external_wallet,
-			context.EventID_sub); err != nil {
+			context.EventID_sub,
+			params.Txid); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
 			return resp
 		}
@@ -450,7 +470,8 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			-fee, // amount
 			meBaseCoin.Quantity-fee,
 			context.LogID_external_wallet,
-			context.EventID_sub); err != nil {
+			context.EventID_sub,
+			params.Txid); err != nil {
 			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
 			return resp
 		}
@@ -462,109 +483,6 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 	}
 
 	return resp
-
-	//============================================================================
-
-	// // tx로 redis 검색해서 load
-	// tKey := model.MakeCoinTransferKeyByTxID(params.Txid)
-
-	// // 부모지갑에서 출금된건지 특정 지갑에서 출금된건지 모르기 때문에 둘다 체크
-	// var AUID, CoinID int64
-	// var transferQuantity float64
-	// transferInfoFromUser, err := model.GetDB().GetCacheCoinTransferFromUserWallet(tKey)
-	// if err != nil {
-	// 	// 존재 하지 않는 출금 정보 콜백을 받았다.
-	// 	log.Errorf(resultcode.ResultCodeText[resultcode.Result_Invalid_transfer_txid]+" txid:%v", params.Txid)
-	// 	resp.SetReturn(resultcode.Result_Invalid_transfer_txid)
-	// 	return resp
-	// }
-
-	// AUID = transferInfoFromUser.AUID
-	// CoinID = transferInfoFromUser.CoinID
-	// transferQuantity = transferInfoFromUser.Quantity
-
-	// // 응답 status 성공 여부 체크
-	// if strings.EqualFold(params.Status, "success") {
-	// 	// from address, 이전 코인량 검색, 전송후 남은량 계산
-	// 	_, coinsMap, err := model.GetDB().GetAccountCoins(AUID)
-	// 	if err != nil {
-	// 		log.Errorf("GetAccountCoins error : %v", err)
-	// 		model.MakeDbError(resp, resultcode.Result_DBError, err)
-	// 	}
-
-	// 	meCoin, ok := coinsMap[CoinID]
-	// 	if !ok {
-	// 		log.Errorf("Not file my coinid : %v", CoinID)
-	// 		return resp
-	// 	}
-
-	// 	// USPAU_Mod_AccountCoins 호출 하여 코인 량 갱신
-	// 	if err := model.GetDB().UpdateAccountCoins(
-	// 		AUID,
-	// 		CoinID,
-	// 		model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
-	// 		meCoin.WalletAddress,
-	// 		meCoin.Quantity,
-	// 		-transferQuantity,
-	// 		meCoin.Quantity-transferQuantity,
-	// 		context.LogID_external_wallet,
-	// 		context.EventID_sub); err != nil {
-	// 		log.Errorf("UpdateAccountCoins error : %v", err)
-	// 	}
-	// 	meCoin.Quantity = meCoin.Quantity - transferQuantity // 정보 갱신
-
-	// 	// 자기 지갑에서 수수료 빼기
-	// 	gasFeeCoinID := int64(0)
-	// 	for _, coin := range model.GetDB().Coins {
-	// 		if coin.CoinSymbol == model.GetDB().BaseCoinMapByCoinID[meCoin.BaseCoinID].BaseCoinSymbol {
-	// 			gasFeeCoinID = coin.CoinId
-	// 			break
-	// 		}
-	// 	}
-	// 	gasCoin := coinsMap[gasFeeCoinID]
-	// 	// 가스비 차감
-	// 	gasFee, _ := strconv.ParseFloat(params.ActualFee, 64)
-	// 	if err := model.GetDB().UpdateAccountCoins(
-	// 		AUID,
-	// 		gasFeeCoinID,
-	// 		model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
-	// 		gasCoin.WalletAddress,
-	// 		gasCoin.Quantity,
-	// 		-gasFee,
-	// 		gasCoin.Quantity-gasFee,
-	// 		context.LogID_external_wallet,
-	// 		context.EventID_sub); err != nil {
-	// 		log.Errorf("UpdateAccountCoins gasfee error : %v", err)
-	// 	}
-	// } else if strings.EqualFold(params.Status, "failure") {
-	// 	// 실패 한 경우 두가지 redis 삭제만 유도한다.
-	// 	log.Warnf("coin withdrawal callback failure : %v", params.Txid)
-	// }
-
-	// // redis 두가지 삭제
-	// model.GetDB().DelCacheCoinTransfer(tKey) // txid key redis delete
-
-	// keyFromUser := model.MakeCoinTransferFromUserWalletKey(AUID)
-
-	// Lockkey := model.MakeMemberPointListLockKey(AUID)
-	// mutex := model.GetDB().RedSync.NewMutex(Lockkey)
-	// if err := mutex.Lock(); err != nil {
-	// 	log.Error("redis lock err:%v", err)
-	// 	resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-	// 	return resp
-	// }
-
-	// defer func() {
-	// 	// 1-1. redis unlock
-	// 	if ok, err := mutex.Unlock(); !ok || err != nil {
-	// 		if err != nil {
-	// 			log.Errorf("unlock err : %v", err)
-	// 		}
-	// 	}
-	// }()
-	// model.GetDB().DelCacheCoinTransfer(keyFromUser) // audi key redis delete
-
-	// return resp
 }
 
 func IsExistInprogressTransferFromParentWallet(params *context.GetCoinTransferExistInProgress) *base.BaseResponse {

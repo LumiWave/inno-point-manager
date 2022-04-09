@@ -19,6 +19,7 @@ type AccountCoinLog struct {
 	LogDt         string  `json:"log_dt"`
 	LogID         int64   `json:"log_id"`
 	EventID       int64   `json:"event_id"`
+	TxHash        string  `json:"tx_hash"`
 	AUID          int64   `json:"au_id"`
 	CoinID        int64   `json:"coin_id"`
 	BaseCoinID    int64   `json:"basecoin_id"`

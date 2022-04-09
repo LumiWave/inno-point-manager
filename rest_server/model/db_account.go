@@ -172,7 +172,7 @@ func (o *DB) GetAccountCoinsByWalletAddress(walletAddress, coinSymbol string) (*
 
 // 내 코인 정보 수정
 func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress string, previousCoinQuantity, adjustCoinQuantity, coinQuantity float64,
-	logID context.LogID_type, eventID context.EventID_type) error {
+	logID context.LogID_type, eventID context.EventID_type, txHash string) error {
 
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_AccountCoins,
@@ -202,6 +202,7 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 		LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
 		LogID:         int64(logID),
 		EventID:       int64(eventID),
+		TxHash:        txHash,
 		AUID:          auid,
 		CoinID:        coinid,
 		BaseCoinID:    baseCoinID,
