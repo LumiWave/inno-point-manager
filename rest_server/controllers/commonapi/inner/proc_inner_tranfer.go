@@ -378,7 +378,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
 			return resp
 		}
-		meCoin.Quantity = meCoin.Quantity - fee // 남은 수량
+		meBaseCoin.Quantity = meCoin.Quantity - fee // 남은 수량
 
 		// redis swap 정보 찾아서 스왑 처리
 		swapKey := model.MakeSwapKey(txType.AUID)
@@ -396,7 +396,69 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 		model.GetDB().DelCacheCoinTransferFromUserWallet(userKey) // from user 삭제
 		model.GetDB().DelCacheSwapInfo(swapKey)
 	} else if txType.Target == context.From_user_to_other_wallet { // 자식지갑에서 다른 지갑으로 코인 전송
+		// 자식 지갑의 코인 빼고, 수수료 코인 뺀다.
+		_, coinsMap, err := model.GetDB().GetAccountCoins(txType.AUID)
+		if err != nil {
+			log.Errorf("GetAccountCoins error : %v, audi:%v txid:%v", err, txType.AUID, params.Txid)
+			model.MakeDbError(resp, resultcode.Result_DBError, err)
+			return resp
+		}
 
+		meCoin, ok := coinsMap[txType.CoinID]
+		if !ok {
+			log.Errorf("Not file my coinid : %v txid:%v", txType.CoinID, params.Txid)
+			return resp
+		}
+
+		baseCoinInfo := model.GetDB().BaseCoinMapByCoinID[meCoin.BaseCoinID]
+		meBaseCoinID := int64(0)
+		for _, coin := range model.GetDB().Coins {
+			if strings.EqualFold(coin.CoinSymbol, baseCoinInfo.BaseCoinSymbol) {
+				meBaseCoinID = coin.CoinId
+			}
+		}
+
+		meBaseCoin, ok := coinsMap[meBaseCoinID]
+		if !ok {
+			log.Errorf("Not file my coinid : %v txid:%v", txType.CoinID, params.Txid)
+			return resp
+		}
+
+		amount, _ := strconv.ParseFloat(params.Amount, 64)
+		if err := model.GetDB().UpdateAccountCoins(
+			txType.AUID,
+			txType.CoinID,
+			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+			meCoin.WalletAddress,
+			meCoin.Quantity,
+			-amount, // amount
+			meCoin.Quantity-amount,
+			context.LogID_external_wallet,
+			context.EventID_sub); err != nil {
+			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
+			return resp
+		}
+		meCoin.Quantity = meCoin.Quantity - amount // 남은 수량
+
+		fee, _ := strconv.ParseFloat(params.ActualFee, 64)
+		if err := model.GetDB().UpdateAccountCoins(
+			txType.AUID,
+			meBaseCoinID,
+			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+			meBaseCoin.WalletAddress,
+			meBaseCoin.Quantity,
+			-fee, // amount
+			meBaseCoin.Quantity-fee,
+			context.LogID_external_wallet,
+			context.EventID_sub); err != nil {
+			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
+			return resp
+		}
+		meBaseCoin.Quantity = meCoin.Quantity - fee // 남은 수량
+
+		model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
+		userKey := model.MakeCoinTransferFromUserWalletKey(txType.AUID)
+		model.GetDB().DelCacheCoinTransferFromUserWallet(userKey) // from user 삭제
 	}
 
 	return resp
