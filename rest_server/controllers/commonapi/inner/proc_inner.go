@@ -69,10 +69,10 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 								// 날짜 바뀌면
 								point.TodayQuantity = 0
 								point.ResetDate = time.Now().Format("2006-01-02")
+							} else {
+								point.ResetDate = t.Format("2006-01-02")
 							}
-
 						}
-
 					}
 				}
 			}
