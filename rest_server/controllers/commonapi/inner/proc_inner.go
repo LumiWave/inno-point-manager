@@ -75,6 +75,11 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 							break
 						}
 
+						// 포인트가 0보다 작게 되지 않도록 한다.
+						if points[idx].Quantity+req.AdjustQuantity < 0 {
+							req.AdjustQuantity = -points[idx].Quantity
+						}
+
 						points[idx].AdjustQuantity += req.AdjustQuantity
 						points[idx].Quantity += req.AdjustQuantity
 						points[idx].TodayQuantity += req.AdjustQuantity
@@ -135,9 +140,15 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 						break
 					}
 
+					// 포인트가 0보다 작게 되지 않도록 한다.
+					if points[idx].Quantity+req.AdjustQuantity < 0 {
+						req.AdjustQuantity = -points[idx].Quantity
+					}
+
 					points[idx].AdjustQuantity += req.AdjustQuantity
 					points[idx].Quantity += req.AdjustQuantity
 					points[idx].TodayQuantity += req.AdjustQuantity
+
 					find = true
 					findIdx = idx
 				} else {
