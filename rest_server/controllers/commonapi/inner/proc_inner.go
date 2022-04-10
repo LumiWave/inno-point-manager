@@ -51,7 +51,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 							point.ResetDate = time.Now().Format("2006-01-02")
 							point.TodayQuantity = 0
 						} else {
-							if strings.EqualFold(t.Format("2006-01-02"), time.Now().Format("2006-01-02")) {
+							if !strings.EqualFold(t.Format("2006-01-02"), time.Now().Format("2006-01-02")) {
 								// 날짜 바뀌면
 								point.TodayQuantity = 0
 								point.ResetDate = time.Now().Format("2006-01-02")
