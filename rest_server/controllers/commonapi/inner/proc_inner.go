@@ -286,17 +286,5 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 }
 
 func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {
-	if strings.EqualFold(point.ResetDate, time.Now().Format("2006-01-02")) { // 날짜가 바뀌었는지 체크
-		if point.TodayQuantity+point.AdjustQuantity >= model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
-			// 이미 다 채운 상태라면 에러 리턴
-			return false
-		}
-	}
-
-	// 초과시 최대 가능 포인트만 적립
-	if point.TodayQuantity+point.AdjustQuantity+*reqAdjustQuantity > model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity {
-		*reqAdjustQuantity = model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity - point.TodayQuantity
-	}
-
-	return true
+	return point.TodayQuantity+point.AdjustQuantity+*reqAdjustQuantity < model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity
 }
