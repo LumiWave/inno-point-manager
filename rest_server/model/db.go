@@ -80,6 +80,13 @@ type DB struct {
 	RedSync *redsync.Redsync
 }
 
+type DBType int
+
+const (
+	ACCOUNT DBType = iota
+	POINT
+)
+
 var gDB *DB
 
 func GetDB() *DB {
@@ -94,21 +101,19 @@ func InitDB(conf *config.ServerConfig) (err error) {
 	pool := goredis.NewPool(cache.GetDB().RedisClient())
 	gDB.RedSync = redsync.New(pool)
 
-	gDB.MssqlAccountAll, err = gDB.ConnectDB(&conf.MssqlDBAccountAll)
-	if err != nil {
-		return err
-	}
-
-	gDB.MssqlAccountRead, err = gDB.ConnectDB(&conf.MssqlDBAccountRead)
-	if err != nil {
+	if err := ConnectAllDB(conf); err != nil {
+		log.Errorf("InitDB Error : %v", err)
 		return err
 	}
 
 	// point db create
 	gDB.MssqlPointsAll = make(map[int64]*basedb.Mssql)
 	gDB.MssqlPointsRead = make(map[int64]*basedb.Mssql)
+	var getPointDBs map[int64]*context.PointDB
 
-	if getPointDBs, err := gDB.GetPointDatabases(); err != nil {
+	getPointDBs, err = gDB.GetPointDatabases()
+
+	if err != nil {
 		return err
 	} else {
 		for _, pointDB := range getPointDBs {
@@ -130,6 +135,33 @@ func InitDB(conf *config.ServerConfig) (err error) {
 			gDB.MssqlPointsRead[pointDB.DatabaseID] = mssqlDBRead
 		}
 	}
+
+	go func() {
+		for {
+			timer := time.NewTimer(5 * time.Second)
+			<-timer.C
+			timer.Stop()
+
+			// DB ping 체크 후 오류 시 재 연결
+			if db := CheckPingDB(gDB.MssqlAccountAll, conf.MssqlDBAccountAll, ACCOUNT, nil); db != nil {
+				gDB.MssqlAccountAll = db
+			}
+
+			if db := CheckPingDB(gDB.MssqlAccountRead, conf.MssqlDBAccountRead, ACCOUNT, nil); db != nil {
+				gDB.MssqlAccountRead = db
+			}
+
+			for _, pointDB := range getPointDBs {
+				if db := CheckPingDB(gDB.MssqlPointsAll[pointDB.DatabaseID], conf.MssqlDBPointAll, POINT, pointDB); db != nil {
+					gDB.MssqlPointsAll[pointDB.DatabaseID] = db
+				}
+				if db := CheckPingDB(gDB.MssqlPointsRead[pointDB.DatabaseID], conf.MssqlDBPointRead, POINT, pointDB); db != nil {
+					gDB.MssqlPointsRead[pointDB.DatabaseID] = db
+				}
+			}
+		}
+	}()
+
 	LoadDBPoint()
 	return nil
 }
@@ -170,8 +202,6 @@ func (o *DB) ConnectDB(conf *baseconf.DBAuth) (*basedb.Mssql, error) {
 	idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
 	mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
 	mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
-	mssqlDB.GetDB().SetConnMaxLifetime(24 * time.Hour)
-
 	return mssqlDB, nil
 }
 
@@ -189,7 +219,65 @@ func (o *DB) ConnectDBOfPoint(conf *baseconf.DBAuth, pointDB *context.PointDB) (
 	idleSize, _ := strconv.ParseInt(conf.IdleSize, 10, 32)
 	mssqlDB.GetDB().SetMaxOpenConns(int(idleSize))
 	mssqlDB.GetDB().SetMaxIdleConns(int(idleSize))
-	mssqlDB.GetDB().SetConnMaxLifetime(24 * time.Hour)
-
 	return mssqlDB, nil
+}
+
+func ConnectAllDB(conf *config.ServerConfig) error {
+	var err error
+	gDB.MssqlAccountAll, err = gDB.ConnectDB(&conf.MssqlDBAccountAll)
+	if err != nil {
+		return err
+	}
+
+	gDB.MssqlAccountRead, err = gDB.ConnectDB(&conf.MssqlDBAccountRead)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CheckPingDB(db *basedb.Mssql, conf baseconf.DBAuth, dbType DBType, pointDB *context.PointDB) *basedb.Mssql {
+	// 연결이 안되어있거나, DB Connection이 끊어진 경우에는 재연결 시도
+	if db == nil || !db.Connection.IsConnect {
+		if dbType == ACCOUNT {
+			newDB, err := gDB.ConnectDB(&conf)
+			if err == nil {
+				log.Errorf("connect DB OK")
+			}
+			return newDB
+		} else if dbType == POINT {
+			newDB, err := gDB.ConnectDBOfPoint(&conf, pointDB)
+			if err == nil {
+				log.Debugf("connect DB OK")
+			}
+			return newDB
+		}
+	}
+
+	// 연결이 되어있는 상태면 ping
+	if db.Connection.IsConnect {
+		if err := db.GetDB().Ping(); err != nil {
+			// 재시도 횟수
+			db.Connection.RetryCount += 1
+			if dbType == ACCOUNT {
+				log.Errorf("%v DB Ping err RetryCount(%v)", conf.Database, db.Connection.RetryCount)
+			} else {
+				log.Errorf("%v DB Ping err RetryCount(%v)", pointDB.DatabaseName, db.Connection.RetryCount)
+			}
+
+			// ping 2회 시도해도 안되면 close
+			if db.Connection.RetryCount >= 2 {
+				db.Connection.IsConnect = false
+				// DB Close
+				if err = db.GetDB().Close(); err == nil {
+					if dbType == ACCOUNT {
+						log.Errorf("%v DB Closed", conf.Database)
+					} else {
+						log.Errorf("%v DB Closed", pointDB.DatabaseName)
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
