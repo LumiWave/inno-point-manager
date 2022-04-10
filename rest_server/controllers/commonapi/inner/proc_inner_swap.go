@@ -162,8 +162,6 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return resp
 		}
-		// 가스비 존재 하는지 체크
-
 	} else if params.EventID == context.EventID_toPoint {
 		// 당일 누적 포인트 전환 최대 수량이 넘었는지 체크
 		if accountPoint, err := model.GetDB().GetListAccountPoints(0, params.MUID); err != nil {
@@ -251,12 +249,19 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 	}
 
 	resp = TransferFromUserWallet(transInfo, false)
+	if resp.Return != 0 {
+		return resp
+	}
 
 	// swap 임시 정보 redis에 저장
 	swapKey := model.MakeSwapKey(params.AUID)
 	if err := model.GetDB().SetCacheSwapInfo(swapKey, params); err != nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 		resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
+		return resp
+	}
+	if err := model.GetDB().PostPointCoinSwap(params); err != nil {
+		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 		return resp
 	}
 

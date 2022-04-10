@@ -59,6 +59,7 @@ type ServerConfig struct {
 	MssqlDBPointAll    baseconf.DBAuth       `yaml:"mssql_db_point"`
 	MssqlDBPointRead   baseconf.DBAuth       `yaml:"mssql_db_point_read"`
 	ParentWallets      []Wallets             `yaml:"parent_wallet_info"`
+	ParentWalletsMap   map[string]Wallets    // key parent_wallet_address
 	Auth               ApiAuth               `yaml:"api_auth"`
 	TokenMgrServer     ApiTokenManagerServer `yaml:"api_token_manager_server"`
 	InnoLog            ApiInno               `yaml:"inno-log"`
@@ -73,6 +74,12 @@ func GetInstance(filepath ...string) *ServerConfig {
 		if err := baseconf.Load(filepath[0], currentConfig); err != nil {
 			currentConfig = nil
 		} else {
+			currentConfig.ParentWalletsMap = make(map[string]Wallets)
+
+			for _, wallet := range currentConfig.ParentWallets {
+				currentConfig.ParentWalletsMap[wallet.ParentWalletAddr] = wallet
+			}
+
 			if os.Getenv("ASPNETCORE_PORT") != "" {
 				port, _ := strconv.ParseInt(os.Getenv("ASPNETCORE_PORT"), 10, 32)
 				currentConfig.APIServers[0].Port = int(port)

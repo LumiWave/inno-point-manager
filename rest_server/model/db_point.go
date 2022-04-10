@@ -105,46 +105,32 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 }
 
 // 맴버의 포인트 정보 조회
-func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (*context.Point, error) {
+func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (int64, error) {
 	mssql, ok := o.MssqlPointsRead[DatabaseID]
 	if !ok {
-		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+		return 0, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
 	var rs orginMssql.ReturnStatus
+	var quantity int64
 	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Get_MemberPoints,
 		sql.Named("MUID", MUID),
 		sql.Named("PointID", PointID),
+		sql.Named("Quantity", sql.Out{Dest: &quantity}),
 		&rs)
 	if err != nil {
 		log.Errorf("USPPO_Get_MemberPoints QueryContext error : %v", err)
-		return nil, err
+		return 0, err
 	}
 
 	defer rows.Close()
 
-	rowCnt := 0
-	point := new(context.Point)
-	for rows.Next() {
-		point.PointID = PointID
-		point.Quantity = 0
-		if err := rows.Scan(&point.Quantity); err != nil {
-			return nil, err
-		} else {
-			rowCnt++
-		}
-	}
-
 	if rs != 1 {
 		log.Errorf("USPPO_Get_MemberPoints returnStatus : %v", rs)
-		return nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+		return 0, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
 	}
 
-	if rowCnt == 0 {
-		return nil, nil
-	}
-
-	return point, nil
+	return quantity, nil
 }
 
 // 포인트 최초 초기화 등록
