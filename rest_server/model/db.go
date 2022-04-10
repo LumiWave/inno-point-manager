@@ -242,7 +242,7 @@ func CheckPingDB(db *basedb.Mssql, conf baseconf.DBAuth, dbType DBType, pointDB 
 		if dbType == ACCOUNT {
 			newDB, err := gDB.ConnectDB(&conf)
 			if err == nil {
-				log.Debugf("connect DB OK")
+				log.Errorf("connect DB OK")
 			}
 			return newDB
 		} else if dbType == POINT {
