@@ -29,20 +29,6 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 		}
 	}()
 
-	// if auid, err := model.GetDB().GetMembers(req.DatabaseID, req.MUID); err != nil {
-	// 	return nil, err
-	// } else {
-	// 	// 1. 스왑중인지 check
-	// 	swapKey := model.MakeSwapKey(auid)
-	// 	_, err := model.GetDB().GetCacheSwapInfo(swapKey)
-	// 	if err == nil {
-	// 		// 전송중인 기존 정보가 있다면 에러를 리턴한다.
-	// 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
-	// 		err = errors.New(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
-	// 		return nil, err
-	// 	}
-	// }
-
 	respPoint := new(context.Point)
 	// 2. redis에 해당 포인트 정보 존재하는지 check
 	key := model.MakeMemberPointListKey(req.MUID)
