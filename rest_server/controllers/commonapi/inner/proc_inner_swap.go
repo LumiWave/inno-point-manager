@@ -151,7 +151,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			params.PreviousPointQuantity < params.AdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
 			pointInfo.MinExchangeQuantity > absAdjustPointQuantity { // 전환 최소 수량 에러
 			// 전환할 포인트 수량이 없음 에러
-			log.Errorf("not find me point id [point_id:%v][PointQuantity:%v]", params.PointID, params.PreviousPointQuantity)
+			log.Errorf("lack of minimum point quantity [point_id:%v][PointQuantity:%v]", params.PointID, params.PreviousPointQuantity)
 			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
 			return resp
 		}
