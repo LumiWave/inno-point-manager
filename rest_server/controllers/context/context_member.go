@@ -40,6 +40,11 @@ type ResPointMemberRegister struct {
 	PointInfo
 }
 
+type InsertPointMemberInfo struct {
+	PointID  int64
+	Quantity int64
+}
+
 ////////////////////////////////////////
 
 ///////// 지갑 정보 조회

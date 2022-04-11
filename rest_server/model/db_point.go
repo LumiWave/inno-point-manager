@@ -4,7 +4,6 @@ import (
 	originCtx "context"
 	"database/sql"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
@@ -22,6 +21,7 @@ const (
 	USPPO_Mod_MemberPoints     = "[dbo].[USPPO_Mod_MemberPoints]"
 	USPPO_Add_MemberPoints     = "[dbo].[USPPO_Add_MemberPoints]"
 	USPPO_Get_Members          = "[dbo].[USPPO_Get_Members]"
+	TVP_MemberPoints           = "dbo.TVP_MemberPoints"
 )
 
 // 포인트 맴버 등록
@@ -31,37 +31,35 @@ func (o *DB) InsertPointMember(params *context.ReqPointMemberRegister) error {
 		return errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
 	}
 
-	pointStr := ""
-	separator := ","
+	execTvp := "exec " + USPPO_Add_Members + " @AUID, @MUID, @AppID, @TVP;"
+
+	var tableData []context.InsertPointMemberInfo
+
 	for _, pointInfo := range o.AppPointsMap[params.AppID].Points {
-		if len(pointStr) > 0 {
-			pointStr += separator
+
+		data := &context.InsertPointMemberInfo{
+			PointID:  pointInfo.PointId,
+			Quantity: 0,
 		}
-		pointStr += strconv.FormatInt(pointInfo.PointId, 10)
+		tableData = append(tableData, *data)
+	}
+
+	tvpType := orginMssql.TVP{
+		TypeName: TVP_MemberPoints,
+		Value:    tableData,
 	}
 
 	var rs orginMssql.ReturnStatus
-	if rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_Add_Members,
+	_, err := mssql.Exec(execTvp,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
-		sql.Named("PointString", pointStr),
-		sql.Named("RowSeparator", separator),
-		&rs); err != nil {
-		log.Errorf("USPPO_Add_Members QueryContext error : %v", err)
+		sql.Named("TVP", tvpType),
+		&rs)
+	if err != nil {
+		log.Errorf("%v", err)
 		return err
-	} else {
-		defer rows.Close()
 	}
-
-	if rs == resultcode.Result_Error_duplicate_auid {
-		log.Errorf("USPPO_Add_Members returnStatus : %v", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_Error_duplicate_auid])
-	} else if rs != 1 {
-		log.Errorf("USPPO_Add_Members returnStatus : %v", rs)
-		return errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
-	}
-
 	return nil
 }
 
