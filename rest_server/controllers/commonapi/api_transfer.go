@@ -94,3 +94,26 @@ func GetCoinFee(params *context.ReqCoinFee, c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+func GetBalance(params *context.ReqBalance, c echo.Context) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	req := &token_manager_server.ReqBalance{
+		Symbol:  params.Symbol,
+		Address: params.Address,
+	}
+
+	if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {
+		resp.SetReturn(resultcode.ResultInternalServerError)
+	} else {
+		if res.Return != 0 { // token manager 전송 에러
+			resp.Return = res.Return
+			resp.Message = res.Message
+		} else {
+			resp.Value = res.ResReqBalanceValue
+		}
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}

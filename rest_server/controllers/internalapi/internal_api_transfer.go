@@ -103,3 +103,17 @@ func (o *InternalAPI) GetCoinFee(c echo.Context) error {
 
 	return commonapi.GetCoinFee(params, c)
 }
+
+func (o *InternalAPI) GetBalance(c echo.Context) error {
+	params := context.NewReqBalance()
+	if err := c.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetBalance(params, c)
+}

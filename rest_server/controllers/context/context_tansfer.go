@@ -197,3 +197,28 @@ type ResCoinFeeInfo struct {
 }
 
 ////////////////////////////////////////
+
+///////// 지갑 잔액
+type ReqBalance struct {
+	Symbol  string `query:"symbol"`
+	Address string `query:"address"`
+}
+
+func NewReqBalance() *ReqBalance {
+	return new(ReqBalance)
+}
+
+func (o *ReqBalance) CheckValidate() *base.BaseResponse {
+	if len(o.Symbol) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_Symbol)
+	}
+
+	return nil
+}
+
+type ResReqBalance struct {
+	Balance string `json:"balance"`
+	Address string `json:"address"`
+}
+
+////////////////////////////////////////

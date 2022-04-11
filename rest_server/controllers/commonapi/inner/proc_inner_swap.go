@@ -200,13 +200,13 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		}
 	}
 
-	feeWallet := ""
+	//feeWallet := ""
 	parentWallet := ""
 	target := int64(0)
 	transInfo := &context.ReqCoinTransferFromUserWallet{}
 	for _, wallet := range config.GetInstance().ParentWallets {
 		if strings.EqualFold(wallet.Name, params.BaseCoinSymbol) {
-			feeWallet = wallet.FeeWalletAddr
+			//feeWallet = wallet.FeeWalletAddr
 			parentWallet = wallet.ParentWalletAddr
 		}
 	}
@@ -228,7 +228,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 			CoinSymbol:     params.BaseCoinSymbol,
 			BaseCoinSymbol: params.BaseCoinSymbol,
 			FromAddress:    params.WalletAddress,
-			ToAddress:      feeWallet,
+			ToAddress:      parentWallet,
 			Quantity:       params.SwapFee,
 			Target:         target,
 		}

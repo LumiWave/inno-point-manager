@@ -17,6 +17,7 @@ type api_kind int
 const (
 	Api_post_sendfrom_parentwallet = 0 // 대표지갑에서 출금 PostSendFromParentWallet
 	Api_post_sendfrom_userWallet   = 1 // 특정지갑에서 출금 PostSendFromUserWallet
+	Api_get_balance                = 2 // 지갑 잔액 조회 GetBalance
 
 	Api_get_coin_fee = 3 // 코인 가스비 조회
 )
@@ -35,6 +36,8 @@ var ApiList = map[api_kind]ApiInfo{
 		ResponseFuncType: func() interface{} { return new(ResSendFromParentWallet) }, client: NewClient()},
 	Api_post_sendfrom_userWallet: ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "POST", Uri: "/token/transfer/user", ResponseType: new(ResSendFromUserWallet),
 		ResponseFuncType: func() interface{} { return new(ResSendFromUserWallet) }, client: NewClient()},
+	Api_get_balance: ApiInfo{ApiType: Api_get_balance, Method: "GET", Uri: "/token/address/balance", ResponseType: new(ResBalanc),
+		ResponseFuncType: func() interface{} { return new(ResBalanc) }, client: NewClient()},
 
 	Api_get_coin_fee: ApiInfo{ApiType: Api_post_sendfrom_userWallet, Method: "GET", Uri: "/token/coin/fee", ResponseType: new(ResCoinFeeInfo),
 		ResponseFuncType: func() interface{} { return new(ResCoinFeeInfo) }, client: NewClient()},
