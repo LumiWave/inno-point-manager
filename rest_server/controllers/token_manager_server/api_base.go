@@ -49,7 +49,7 @@ func NewClient() *http.Client {
 	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := &http.Client{
-		Timeout:   10 * time.Second,
+		Timeout:   60 * time.Second,
 		Transport: t,
 	}
 	return client
