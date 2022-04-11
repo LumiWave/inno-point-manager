@@ -340,7 +340,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 					reqSwapInfo.EventID = context.EventID_toCoin
 				}
 
-				if err := model.GetDB().PostPointCoinSwap(reqSwapInfo); err != nil {
+				if err := model.GetDB().PostPointCoinSwap(reqSwapInfo, params.Txid); err != nil {
 					resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 					return resp
 				}

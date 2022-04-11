@@ -260,7 +260,7 @@ func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
 		resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 		return resp
 	}
-	if err := model.GetDB().PostPointCoinSwap(params); err != nil {
+	if err := model.GetDB().PostPointCoinSwap(params, transInfo.TransactionId); err != nil {
 		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 		return resp
 	}

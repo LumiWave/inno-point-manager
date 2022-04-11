@@ -16,7 +16,7 @@ const (
 )
 
 // 지갑 정보 조회
-func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
+func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo, txHash string) error {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Exchange_Goods,
 		sql.Named("AUID", params.AUID),
@@ -47,6 +47,7 @@ func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo) error {
 		LogDt:            time.Now().Format("2006-01-02 15:04:05.000"),
 		LogID:            int64(params.LogID),
 		EventID:          int64(params.EventID),
+		TxHash:           txHash,
 		AUID:             params.AUID,
 		MUID:             params.MUID,
 		AppID:            params.AppID,
