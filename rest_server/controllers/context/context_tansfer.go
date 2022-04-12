@@ -222,3 +222,21 @@ type ResReqBalance struct {
 }
 
 ////////////////////////////////////////
+
+///////// coin mainnet 보정
+type CoinReload struct {
+	AUID int64 `json:"au_id" query:"au_id"`
+}
+
+func NewCoinReload() *CoinReload {
+	return new(CoinReload)
+}
+
+func (o *CoinReload) CheckValidate() *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
+	return nil
+}
+
+////////////////////////////////////////

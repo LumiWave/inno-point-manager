@@ -622,3 +622,85 @@ func IsExistInprogressTransferFromUserWallet(params *context.GetCoinTransferExis
 
 	return resp
 }
+
+func CoinReload(params *context.CoinReload) *base.BaseResponse {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
+	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+	if err := mutex.Lock(); err != nil {
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
+	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
+
+	meCoins, _, err := model.GetDB().GetAccountCoins(params.AUID)
+	if err != nil {
+		log.Errorf("GetAccountCoins error : %v, auid:%v", err, params.AUID)
+		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else {
+		for _, coin := range meCoins {
+			req := &token_manager_server.ReqBalance{
+				Symbol:  model.GetDB().Coins[coin.CoinID].CoinSymbol,
+				Address: coin.WalletAddress,
+			}
+
+			if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {
+				resp.SetReturn(resultcode.ResultInternalServerError)
+				return resp
+			} else {
+				if res.Return != 0 { // token manager 전송 에러
+					resp.Return = res.Return
+					resp.Message = res.Message
+				} else {
+					resp.Value = meCoins
+					// 내 코인 수량과 비교해서 다르면 업데이트
+					newQuantity, err := strconv.ParseFloat(res.ResReqBalanceValue.Balance, 64)
+
+					if err != nil {
+						log.Errorf("new coin balance parse err : %v", err)
+					} else if coin.Quantity != newQuantity {
+						adjustCoinAmount := coin.Quantity - newQuantity
+						adjustCoinAmount = toFixed(adjustCoinAmount, 9)
+						if adjustCoinAmount == 0 {
+							continue
+						}
+
+						eventID := context.EventID_add
+						if adjustCoinAmount > 0 {
+							eventID = context.EventID_sub
+						}
+
+						if err := model.GetDB().UpdateAccountCoins(
+							params.AUID,
+							coin.CoinID,
+							model.GetDB().Coins[coin.CoinID].BaseCoinID,
+							coin.WalletAddress,
+							coin.Quantity,
+							-adjustCoinAmount,
+							coin.Quantity-adjustCoinAmount,
+							context.LogID_wallet_sync,
+							context.EventID_type(eventID),
+							"coin reload"); err != nil {
+							log.Errorf("UpdateAccountCoins error : %v", err)
+						}
+
+						coin.Quantity = coin.Quantity - adjustCoinAmount // 응답값 수정
+					}
+				}
+			}
+		}
+	}
+
+	return resp
+}
