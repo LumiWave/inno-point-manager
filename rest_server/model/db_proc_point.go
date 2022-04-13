@@ -71,7 +71,7 @@ func (o *MemberPointInfo) UpdateRun() {
 			}
 			//4. myuuid check else go func end
 			if !strings.EqualFold(o.MyUuid, pointInfo.MyUuid) {
-				log.Errorf("Myuuid diffrent [my_uuid:%v][cache_uuid:%v]", o.MyUuid, pointInfo.MyUuid)
+				//log.Errorf("Myuuid diffrent [my_uuid:%v][cache_uuid:%v]", o.MyUuid, pointInfo.MyUuid)
 				if ok, err := mutex.Unlock(); !ok || err != nil {
 					if err != nil {
 						log.Errorf("unlock err : %v", err)

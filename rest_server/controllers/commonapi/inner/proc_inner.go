@@ -158,7 +158,7 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 			}
 		}
 		if err != nil {
-			log.Errorf("%v ", err)
+			log.Errorf("%v muid:%v", err, req.MUID)
 			return nil, err
 		}
 		if !find { // point id를 못찼았을경우
