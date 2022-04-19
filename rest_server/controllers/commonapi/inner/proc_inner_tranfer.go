@@ -158,7 +158,11 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 	} else {
 		if res.Return != 0 { // token manager 전송 에러
 			resp.Return = res.Return
-			resp.Message = res.Message
+			if errMsg, ok := token_manager_server.ResultCodeText[res.Message]; ok {
+				resp.Message = errMsg
+			} else {
+				resp.Message = res.Message
+			}
 			return resp
 		}
 
