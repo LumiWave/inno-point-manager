@@ -629,6 +629,12 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 
 	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(params.AUID)
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+	isValid, _ := mutex.Valid()
+	if isValid {
+		log.Errorf("audi:%v %v", params.AUID, resultcode.ResultCodeText[resultcode.Result_RedisError_WaitForProcessing])
+		resp.SetReturn(resultcode.Result_RedisError_WaitForProcessing)
+		return resp
+	}
 	if err := mutex.Lock(); err != nil {
 		log.Error("redis lock err:%v", err)
 		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)

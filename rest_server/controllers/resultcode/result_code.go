@@ -39,10 +39,11 @@ const (
 	Result_Error_Transfer_NotExistInprogress = 12201 // 진행 중인 전송이 존재하지 않는다.
 	Result_Invalid_transfer_txid             = 12202 // 유효하지 않은 출금 txid
 
-	Result_RedisError_Lock_fail      = 18000 // redis lock error
-	Result_RedisError_SetTransfer    = 18001 // redis set coin tranfer error
-	Result_RedisError_SetTransfer_Tx = 18002 // redis set coin tranfer error
-	Result_RedisError_SetSwapInfo    = 18003 // redis set swap info error
+	Result_RedisError_Lock_fail         = 18000 // redis lock error
+	Result_RedisError_SetTransfer       = 18001 // redis set coin tranfer error
+	Result_RedisError_SetTransfer_Tx    = 18002 // redis set coin tranfer error
+	Result_RedisError_SetSwapInfo       = 18003 // redis set swap info error
+	Result_RedisError_WaitForProcessing = 18004 // redis lock return
 
 	Result_Error_DB_GetPointAppList               = 18100 // db member point 조회 에러
 	Result_Error_DB_UpdateAppPoint                = 18101 // db point update 에러
@@ -101,6 +102,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_DB_UpdateAppPoint:                "db point update error",
 	Result_Error_DB_PostPointCoinSwap:             "db swap error",
 	Result_Error_DB_GetAccountCoinByWalletAddress: "db get coin info error",
+	Result_RedisError_WaitForProcessing:           "Wait for previous processing.",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
