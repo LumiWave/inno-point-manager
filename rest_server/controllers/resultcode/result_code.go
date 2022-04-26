@@ -27,6 +27,7 @@ const (
 	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
 	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
 	Result_Require_Symbol         = 12006 // 유효한 coin symbol 정보 필요
+	Result_Require_InnoUID        = 12007 // 유요한 inno uid 정보 필요
 
 	Result_Error_MinPointQuantity             = 12100 // 포인트 최소 보유 수량 에러
 	Result_Error_MinCoinQuantity              = 12101 // 코인 최소 보유 수량 에러

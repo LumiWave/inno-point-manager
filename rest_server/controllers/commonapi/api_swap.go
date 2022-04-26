@@ -12,7 +12,7 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.Swap(params); err != nil {
+	if err := inner.Swap(params, ctx.GetValue().InnoUID); err != nil {
 		resp = err
 	}
 

@@ -35,6 +35,7 @@ type ExchangeGoodsLog struct {
 	EventID          int64   `json:"event_id"`
 	TxHash           string  `json:"tx_hash"`
 	AUID             int64   `json:"au_id"`
+	InnoUID          string  `json:"inno_uid"`
 	MUID             int64   `json:"mu_id"`
 	AppID            int64   `json:"app_id"`
 	CoinID           int64   `json:"coin_id"`

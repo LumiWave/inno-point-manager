@@ -49,6 +49,7 @@ func (o *DB) PostPointCoinSwap(params *context.ReqSwapInfo, txHash string) error
 		EventID:          int64(params.EventID),
 		TxHash:           txHash,
 		AUID:             params.AUID,
+		InnoUID:          params.InnoUID,
 		MUID:             params.MUID,
 		AppID:            params.AppID,
 		CoinID:           params.CoinID,

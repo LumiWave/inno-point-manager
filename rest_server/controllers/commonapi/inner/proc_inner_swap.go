@@ -12,7 +12,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
-func Swap(params *context.ReqSwapInfo) *base.BaseResponse {
+func Swap(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse {
 	resp := new(base.BaseResponse)
 	resp.Success()
 

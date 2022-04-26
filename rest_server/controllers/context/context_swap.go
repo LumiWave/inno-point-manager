@@ -36,14 +36,14 @@ type ReqSwapInfo struct {
 	EventID int64 `json:"event_id"` // 3: point->coin,  4: coin->point
 
 	SwapFee float64 `json:"swap_fee"` // point->coin 시 전환시 부모지갑에 전송될 코인량 coin->point는 0 고정
+	InnoUID string  `json:"inno_uid"`
 }
 
 func NewReqSwapInfo() *ReqSwapInfo {
 	return new(ReqSwapInfo)
 }
 
-func (o *ReqSwapInfo) CheckValidate() *base.BaseResponse {
-
+func (o *ReqSwapInfo) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
 	return nil
 }
 

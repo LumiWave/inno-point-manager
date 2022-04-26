@@ -20,7 +20,7 @@ func (o *InternalAPI) PostPointCoinSwap(c echo.Context) error {
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
-	if err := params.CheckValidate(); err != nil {
+	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}
 
