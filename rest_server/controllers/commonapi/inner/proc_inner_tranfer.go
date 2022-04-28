@@ -530,7 +530,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			context.LogID_external_wallet,
 			context.EventID_sub,
 			params.Txid); err != nil {
-			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
+			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v amount:%v", err, resp.Return, resp.Message, params.Txid, -amount)
 			return resp
 		}
 		meCoin.Quantity = meCoin.Quantity - amount // 남은 수량
@@ -547,7 +547,7 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 			context.LogID_external_wallet,
 			context.EventID_sub,
 			params.Txid); err != nil {
-			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v", err, resp.Return, resp.Message, params.Txid)
+			log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v fee:%v", err, resp.Return, resp.Message, params.Txid, fee)
 			return resp
 		}
 		meBaseCoin.Quantity = meCoin.Quantity - fee // 남은 수량
@@ -635,7 +635,7 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
 	isValid, _ := mutex.Valid()
 	if isValid {
-		log.Errorf("audi:%v %v", params.AUID, resultcode.ResultCodeText[resultcode.Result_RedisError_WaitForProcessing])
+		log.Errorf("auid:%v %v", params.AUID, resultcode.ResultCodeText[resultcode.Result_RedisError_WaitForProcessing])
 		resp.SetReturn(resultcode.Result_RedisError_WaitForProcessing)
 		return resp
 	}
