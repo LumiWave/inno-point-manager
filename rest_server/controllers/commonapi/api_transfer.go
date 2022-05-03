@@ -8,6 +8,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/token_manager_server"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 	"github.com/labstack/echo"
 )
 
@@ -25,6 +26,11 @@ func PostCoinTransferFromParentWallet(params *context.ReqCoinTransferFromParentW
 func PostCoinTransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
+
+	if !model.GetExternalTransferEnable() {
+		resp.SetReturn(resultcode.Result_Error_IsCoinTransferExternalMaintenance)
+		return ctx.EchoContext.JSON(http.StatusOK, resp)
+	}
 
 	params.Target = context.From_user_to_other_wallet
 	if err := inner.TransferFromUserWallet(params, true); err != nil {

@@ -163,6 +163,9 @@ func InitDB(conf *config.ServerConfig) (err error) {
 	}()
 
 	LoadDBPoint()
+
+	go gDB.ListenSubscribeEvent()
+
 	return nil
 }
 

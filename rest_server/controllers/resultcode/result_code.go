@@ -40,6 +40,12 @@ const (
 	Result_Error_Transfer_NotExistInprogress = 12201 // 진행 중인 전송이 존재하지 않는다.
 	Result_Invalid_transfer_txid             = 12202 // 유효하지 않은 출금 txid
 
+	Result_PubSub_InternalErr                      = 12300 // pubsub error
+	Result_Error_IsMaintenance                     = 12301 // 정검 중
+	Result_Error_IsSwapMaintenance                 = 12302 // swap 정검중
+	Result_Error_IsCoinTransferExternalMaintenance = 12303 // 외부 코인 전송 정검중
+	Result_Error_IsPointUpdateMaintenance          = 12304 // 포인트 업데이트 정검중
+
 	Result_RedisError_Lock_fail         = 18000 // redis lock error
 	Result_RedisError_SetTransfer       = 18001 // redis set coin tranfer error
 	Result_RedisError_SetTransfer_Tx    = 18002 // redis set coin tranfer error
@@ -93,6 +99,12 @@ var ResultCodeText = map[int]string{
 	Result_Error_Transfer_Inprogress:         "Transfer inprogress",
 	Result_Error_Transfer_NotExistInprogress: "Not exist transfer inprogress",
 	Result_Invalid_transfer_txid:             "Invalid txid",
+
+	Result_PubSub_InternalErr:                      "Internal pubsub error",
+	Result_Error_IsMaintenance:                     "It is under maintainence",
+	Result_Error_IsSwapMaintenance:                 "Swap is under maintainence",
+	Result_Error_IsCoinTransferExternalMaintenance: "External coin transfer is under maintenance",
+	Result_Error_IsPointUpdateMaintenance:          "Point update is under maintenance",
 
 	Result_RedisError_Lock_fail:      "Redis lock error.",
 	Result_RedisError_SetTransfer:    "Redis Coin transfer set error",

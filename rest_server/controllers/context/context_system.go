@@ -38,3 +38,35 @@ type NodeMetric struct {
 	CpuUsage      int32       `json:"cpu_usage"`
 	DiskUsage     []DiskUsage `json:"disk_usage"`
 }
+
+type PSMaintenance struct {
+	Enable bool `json:"enable"`
+}
+
+func NewPSMaintenance() *PSMaintenance {
+	return new(PSMaintenance)
+}
+
+type PSSwap struct {
+	Enable bool `json:"enable"`
+}
+
+func NewPSSwap() *PSSwap {
+	return new(PSSwap)
+}
+
+type PSCoinTransferExternal struct {
+	Enable bool `json:"enable"`
+}
+
+func NewPSCoinTransferExternal() *PSCoinTransferExternal {
+	return new(PSCoinTransferExternal)
+}
+
+type PSPointUpdate struct {
+	Enable bool `json:"enable"`
+}
+
+func NewPSPointUpdate() *PSPointUpdate {
+	return new(PSPointUpdate)
+}

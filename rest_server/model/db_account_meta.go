@@ -84,6 +84,8 @@ func (o *DB) GetAppCoins() error {
 
 	defer rows.Close()
 
+	o.AppCoins = make(map[int64][]*AppCoin)
+
 	for rows.Next() {
 		appCoin := &AppCoin{}
 		if err := rows.Scan(&appCoin.AppID, &appCoin.CoinId, &appCoin.BaseCoinID); err == nil {
@@ -207,6 +209,8 @@ func (o *DB) GetAppPoints() error {
 	}
 
 	defer rows.Close()
+
+	o.ScanPointsOfApp = make(map[int64]*AppPointInfo)
 
 	var appId, pointId, minExchangeQuantity, daliyLimiteAcqQuantity, dailyLimitedAcqExchangeQuantity sql.NullInt64
 	var exchangeRatio sql.NullFloat64

@@ -9,6 +9,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 	"github.com/labstack/echo"
 )
 
@@ -29,8 +30,15 @@ func PreCheck(c echo.Context) base.PreCheckResponse {
 		}
 	}
 
-	// auth token 검증
+	if model.GetMaintenance() {
+		res := base.MakeBaseResponse(resultcode.Result_Error_IsMaintenance)
+		return base.PreCheckResponse{
+			IsSucceed: false,
+			Response:  res,
+		}
+	}
 
+	// auth token 검증
 	if conf.Auth.AuthEnable {
 		author, ok := c.Request().Header["Authorization"]
 		if !ok {
