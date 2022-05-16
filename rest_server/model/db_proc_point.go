@@ -81,7 +81,7 @@ func (o *MemberPointInfo) UpdateRun() {
 			}
 			//5. db update
 			for _, point := range pointInfo.Points {
-				if o.BackUpCurQuantity[point.PointID] != point.Quantity { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
+				if o.BackUpCurQuantity[point.PointID] != point.Quantity && point.AdjustQuantity != 0 { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
 					var eventID context.EventID_type
 					if point.AdjustQuantity >= 0 {
 						eventID = context.EventID_add
@@ -91,7 +91,8 @@ func (o *MemberPointInfo) UpdateRun() {
 
 					if todayAcqQuantity, resetDate, err := GetDB().UpdateAppPoint(pointInfo.DatabaseID, pointInfo.MUID, point.PointID,
 						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
-						log.Errorf("UpdateAppPoint [err:%v]", err)
+						log.Errorf("UpdateAppPoint [err:%v][muid:%v][pointid:%v][prequantity:%v][adjust:%v][quantity:%v][backup:%v]",
+							err, pointInfo.MUID, point.PointID, point.PreQuantity, point.AdjustQuantity, point.Quantity, o.BackUpCurQuantity[point.PointID])
 					} else {
 						// 업데이트 성공시 BackUpCurQuantity 최신으로 업데이트
 						o.BackUpCurQuantity[point.PointID] = point.Quantity
