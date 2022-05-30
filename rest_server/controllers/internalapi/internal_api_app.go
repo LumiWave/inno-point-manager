@@ -60,3 +60,43 @@ func (o *InternalAPI) GetPointAppMonitoring(c echo.Context) error {
 
 	return commonapi.GetPointAppMonitoring(params, ctx)
 }
+
+// member 코인 리스트 조회
+func (o *InternalAPI) GetMeCoinList(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+	params := context.NewReqMeCoin()
+
+	// Request json 파싱
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Errorf("%v", err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	// 유효성 체크
+	if err := params.CheckValidate(); err != nil {
+		log.Errorf("%v", err)
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetMeCoinList(c, params)
+}
+
+// member 코인 업데이트
+func (o *InternalAPI) PutMeCoin(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+	params := context.NewReqUpdateMeCoin()
+
+	// Request json 파싱
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Errorf("%v", err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	// 유효성 체크
+	if err := params.CheckValidate(); err != nil {
+		log.Errorf("%v", err)
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PutMeCoin(c, params)
+}
