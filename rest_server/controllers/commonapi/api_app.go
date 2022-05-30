@@ -104,6 +104,29 @@ func PutMeCoin(c echo.Context, reqMeCoin *context.ReqUpdateMeCoin) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(reqMeCoin.AUID)
+	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+	isValid, _ := mutex.Valid()
+	if isValid {
+		log.Errorf("auid:%v %v", reqMeCoin.AUID, resultcode.ResultCodeText[resultcode.Result_RedisError_WaitForProcessing])
+		resp.SetReturn(resultcode.Result_RedisError_WaitForProcessing)
+		return c.JSON(http.StatusOK, resp)
+	}
+	if err := mutex.Lock(); err != nil {
+		log.Error("redis lock err:%v", err)
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return c.JSON(http.StatusOK, resp)
+	}
+
+	defer func() {
+		// 1-1. redis unlock
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("unlock err : %v", err)
+			}
+		}
+	}()
+
 	var eventID context.EventID_type = context.EventID_sub
 	if reqMeCoin.AdjQuantity >= 0 {
 		eventID = context.EventID_add
