@@ -127,11 +127,6 @@ func PutMeCoin(c echo.Context, reqMeCoin *context.ReqUpdateMeCoin) error {
 		}
 	}()
 
-	var eventID context.EventID_type = context.EventID_sub
-	if reqMeCoin.AdjQuantity >= 0 {
-		eventID = context.EventID_add
-	}
-
 	if err := model.GetDB().UpdateAccountCoins(
 		reqMeCoin.AUID,
 		reqMeCoin.CoinID,
@@ -140,8 +135,8 @@ func PutMeCoin(c echo.Context, reqMeCoin *context.ReqUpdateMeCoin) error {
 		reqMeCoin.PreQuantity,
 		reqMeCoin.AdjQuantity, // 전송 수수료 + amount
 		reqMeCoin.Quantity,
-		context.LogID_external_wallet, // todo 로그 타입 추가 필요
-		eventID,
+		context.LogID_type(reqMeCoin.LogID),
+		context.EventID_type(reqMeCoin.EventID),
 		""); err != nil {
 		log.Errorf("UpdateAccountCoins error : %v, auid:%v, pre:%v, adj:%v, quantity:%v",
 			err, reqMeCoin.AUID, reqMeCoin.PreQuantity, reqMeCoin.AdjQuantity, reqMeCoin.Quantity)

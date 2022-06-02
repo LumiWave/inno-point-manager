@@ -56,9 +56,8 @@ type ReqUpdateMeCoin struct {
 	PreQuantity   float64 `json:"previous_quantity"`
 	AdjQuantity   float64 `json:"adjust_quantity"`
 	Quantity      float64 `json:"quantity"`
-
-	//sql.Named("LogID", logID),
-	//sql.Named("EventID", eventID),
+	LogID         int64   `json:"log_id"`
+	EventID       int64   `json:"event_id"`
 }
 
 func NewReqUpdateMeCoin() *ReqUpdateMeCoin {
