@@ -118,6 +118,7 @@ func (o *DB) GetCoins() error {
 			&coin.CoinName,
 			&coin.CoinSymbol,
 			&coin.ContractAddress,
+			&coin.ExplorePath,
 			&coin.IconUrl,
 			&coin.DailyLimitedAcqExchangeQuantity,
 			&coin.ExchangeFees); err == nil {

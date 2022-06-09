@@ -43,6 +43,7 @@ type Coin struct {
 	CoinName                        string  `json:"coin_name"`
 	CoinSymbol                      string  `json:"coin_symbol,omitempty"`
 	ContractAddress                 string  `json:"contract_address,omitempty"`
+	ExplorePath                     string  `json:"explore_path"`
 	IconUrl                         string  `json:"icon_url,omitempty"`
 	DailyLimitedAcqExchangeQuantity float64 `json:"daily_limited_acq_exchange_quantity"`
 	ExchangeFees                    float64 `json:"exchange_fees"`
