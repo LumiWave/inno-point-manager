@@ -61,7 +61,7 @@ func PutPointAppUpdate(req *context.ReqPointAppUpdate, ctx *context.PointManager
 		return ctx.EchoContext.JSON(http.StatusOK, resp)
 	}
 
-	if pointInfo, err := inner.UpdateAppPoint(req, ctx.GetValue().AppID); err != nil {
+	if pointInfo, err := inner.UpdateAppPoint(req, req.AppID); err != nil {
 		if strings.EqualFold(resultcode.ResultCodeText[resultcode.Result_Error_NotEqual_PreviousQuantity], err.Error()) {
 			resp.SetReturn(resultcode.Result_Error_NotEqual_PreviousQuantity)
 		} else if strings.EqualFold(resultcode.ResultCodeText[resultcode.Result_Error_Exceeded_TodayPoints_earned], err.Error()) {

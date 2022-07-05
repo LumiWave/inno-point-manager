@@ -660,6 +660,10 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
 	} else {
 		for _, coin := range meCoins {
+			if model.GetDB().BaseCoinMapByCoinID[coin.BaseCoinID].IsUsedParentWallet {
+				continue
+			}
+
 			req := &token_manager_server.ReqBalance{
 				Symbol:  model.GetDB().Coins[coin.CoinID].CoinSymbol,
 				Address: coin.WalletAddress,

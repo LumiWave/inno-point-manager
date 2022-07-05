@@ -52,6 +52,7 @@ func (o *ReqGetPointApp) CheckValidate(ctx *PointManagerContext) *base.BaseRespo
 
 ///////// app 포인트 업데이트
 type ReqPointAppUpdate struct {
+	AppID      int64 `json:"app_id"`
 	MUID       int64 `json:"mu_id"`
 	PointID    int64 `json:"point_id"`
 	DatabaseID int64 `json:"database_id"`
@@ -64,7 +65,11 @@ func NewReqPointMemberAppUpdate() *ReqPointAppUpdate {
 	return new(ReqPointAppUpdate)
 }
 
-func (o *ReqPointAppUpdate) CheckValidate() *base.BaseResponse {
+func (o *ReqPointAppUpdate) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	if ctx.GetValue() != nil && ctx.GetValue().AppID != 0 {
+		o.AppID = ctx.GetValue().AppID
+	}
+
 	if o.MUID == 0 {
 		return base.MakeBaseResponse(resultcode.Result_Require_MUID)
 	}
