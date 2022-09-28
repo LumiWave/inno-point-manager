@@ -3,8 +3,10 @@ package model
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/basedb"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/datetime"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 )
 
@@ -34,6 +36,25 @@ func (o *DB) ListenSubscribeEvent() error {
 	}
 	defer o.Cache.GetDB().ClosePubSub()
 
+	go func() {
+		ticker := time.NewTicker(time.Duration(50) * time.Second)
+
+		for {
+			msg := &PSHealthCheck{
+				PSHeader: PSHeader{
+					Type: PubSub_type_healthcheck,
+				},
+			}
+			msg.Value.Timestamp = datetime.GetTS2MilliSec()
+
+			if err := o.PublishEvent(InternalCmd, msg); err != nil {
+				log.Errorf("pubsub health check err : %v", err)
+			}
+			<-ticker.C
+		}
+
+	}()
+
 	for {
 		msg, ok := <-rch
 		if msg == nil || !ok {
@@ -55,7 +76,11 @@ func (o *DB) PubSubCmdByInternal(msg basedb.PubSubMessageV8) error {
 	header := &PSHeader{}
 	json.Unmarshal([]byte(msg.Payload), header)
 
-	if strings.EqualFold(header.Type, PubSub_type_maintenance) {
+	if strings.EqualFold(header.Type, PubSub_type_healthcheck) {
+		psPacket := &PSHealthCheck{}
+		json.Unmarshal([]byte(msg.Payload), psPacket)
+		log.Infof("pubsub healthcheck : %v ", psPacket.Value.Timestamp)
+	} else if strings.EqualFold(header.Type, PubSub_type_maintenance) {
 		psPacket := &PSMaintenance{}
 		json.Unmarshal([]byte(msg.Payload), psPacket)
 		SetMaintenance(psPacket.Value.Enable)

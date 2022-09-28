@@ -8,6 +8,7 @@ const (
 )
 
 const (
+	PubSub_type_healthcheck          = "HealthCheck_InnoPoint"
 	PubSub_type_maintenance          = "Maintenance"
 	PubSub_type_Swap                 = "Swap"
 	PubSub_type_CoinTransferExternal = "CoinTransferExternal"
@@ -17,6 +18,13 @@ const (
 
 type PSHeader struct {
 	Type string `json:"type"`
+}
+
+type PSHealthCheck struct {
+	PSHeader
+	Value struct {
+		Timestamp int64 `json:"ts"`
+	} `json:"value"`
 }
 
 type PSMaintenance struct {
