@@ -420,18 +420,94 @@ func TransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal) *bas
 		model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
 		userKey := model.MakeCoinTransferFromUserWalletKey(txType.AUID)
 		model.GetDB().DelCacheCoinTransferFromUserWallet(userKey) // from user 삭제
-	} else if txType.Target == context.From_parent_to_other_wallet { // 부모지갑에서 자식지갑으로 코인 전송 : swap point->coin
+	} else if txType.Target == context.From_parent_to_other_wallet { // 부모지갑에서 자식지갑으로 코인 전송 : swap point->coin, 혹은 부모 지갑에서만 출금 가능한 코인(MATIC) 외부 출금
 		// 부모지갑에서 자식지갑으로 입금시 swap으로 간주하고 swap 처리 진행한다.
 		swapKey := model.MakeSwapKey(txType.AUID)
-		if _, err := model.GetDB().GetCacheSwapInfo(swapKey); err != nil {
-			log.Errorf("GetCacheSwapInfo err => audi:%v txid:%v", err, txType.AUID, params.Txid)
+		parentKey := model.MakeCoinTransferFromParentWalletKey(txType.AUID)
+		_, err1 := model.GetDB().GetCacheSwapInfo(swapKey)
+		_, err2 := model.GetDB().GetCacheCoinTransferFromParentWallet(parentKey)
+		if err1 != nil && err2 != nil {
+			log.Errorf("GetCacheSwapInfo err1 => %v auid:%v txid:%v", err1, txType.AUID, params.Txid)
+			log.Errorf("GetCacheCoinTransferFromParentWallet err2 => %v auid:%v txid:%v", err2, txType.AUID, params.Txid)
 			return resp
 		}
+
+		if err2 == nil {
+			// 부모지갑출금을 사용하는 코인 외부 지갑 전송 성공으로 처리하고 그 보낸 사람의 코인을 차감 시킨다.
+			// 자식 지갑의 코인 빼고, 수수료 코인 뺀다.
+			_, coinsMap, err := model.GetDB().GetAccountCoins(txType.AUID)
+			if err != nil {
+				log.Errorf("GetAccountCoins error : %v, audi:%v txid:%v", err, txType.AUID, params.Txid)
+				model.MakeDbError(resp, resultcode.Result_DBError, err)
+				return resp
+			}
+
+			meCoin, ok := coinsMap[txType.CoinID]
+			if !ok {
+				log.Errorf("Not file my coinid : %v txid:%v", txType.CoinID, params.Txid)
+				return resp
+			}
+
+			baseCoinInfo := model.GetDB().BaseCoinMapByCoinID[meCoin.BaseCoinID]
+			meBaseCoinID := int64(0)
+			for _, coin := range model.GetDB().Coins {
+				if strings.EqualFold(coin.CoinSymbol, baseCoinInfo.BaseCoinSymbol) {
+					meBaseCoinID = coin.CoinId
+				}
+			}
+
+			meBaseCoin, ok := coinsMap[meBaseCoinID]
+			if !ok {
+				log.Errorf("Not file my coinid : %v txid:%v", txType.CoinID, params.Txid)
+				return resp
+			}
+
+			amount, _ := strconv.ParseFloat(params.Amount, 64)
+			if err := model.GetDB().UpdateAccountCoins(
+				txType.AUID,
+				txType.CoinID,
+				model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+				meCoin.WalletAddress,
+				meCoin.Quantity,
+				-amount, // amount
+				meCoin.Quantity-amount,
+				context.LogID_external_wallet,
+				context.EventID_sub,
+				params.Txid); err != nil {
+				log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v amount:%v", err, resp.Return, resp.Message, params.Txid, -amount)
+				return resp
+			}
+			meCoin.Quantity = meCoin.Quantity - amount // 남은 수량
+
+			fee, _ := strconv.ParseFloat(params.ActualFee, 64)
+			if err := model.GetDB().UpdateAccountCoins(
+				txType.AUID,
+				meBaseCoinID,
+				model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+				meBaseCoin.WalletAddress,
+				meBaseCoin.Quantity,
+				-fee, // amount
+				meBaseCoin.Quantity-fee,
+				context.LogID_external_wallet,
+				context.EventID_sub,
+				params.Txid); err != nil {
+				log.Errorf("UpdateAccountCoins error : %v Rceived a fee but failed to send coins => return:%v message:%v txid:%v fee:%v", err, resp.Return, resp.Message, params.Txid, fee)
+				return resp
+			}
+		}
 		// parent가 보낸 redis 정보는 삭제 해준다.
-		model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
-		parentKey := model.MakeCoinTransferFromParentWalletKey(txType.AUID)
+		model.GetDB().DelCacheCoinTransfer(tKey)                      //tx 삭제
 		model.GetDB().DelCacheCoinTransferFromParentWallet(parentKey) // from user 삭제
 		model.GetDB().DelCacheSwapInfo(swapKey)
+
+		// if _, err := model.GetDB().GetCacheSwapInfo(swapKey); err != nil {
+		// 	log.Errorf("GetCacheSwapInfo err => audi:%v txid:%v", err, txType.AUID, params.Txid)
+		// 	return resp
+		// }
+		// // parent가 보낸 redis 정보는 삭제 해준다.
+		// model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
+		// model.GetDB().DelCacheCoinTransferFromParentWallet(parentKey) // from user 삭제
+		// model.GetDB().DelCacheSwapInfo(swapKey)
 	} else if txType.Target == context.From_user_to_parent_wallet { // 자식 지갑에서 부모 지갑으로 전송 : swap coin->point
 		// 자식 지갑의 basecoin 수량 acutual fee 만큼 축소
 		_, coinsMap, err := model.GetDB().GetAccountCoins(txType.AUID)
