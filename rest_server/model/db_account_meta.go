@@ -121,7 +121,8 @@ func (o *DB) GetCoins() error {
 			&coin.ExplorePath,
 			&coin.IconUrl,
 			&coin.DailyLimitedAcqExchangeQuantity,
-			&coin.ExchangeFees); err == nil {
+			&coin.ExchangeFees,
+			&coin.IsRechargeable); err == nil {
 			o.Coins[coin.CoinId] = coin
 		} else {
 			log.Errorf("USPAU_Scan_Coins Scan error : %v", err)
