@@ -5,12 +5,13 @@ type Common struct {
 	Message string `json:"message"`
 }
 
-///////// 부모 지갑에서 전송 요청
+// /////// 부모 지갑에서 전송 요청
 type ReqSendFromParentWallet struct {
-	Symbol    string `json:"symbol"`
-	ToAddress string `json:"to_address"`
-	Amount    string `json:"amount"`
-	Memo      string `json:"memo"`
+	BaseSymbol string `json:"base_symbol"`
+	Symbol     string `json:"symbol"`
+	ToAddress  string `json:"to_address"`
+	Amount     string `json:"amount"`
+	Memo       string `json:"memo"`
 }
 
 type ResSendFromParentWalletValue struct {
@@ -25,7 +26,7 @@ type ResSendFromParentWallet struct {
 
 ////////////////////////////////////////
 
-///////// 특정 지갑에서 전송 요청
+// /////// 특정 지갑에서 전송 요청
 type ReqSendFromUserWallet struct {
 	Symbol         string `json:"symbol"`
 	BaseCoinSymbol string `json:"base_coin_symbol"`
@@ -44,7 +45,7 @@ type ResSendFromUserWallet struct {
 	Value ResSendFromUserWalletValue `json:"value"`
 }
 
-////////////////////////////////////////
+// //////////////////////////////////////
 // 잔액 조회
 type ReqBalance struct {
 	Symbol  string `query:"symbol"`
@@ -63,17 +64,14 @@ type ResBalanc struct {
 
 ////////////////////////////////////////
 
-///////// 코인 가스비 요청
+// /////// 코인 가스비 요청
 type ReqCoinFee struct {
-	Symbol string `query:"symbol"`
+	Symbol string `url:"base_symbol"`
 }
 
 type ResCoinFeeInfoValue struct {
-	Fast    string `json:"fast"`
-	Slow    string `json:"slow"`
-	Average string `json:"average"`
-	BaseFee string `json:"basefee"`
-	Fastest string `json:"fastest"`
+	GasPrice string `json:"gas_price"`
+	Decimal  int64  `json:"decimal"`
 }
 
 type ResCoinFeeInfo struct {

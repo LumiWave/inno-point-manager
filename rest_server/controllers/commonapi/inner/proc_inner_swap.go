@@ -200,6 +200,15 @@ func Swap(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse {
 		}
 	}
 
+	// todo 부보지갑 집금을 사용하지 않는 코인 스왑 기능 개발 필요
+	// 부모지갑 집금을 사용하는 코인은 DB에서 차감 후 바로 자식지갑에 수량을 전송 해준다.
+	// 부모지갑 집금을 사용하지 않은 토큰은 부모지갑에 수수료 전송 콜백 확인 후 자식지갑에 스왑 수량 전송 진행한다.
+	// baseCoin, _ := model.GetDB().BaseCoinMapByCoinID[params.BaseCoinID]
+	// if baseCoin.IsUsedParentWallet {
+
+	// 	return resp
+	// }
+
 	//feeWallet := ""
 	parentWallet := ""
 	target := int64(0)
