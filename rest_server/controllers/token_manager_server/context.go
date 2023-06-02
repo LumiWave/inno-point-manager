@@ -49,8 +49,9 @@ type ResSendFromUserWallet struct {
 // //////////////////////////////////////
 // 잔액 조회
 type ReqBalance struct {
-	Symbol  string `query:"symbol"`
-	Address string `query:"address"`
+	BaseSymbol string `url:"base_symbol"`
+	Symbol     string `url:"symbol"`
+	Address    string `url:"address"`
 }
 
 type ResReqBalanceValue struct {

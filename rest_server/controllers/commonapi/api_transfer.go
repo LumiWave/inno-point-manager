@@ -105,9 +105,16 @@ func GetBalance(params *context.ReqBalance, c echo.Context) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	coinInfo, ok := model.GetDB().CoinsBySymbol[params.Symbol]
+	if !ok {
+		resp.SetReturn(resultcode.Result_Require_Symbol)
+		return c.JSON(http.StatusOK, resp)
+	}
+	baseCoinInfo := model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID]
 	req := &token_manager_server.ReqBalance{
-		Symbol:  params.Symbol,
-		Address: params.Address,
+		BaseSymbol: baseCoinInfo.BaseCoinSymbol,
+		Symbol:     params.Symbol,
+		Address:    params.Address,
 	}
 
 	if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {
