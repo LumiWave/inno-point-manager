@@ -21,7 +21,7 @@ type TxType struct {
 	CoinID int64 `json:"coin_id"`
 }
 
-///////// 코인 부모 지갑 전송 요청 : to 부모지갑
+// /////// 코인 부모 지갑 전송 요청 : to 부모지갑
 type ReqCoinTransferToParentWallet struct {
 	AUID       int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
 	CoinID     int64   `json:"coin_id" url:"coin_id"`
@@ -46,7 +46,7 @@ func (o *ReqCoinTransferToParentWallet) CheckValidate(ctx *PointManagerContext) 
 
 ////////////////////////////////////////
 
-///////// 코인 외부 지갑 전송 요청 : 부모지갑
+// /////// 코인 외부 지갑 전송 요청 : 부모지갑
 type ReqCoinTransferFromParentWallet struct {
 	AUID       int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
 	CoinID     int64   `json:"coin_id" url:"coin_id"`
@@ -71,7 +71,7 @@ func (o *ReqCoinTransferFromParentWallet) CheckValidate(ctx *PointManagerContext
 
 ////////////////////////////////////////
 
-///////// 코인 외부 지갑 전송 요청 : 특정지갑
+// /////// 코인 외부 지갑 전송 요청 : 특정지갑
 type ReqCoinTransferFromUserWallet struct {
 	AUID           int64   `json:"au_id" url:"au_id"` // 계정의 UID (Access Token에서 가져옴)
 	CoinID         int64   `json:"coin_id" url:"coin_id"`
@@ -98,7 +98,7 @@ func (o *ReqCoinTransferFromUserWallet) CheckValidate(ctx *PointManagerContext) 
 
 ////////////////////////////////////////
 
-///////// transfer 중인 상태 정보 요청
+// /////// transfer 중인 상태 정보 요청
 type GetCoinTransferExistInProgress struct {
 	AUID int64 `json:"au_id" query:"au_id"`
 }
@@ -116,7 +116,7 @@ func (o *GetCoinTransferExistInProgress) CheckValidate(ctx *PointManagerContext)
 
 ////////////////////////////////////////
 
-///////// 코인 외부 지갑 전송 콜백 응답
+// /////// 코인 외부 지갑 전송 콜백 응답
 // 입금 콜백
 type ReqCoinTransferResDeposit struct {
 	Id             int64  `json:"id"`
@@ -171,7 +171,7 @@ func (o *ReqCoinTransferResWithdrawal) CheckValidate() *base.BaseResponse {
 
 ////////////////////////////////////////
 
-///////// 코인 수수료
+// /////// 코인 수수료
 type ReqCoinFee struct {
 	Symbol string `query:"symbol"`
 }
@@ -198,7 +198,7 @@ type ResCoinFeeInfo struct {
 
 ////////////////////////////////////////
 
-///////// 지갑 잔액
+// /////// 지갑 잔액
 type ReqBalance struct {
 	Symbol  string `query:"symbol"`
 	Address string `query:"address"`
@@ -223,7 +223,7 @@ type ResReqBalance struct {
 
 ////////////////////////////////////////
 
-///////// coin mainnet 보정
+// /////// coin mainnet 보정
 type CoinReload struct {
 	AUID int64 `json:"au_id" query:"au_id"`
 }

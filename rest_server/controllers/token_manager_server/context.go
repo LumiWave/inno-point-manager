@@ -15,8 +15,8 @@ type ReqSendFromParentWallet struct {
 }
 
 type ResSendFromParentWalletValue struct {
-	ReqId         string `json:"reqid"`
-	TransactionId string `json:"transaction_id"`
+	IsSuccess bool   `json:"is_success"`
+	TxHash    string `json:"tx_hash"`
 }
 
 type ResSendFromParentWallet struct {
@@ -29,7 +29,7 @@ type ResSendFromParentWallet struct {
 // /////// 특정 지갑에서 전송 요청
 type ReqSendFromUserWallet struct {
 	Symbol         string `json:"symbol"`
-	BaseCoinSymbol string `json:"base_coin_symbol"`
+	BaseCoinSymbol string `json:"base_symbol"`
 	FromAddress    string `json:"from_address"`
 	ToAddress      string `json:"to_address"`
 	Amount         string `json:"amount"`
@@ -37,7 +37,8 @@ type ReqSendFromUserWallet struct {
 }
 
 type ResSendFromUserWalletValue struct {
-	TransactionHash string `json:"transactionHash"`
+	IsSuccess bool   `json:"is_success"`
+	TxHash    string `json:"tx_hash"`
 }
 
 type ResSendFromUserWallet struct {

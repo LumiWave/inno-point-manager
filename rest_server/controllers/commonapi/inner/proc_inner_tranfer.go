@@ -54,12 +54,14 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 		}
 	}
 
+	coinInfo := model.GetDB().CoinsBySymbol[params.CoinSymbol]
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromParentWallet{
-		Symbol:    params.CoinSymbol,
-		ToAddress: params.ToAddress,
-		Amount:    strconv.FormatFloat(params.Quantity, 'f', -1, 64),
-		Memo:      strconv.FormatInt(params.AUID, 10),
+		BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol,
+		Symbol:     params.CoinSymbol,
+		ToAddress:  params.ToAddress,
+		Amount:     strconv.FormatFloat(params.Quantity, 'f', -1, 64),
+		Memo:       strconv.FormatInt(params.AUID, 10),
 	}
 	if res, err := token_manager_server.GetInstance().PostSendFromParentWallet(req); err != nil {
 		resp.SetReturn(resultcode.ResultInternalServerError)
@@ -71,8 +73,13 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 			return resp
 		}
 
-		params.ReqId = res.Value.ReqId
-		params.TransactionId = res.Value.TransactionId
+		if !res.Value.IsSuccess {
+			resp.SetReturn(resultcode.ResultInternalServerError)
+		}
+
+		//params.ReqId = res.Value.ReqId
+		//params.TransactionId = res.Value.TransactionId
+		params.TransactionId = res.Value.TxHash
 	}
 
 	params.ActionDate = time.Unix(time.Now().Unix(), 0)
@@ -166,11 +173,11 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 			return resp
 		}
 
-		if len(res.Value.TransactionHash) == 0 {
-			log.Errorf("PostSendFromUserWallet txid null")
-		}
+		// if len(res.Value.TransactionHash) == 0 {
+		// 	log.Errorf("PostSendFromUserWallet txid null")
+		// }
 		//params.ReqId = res.Value.ReqId
-		params.TransactionId = res.Value.TransactionHash
+		params.TransactionId = res.Value.TxHash
 	}
 
 	params.ActionDate = time.Unix(time.Now().Unix(), 0)

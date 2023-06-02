@@ -110,6 +110,7 @@ func (o *DB) GetCoins() error {
 	defer rows.Close()
 
 	o.Coins = make(map[int64]*Coin)
+	o.CoinsBySymbol = make(map[string]*Coin)
 
 	for rows.Next() {
 		coin := &Coin{}
@@ -124,6 +125,7 @@ func (o *DB) GetCoins() error {
 			&coin.ExchangeFees,
 			&coin.IsRechargeable); err == nil {
 			o.Coins[coin.CoinId] = coin
+			o.CoinsBySymbol[coin.CoinSymbol] = coin
 		} else {
 			log.Errorf("USPAU_Scan_Coins Scan error : %v", err)
 		}

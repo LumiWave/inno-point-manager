@@ -72,8 +72,9 @@ type DB struct {
 
 	AppPointsMap map[int64]*AppPointInfo // 전체 app과 포인트 : key AppId
 
-	AppCoins map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
-	Coins    map[int64]*Coin      // 전체 coin 정보 : key coinID
+	AppCoins      map[int64][]*AppCoin // 전체 app에 속한 CoinID 정보
+	Coins         map[int64]*Coin      // 전체 coin 정보 : key coinID
+	CoinsBySymbol map[string]*Coin     // 전체 coin 정보 : key coin_symbol
 
 	BaseCoinMapByCoinID map[int64]*context.BaseCoinInfo  // 전체 base coin 정보 : key coin symbol
 	BaseCoinMapBySymbol map[string]*context.BaseCoinInfo // 전체 base coin 정보 : key coin symbol
