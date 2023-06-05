@@ -65,7 +65,7 @@ func (o *DB) ListenSubscribeEvent() error {
 			o.PubSubCmdByInternal(msg)
 		}
 
-		log.Debugf("subscribe channel: %v, val: %v", msg.Channel, msg.Payload)
+		//log.Debugf("subscribe channel: %v, val: %v", msg.Channel, msg.Payload)
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func (o *DB) PubSubCmdByInternal(msg basedb.PubSubMessageV8) error {
 	if strings.EqualFold(header.Type, PubSub_type_healthcheck) {
 		psPacket := &PSHealthCheck{}
 		json.Unmarshal([]byte(msg.Payload), psPacket)
-		log.Infof("pubsub healthcheck : %v ", psPacket.Value.Timestamp)
+		//log.Infof("pubsub healthcheck : %v ", psPacket.Value.Timestamp)
 	} else if strings.EqualFold(header.Type, PubSub_type_maintenance) {
 		psPacket := &PSMaintenance{}
 		json.Unmarshal([]byte(msg.Payload), psPacket)
