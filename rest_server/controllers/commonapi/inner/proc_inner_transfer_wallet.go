@@ -132,14 +132,21 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 		feeAmount = new(big.Float).Quo(feeAmount, scale)
 		fe, _ := feeAmount.Float64()
 
+		adjust := new(big.Float).Add(valueAmount, feeAmount)
+		adjustQuantity, _ := adjust.Float64()
+
+		lastQuantity := new(big.Float).SetFloat64(meCoin.Quantity)
+		new := new(big.Float).Sub(lastQuantity, adjust)
+		newQuantity, _ := new.Float64()
+
 		if err := model.GetDB().UpdateAccountCoins(
 			txType.AUID,
 			txType.CoinID,
 			model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
 			meCoin.WalletAddress,
 			meCoin.Quantity,
-			-(amount + fe), // 전송 수수료 + amount
-			meCoin.Quantity-(amount+fe),
+			-adjustQuantity, // 전송 수수료 + amount
+			newQuantity,
 			context.LogID_external_wallet,
 			context.EventID_sub,
 			txHash); err != nil {

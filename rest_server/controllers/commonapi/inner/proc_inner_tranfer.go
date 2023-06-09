@@ -1,6 +1,8 @@
 package inner
 
 import (
+	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -55,12 +57,21 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 	}
 
 	coinInfo := model.GetDB().CoinsBySymbol[params.CoinSymbol]
+	scale := new(big.Float).SetInt64(1)
+	scale.SetString("1e" + fmt.Sprintf("%d", coinInfo.Decimal))
+
+	valueAmount := new(big.Float).SetFloat64(params.Quantity)
+	valueAmount = new(big.Float).Mul(valueAmount, scale)
+	nAmount := new(big.Int)
+	valueAmount.Int(nAmount)
+	amount := nAmount.String()
+
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromParentWallet{
 		BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol,
 		Symbol:     params.CoinSymbol,
 		ToAddress:  params.ToAddress,
-		Amount:     strconv.FormatFloat(params.Quantity, 'f', -1, 64),
+		Amount:     amount,
 		Memo:       strconv.FormatInt(params.AUID, 10),
 	}
 	if res, err := token_manager_server.GetInstance().PostSendFromParentWallet(req); err != nil {
@@ -150,13 +161,21 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 		}
 	}
 
+	decimal := model.GetDB().CoinsBySymbol[params.CoinSymbol].Decimal
+	scale := new(big.Float).SetInt64(1)
+	scale.SetString("1e" + fmt.Sprintf("%d", decimal))
+
+	valueAmount := new(big.Float).SetFloat64(params.Quantity)
+	valueAmount = new(big.Float).Mul(valueAmount, scale)
+	amount := valueAmount.String()
+
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromUserWallet{
 		BaseCoinSymbol: params.BaseCoinSymbol,
 		Symbol:         params.CoinSymbol,
 		FromAddress:    params.FromAddress,
 		ToAddress:      params.ToAddress,
-		Amount:         strconv.FormatFloat(params.Quantity, 'f', -1, 64),
+		Amount:         amount,
 		Memo:           strconv.FormatInt(params.AUID, 10),
 	}
 	if res, err := token_manager_server.GetInstance().PostSendFromUserWallet(req); err != nil {
@@ -754,8 +773,9 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 			}
 
 			req := &token_manager_server.ReqBalance{
-				Symbol:  model.GetDB().Coins[coin.CoinID].CoinSymbol,
-				Address: coin.WalletAddress,
+				BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coin.BaseCoinID].BaseCoinSymbol,
+				Symbol:     model.GetDB().Coins[coin.CoinID].CoinSymbol,
+				Address:    coin.WalletAddress,
 			}
 
 			if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {
@@ -768,7 +788,14 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 				} else {
 					resp.Value = meCoins
 					// 내 코인 수량과 비교해서 다르면 업데이트
-					newQuantity, err := strconv.ParseFloat(res.ResReqBalanceValue.Balance, 64)
+
+					scale := new(big.Float).SetFloat64(1)
+					scale.SetString("1e" + fmt.Sprintf("%d", res.Decimal))
+					valueAmount, _ := new(big.Float).SetString(res.Balance)
+					valueAmount = new(big.Float).Quo(valueAmount, scale)
+					newQuantity, _ := valueAmount.Float64()
+
+					//newQuantity, err := strconv.ParseFloat(res.ResReqBalanceValue.Balance, 64)
 
 					if err != nil {
 						log.Errorf("new coin balance parse err : %v", err)

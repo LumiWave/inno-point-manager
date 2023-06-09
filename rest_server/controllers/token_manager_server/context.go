@@ -57,6 +57,7 @@ type ReqBalance struct {
 type ResReqBalanceValue struct {
 	Balance string `json:"balance"`
 	Address string `json:"address"`
+	Decimal int64  `json:"decimal"`
 }
 
 type ResBalanc struct {
