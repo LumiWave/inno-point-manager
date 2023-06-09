@@ -167,7 +167,9 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 
 	valueAmount := new(big.Float).SetFloat64(params.Quantity)
 	valueAmount = new(big.Float).Mul(valueAmount, scale)
-	amount := valueAmount.String()
+	nAmount := new(big.Int)
+	valueAmount.Int(nAmount)
+	amount := nAmount.String()
 
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromUserWallet{
