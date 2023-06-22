@@ -69,10 +69,16 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromParentWallet{
 		BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol,
-		Symbol:     params.CoinSymbol,
-		ToAddress:  params.ToAddress,
-		Amount:     amount,
-		Memo:       strconv.FormatInt(params.AUID, 10),
+		Contract: func() string {
+			// 코인 타입이면 contract 정보를 를 보내지 않는다.
+			if strings.EqualFold(model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol, coinInfo.CoinSymbol) {
+				return ""
+			}
+			return coinInfo.ContractAddress
+		}(),
+		ToAddress: params.ToAddress,
+		Amount:    amount,
+		Memo:      strconv.FormatInt(params.AUID, 10),
 	}
 	if res, err := token_manager_server.GetInstance().PostSendFromParentWallet(req); err != nil {
 		resp.SetReturn(resultcode.ResultInternalServerError)
@@ -174,11 +180,17 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
 	req := &token_manager_server.ReqSendFromUserWallet{
 		BaseCoinSymbol: params.BaseCoinSymbol,
-		Symbol:         params.CoinSymbol,
-		FromAddress:    params.FromAddress,
-		ToAddress:      params.ToAddress,
-		Amount:         amount,
-		Memo:           strconv.FormatInt(params.AUID, 10),
+		Contract: func() string {
+			// 코인 타입이면 contract 정보를 를 보내지 않는다.
+			if strings.EqualFold(params.BaseCoinSymbol, model.GetDB().Coins[params.CoinID].CoinSymbol) {
+				return ""
+			}
+			return model.GetDB().Coins[params.CoinID].ContractAddress
+		}(),
+		FromAddress: params.FromAddress,
+		ToAddress:   params.ToAddress,
+		Amount:      amount,
+		Memo:        strconv.FormatInt(params.AUID, 10),
 	}
 	if res, err := token_manager_server.GetInstance().PostSendFromUserWallet(req); err != nil {
 		resp.SetReturn(resultcode.ResultInternalServerError)
@@ -776,8 +788,14 @@ func CoinReload(params *context.CoinReload) *base.BaseResponse {
 
 			req := &token_manager_server.ReqBalance{
 				BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coin.BaseCoinID].BaseCoinSymbol,
-				Symbol:     model.GetDB().Coins[coin.CoinID].CoinSymbol,
-				Address:    coin.WalletAddress,
+				Contract: func() string {
+					// 코인 타입이면 contract 정보를 를 보내지 않는다.
+					if strings.EqualFold(model.GetDB().BaseCoinMapByCoinID[coin.BaseCoinID].BaseCoinSymbol, model.GetDB().Coins[coin.CoinID].CoinSymbol) {
+						return ""
+					}
+					return model.GetDB().Coins[coin.CoinID].ContractAddress
+				}(),
+				Address: coin.WalletAddress,
 			}
 
 			if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {

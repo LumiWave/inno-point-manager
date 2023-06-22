@@ -8,7 +8,7 @@ type Common struct {
 // /////// 부모 지갑에서 전송 요청
 type ReqSendFromParentWallet struct {
 	BaseSymbol string `json:"base_symbol"`
-	Symbol     string `json:"symbol"`
+	Contract   string `json:"contract"`
 	ToAddress  string `json:"to_address"`
 	Amount     string `json:"amount"`
 	Memo       string `json:"memo"`
@@ -28,7 +28,7 @@ type ResSendFromParentWallet struct {
 
 // /////// 특정 지갑에서 전송 요청
 type ReqSendFromUserWallet struct {
-	Symbol         string `json:"symbol"`
+	Contract       string `json:"contract"`
 	BaseCoinSymbol string `json:"base_symbol"`
 	FromAddress    string `json:"from_address"`
 	ToAddress      string `json:"to_address"`
@@ -50,7 +50,7 @@ type ResSendFromUserWallet struct {
 // 잔액 조회
 type ReqBalance struct {
 	BaseSymbol string `url:"base_symbol"`
-	Symbol     string `url:"symbol"`
+	Contract   string `url:"contract"`
 	Address    string `url:"address"`
 }
 

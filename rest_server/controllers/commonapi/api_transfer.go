@@ -2,6 +2,7 @@ package commonapi
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
@@ -113,8 +114,14 @@ func GetBalance(params *context.ReqBalance, c echo.Context) error {
 	baseCoinInfo := model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID]
 	req := &token_manager_server.ReqBalance{
 		BaseSymbol: baseCoinInfo.BaseCoinSymbol,
-		Symbol:     params.Symbol,
-		Address:    params.Address,
+		Contract: func() string {
+			// 코인 타입이면 contract 정보를 를 보내지 않는다.
+			if strings.EqualFold(baseCoinInfo.BaseCoinSymbol, coinInfo.CoinSymbol) {
+				return ""
+			}
+			return coinInfo.ContractAddress
+		}(),
+		Address: params.Address,
 	}
 
 	if res, err := token_manager_server.GetInstance().GetBalance(req); err != nil {
