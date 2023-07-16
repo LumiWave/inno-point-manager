@@ -58,3 +58,7 @@ func (o *InternalAPI) PostPSPointUpdate(c echo.Context) error {
 	}
 	return commonapi.PostPSPointUpdate(ctx, params)
 }
+
+func (o *InternalAPI) GetMeta(c echo.Context) error {
+	return commonapi.GetMeta(c)
+}
