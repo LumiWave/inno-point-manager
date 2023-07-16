@@ -12,4 +12,3 @@ etc/conf/config.local.yml
 etc/conf/external_api.yml
 etc/conf/internal_api.yml
 etc/conf/config.stage.yml
-etc/conf/config.dev-wallet.yml
