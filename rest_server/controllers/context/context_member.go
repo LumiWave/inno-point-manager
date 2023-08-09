@@ -7,7 +7,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 )
 
-///////// 회원 추가
+// /////// 회원 추가
 type ReqPointMemberRegister struct {
 	AUID       int64 `json:"au_id"`
 	MUID       int64 `json:"mu_id"`
@@ -47,7 +47,7 @@ type InsertPointMemberInfo struct {
 
 ////////////////////////////////////////
 
-///////// 지갑 정보 조회
+// /////// 지갑 정보 조회
 type ReqPointMemberWallet struct {
 	AUID int64 `query:"au_id"`
 }
@@ -78,7 +78,7 @@ type ResPointMemberWallet struct {
 
 ////////////////////////////////////////
 
-///////// 코인 정보 조회
+// /////// 코인 정보 조회
 type AccountCoin struct {
 	CoinID                    int64     `json:"coin_id"`
 	BaseCoinID                int64     `json:"base_coin_id"`
@@ -93,7 +93,7 @@ type AccountCoin struct {
 
 ////////////////////////////////////////
 
-///////// 코인 정보 조회 by 지갑 주소
+// /////// 코인 정보 조회 by 지갑 주소
 type AccountCoinByWalletAddress struct {
 	AUID     int64   `json:"au_id"`
 	CoinID   int64   `json:"coin_id"`
@@ -101,3 +101,12 @@ type AccountCoinByWalletAddress struct {
 }
 
 ////////////////////////////////////////
+
+// 내 지갑 정보
+type AccountWallet struct {
+	BaseCoinID    int64  `json:"base_coin_id"`
+	WalletID      int64  `json:"wallet_id"`
+	WalletAddress string `json:"wallet_address"`
+	IsConnected   bool   `json:"is_connected"`
+	ModifiedDT    string `json:"modified_dt"`
+}

@@ -168,10 +168,12 @@ func (o *DB) GetBaseCoins() error {
 	o.BaseCoins.Coins = nil
 	for rows.Next() {
 		baseCoin := &context.BaseCoinInfo{}
-		if err := rows.Scan(&baseCoin.BaseCoinID, &baseCoin.BaseCoinName, &baseCoin.BaseCoinSymbol, &baseCoin.IsUsedParentWallet); err == nil {
+		if err := rows.Scan(&baseCoin.BaseCoinID, &baseCoin.BaseCoinName, &baseCoin.BaseCoinSymbol, &baseCoin.IsUsedParentWallet, &baseCoin.AccessWallet); err == nil {
 			o.BaseCoinMapByCoinID[baseCoin.BaseCoinID] = baseCoin
 			o.BaseCoinMapBySymbol[baseCoin.BaseCoinSymbol] = baseCoin
 			o.BaseCoins.Coins = append(o.BaseCoins.Coins, baseCoin)
+		} else {
+			log.Errorf("USPAU_Scan_BaseCoins scan err : %v", err)
 		}
 	}
 

@@ -138,6 +138,11 @@ func GetBalance(params *context.ReqBalance, c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+func GetBalanceAll(params *context.ReqBalanceAll, ctx *context.PointManagerContext) error {
+	resp := inner.GetBalanceAll(params.AUID)
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
 func PostCoinReload(params *context.CoinReload, ctx *context.PointManagerContext) error {
 	resp := inner.CoinReload(params)
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

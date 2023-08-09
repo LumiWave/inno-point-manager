@@ -19,6 +19,8 @@ const (
 	USPAU_GetList_AccountCoins_By_CoinString    = "[dbo].[USPAU_GetList_AccountCoins_By_CoinString]"
 	USPAU_Get_AccountBaseCoins_By_WalletAddress = "[dbo].[USPAU_Get_AccountBaseCoins_By_WalletAddress]"
 	USPAU_Mod_AccountCoins                      = "[dbo].[USPAU_Mod_AccountCoins]"
+
+	USPAU_GetList_AccountWallets = "[dbo].[USPAU_GetList_AccountWallets]"
 )
 
 // 계정 일일 포인트량 조회
@@ -214,4 +216,35 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 	go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 
 	return nil
+}
+
+// 내 지갑 리스트 요청
+func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet, error) {
+	var rs orginMssql.ReturnStatus
+	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountWallets,
+		sql.Named("AUID", auid),
+		&rs)
+	if err != nil {
+		log.Errorf("%v QueryContext err : %v", USPAU_GetList_AccountWallets, err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	accountWallets := []*context.AccountWallet{}
+	for rows.Next() {
+		accountWallet := &context.AccountWallet{}
+		if err := rows.Scan(&accountWallet.BaseCoinID, &accountWallet.WalletID, &accountWallet.WalletAddress, &accountWallet.IsConnected, &accountWallet.ModifiedDT); err == nil {
+			accountWallets = append(accountWallets, accountWallet)
+		} else {
+			log.Errorf("USPAU_GetList_AccountWallets scan error : %v", err)
+		}
+	}
+
+	if rs != 1 {
+		log.Errorf("%v returnvalue error : %v", USPAU_GetList_AccountWallets, rs)
+		return nil, errors.New("USPAU_GetList_AccountWallets returnvalue error " + strconv.Itoa(int(rs)))
+	}
+
+	return accountWallets, nil
 }

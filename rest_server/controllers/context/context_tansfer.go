@@ -221,6 +221,35 @@ type ResReqBalance struct {
 	Address string `json:"address"`
 }
 
+// /////// 전체 지갑 잔액
+type ReqBalanceAll struct {
+	AUID int64 `query:"au_id"`
+}
+
+func NewReqBalanceAll() *ReqBalanceAll {
+	return new(ReqBalanceAll)
+}
+
+func (o *ReqBalanceAll) CheckValidate() *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
+
+	return nil
+}
+
+type Balance struct {
+	CoinID     int64  `json:"coin_id"`
+	BaseCoinID int64  `json:"base_coin_id"`
+	Symbol     string `json:"symbol"`
+	Balance    string `json:"balance"`
+	Address    string `json:"address"`
+	Decimal    int64  `json:"dicimal"`
+}
+type ResReqBalanceAll struct {
+	Balances []*Balance `json:"balances"`
+}
+
 ////////////////////////////////////////
 
 // /////// coin mainnet 보정

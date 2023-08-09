@@ -118,6 +118,21 @@ func (o *InternalAPI) GetBalance(c echo.Context) error {
 	return commonapi.GetBalance(params, c)
 }
 
+func (o *InternalAPI) GetBalanceAll(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+	params := context.NewReqBalanceAll()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetBalanceAll(params, ctx)
+}
+
 func (o *InternalAPI) PostCoinReload(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 	params := context.NewCoinReload()

@@ -58,6 +58,7 @@ const (
 	Result_Error_DB_GetAccountCoinByWalletAddress = 18103 // db 지갑 주소 기중 acount coin 조회 에러
 	Result_Error_DB_Get_Me_CoinList_Error         = 18104 // db coin 리스트 조회 에러
 	Result_Error_DB_Update_Me_Coin_Error          = 18105 // db coin 업데이트 에러
+	Result_Error_Db_GetAccountWallets             = 18106 // db 지갑 리스트 조회 에러
 
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
@@ -120,12 +121,13 @@ var ResultCodeText = map[int]string{
 	Result_Error_DB_GetAccountCoinByWalletAddress: "db get coin info error",
 	Result_Error_DB_Get_Me_CoinList_Error:         "db get coin list info error",
 	Result_Error_DB_Update_Me_Coin_Error:          "db update coin info error",
+	Result_Error_Db_GetAccountWallets:             "db get account wallet list error",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
 	Result_DBError_Unknown: "Unknown DB error",
 
-	Result_Error_Invalid_data: "	Invalid data received.",
+	Result_Error_Invalid_data:   "	Invalid data received.",
 	Result_Error_duplicate_auid: "The app has duplicate AUIDs.",
 
 	Result_Require_AUID:           "Requires valid 'au_id' information.",

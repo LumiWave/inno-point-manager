@@ -23,7 +23,7 @@ type PointInfo struct {
 	Points []*Point `json:"points"`
 }
 
-///////// member 포인트 조회
+// /////// member 포인트 조회
 type ReqGetPointApp struct {
 	AppId      int64 `query:"app_id"`
 	MUID       int64 `query:"mu_id"`
@@ -50,7 +50,7 @@ func (o *ReqGetPointApp) CheckValidate(ctx *PointManagerContext) *base.BaseRespo
 
 ////////////////////////////////////////
 
-///////// app 포인트 업데이트
+// /////// app 포인트 업데이트
 type ReqPointAppUpdate struct {
 	AppID      int64 `json:"app_id"`
 	MUID       int64 `json:"mu_id"`
@@ -95,12 +95,13 @@ type ResPointAppUpdate struct {
 
 ////////////////////////////////////////
 
-///////// BaseCoinInfo
+// /////// BaseCoinInfo
 type BaseCoinInfo struct {
 	BaseCoinID         int64  `json:"base_coin_id"`
 	BaseCoinName       string `json:"base_coin_name"`
 	BaseCoinSymbol     string `json:"base_coin_symbol"`
 	IsUsedParentWallet bool   `json:"is_used_parent_wallet"`
+	AccessWallet       string `json:"access_wallet"`
 }
 
 type BaseCoinList struct {
