@@ -246,7 +246,7 @@ type Balance struct {
 	Address    string `json:"address"`
 	Decimal    int64  `json:"dicimal"`
 }
-type ResReqBalanceAll struct {
+type ResBalanceAll struct {
 	Balances []*Balance `json:"balances"`
 }
 

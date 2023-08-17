@@ -104,9 +104,8 @@ type AccountCoinByWalletAddress struct {
 
 // 내 지갑 정보
 type AccountWallet struct {
-	BaseCoinID    int64  `json:"base_coin_id"`
-	WalletID      int64  `json:"wallet_id"`
-	WalletAddress string `json:"wallet_address"`
-	IsConnected   bool   `json:"is_connected"`
-	ModifiedDT    string `json:"modified_dt"`
+	BaseCoinID       int64  `json:"base_coin_id"`
+	WalletAddress    string `json:"wallet_address"`
+	ConnectionStatus int    `json:"connection_status"`
+	ModifiedDT       string `json:"modified_dt"`
 }
