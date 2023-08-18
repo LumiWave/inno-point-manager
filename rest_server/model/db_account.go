@@ -78,9 +78,9 @@ func (o *DB) GetAccountCoins(auid int64) ([]*context.AccountCoin, map[int64]*con
 	for rows.Next() {
 		accountCoin := &context.AccountCoin{}
 		if err := rows.Scan(&accountCoin.CoinID,
-			&accountCoin.BaseCoinID,
-			&accountCoin.WalletAddress,
-			&accountCoin.Quantity,
+			// &accountCoin.BaseCoinID,
+			// &accountCoin.WalletAddress,
+			//&accountCoin.Quantity,
 			&accountCoin.TodayAcqQuantity,
 			&accountCoin.TodayCnsmQuantity,
 			&accountCoin.TodayAcqExchangeQuantity,

@@ -53,16 +53,17 @@ type Wallets struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager           PointManager          `yaml:"point_manager"`
-	MssqlDBAccountAll  baseconf.DBAuth       `yaml:"mssql_db_account"`
-	MssqlDBAccountRead baseconf.DBAuth       `yaml:"mssql_db_account_read"`
-	MssqlDBPointAll    baseconf.DBAuth       `yaml:"mssql_db_point"`
-	MssqlDBPointRead   baseconf.DBAuth       `yaml:"mssql_db_point_read"`
-	ParentWallets      []Wallets             `yaml:"parent_wallet_info"`
-	ParentWalletsMap   map[string]Wallets    // key parent_wallet_address
-	Auth               ApiAuth               `yaml:"api_auth"`
-	TokenMgrServer     ApiTokenManagerServer `yaml:"api_token_manager_server"`
-	InnoLog            ApiInno               `yaml:"inno-log"`
+	PManager                 PointManager          `yaml:"point_manager"`
+	MssqlDBAccountAll        baseconf.DBAuth       `yaml:"mssql_db_account"`
+	MssqlDBAccountRead       baseconf.DBAuth       `yaml:"mssql_db_account_read"`
+	MssqlDBPointAll          baseconf.DBAuth       `yaml:"mssql_db_point"`
+	MssqlDBPointRead         baseconf.DBAuth       `yaml:"mssql_db_point_read"`
+	ParentWallets            []Wallets             `yaml:"parent_wallet_info"`
+	ParentWalletsMap         map[string]Wallets    // key parent_wallet_address
+	ParentWalletsMapBySymbol map[string]Wallets    // key basecoin Symbol
+	Auth                     ApiAuth               `yaml:"api_auth"`
+	TokenMgrServer           ApiTokenManagerServer `yaml:"api_token_manager_server"`
+	InnoLog                  ApiInno               `yaml:"inno-log"`
 }
 
 func GetInstance(filepath ...string) *ServerConfig {
@@ -75,9 +76,11 @@ func GetInstance(filepath ...string) *ServerConfig {
 			currentConfig = nil
 		} else {
 			currentConfig.ParentWalletsMap = make(map[string]Wallets)
+			currentConfig.ParentWalletsMapBySymbol = make(map[string]Wallets)
 
 			for _, wallet := range currentConfig.ParentWallets {
 				currentConfig.ParentWalletsMap[wallet.ParentWalletAddr] = wallet
+				currentConfig.ParentWalletsMapBySymbol[wallet.Name] = wallet
 			}
 
 			if os.Getenv("ASPNETCORE_PORT") != "" {

@@ -14,9 +14,25 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	// if !model.GetSwapEnable() {
+	// 	resp.SetReturn(resultcode.Result_Error_IsSwapMaintenance)
+	// } else if err := inner.Swap(params, ctx.GetValue().InnoUID); err != nil {
+	// 	resp = err
+	// }
 	if !model.GetSwapEnable() {
 		resp.SetReturn(resultcode.Result_Error_IsSwapMaintenance)
-	} else if err := inner.Swap(params, ctx.GetValue().InnoUID); err != nil {
+	} else if err := inner.SwapWallet(params, ctx.GetValue().InnoUID); err != nil {
+		resp = err
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+func PutSwapGasFee(params *context.ReqSwapGasFee, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	if err := inner.SwapGasFee(params); err != nil {
 		resp = err
 	}
 

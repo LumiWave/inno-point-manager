@@ -14,8 +14,12 @@ func MakeSwapLockKey(AUID int64) string {
 }
 
 // redis coin transfer key generate
-func MakeSwapKey(AUID int64) string {
-	return config.GetInstance().DBPrefix + ":SWAP:" + strconv.FormatInt(AUID, 10)
+// func MakeSwapKey(AUID int64) string {
+// 	return config.GetInstance().DBPrefix + ":SWAP:" + strconv.FormatInt(AUID, 10)
+// }
+
+func MakeSwapKey(walletAddr string) string {
+	return config.GetInstance().DBPrefix + ":SWAP:" + walletAddr
 }
 
 func (o *DB) GetCacheSwapInfo(key string) (*context.ReqSwapInfo, error) {

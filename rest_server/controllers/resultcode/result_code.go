@@ -20,14 +20,17 @@ const (
 	Result_Error_NotEqual_PreviousQuantity   = 11103 // 이전 수량이 다르다.
 	Result_Error_Exceeded_TodayPoints_earned = 11104 // 하루 최대 포인트 획득량 달성
 
-	Result_Require_AUID           = 12000 // 유효한 au_id 정보 필요
-	Result_Require_MUID           = 12001 // 유효한 mu_id 정보 필요
-	Result_Require_AppID          = 12002 // 유효한 app_id 정보 필요
-	Result_Require_DatabaseID     = 12003 // 유효한 database_id 정보 필요
-	Result_Require_PointID        = 12004 // 유효한 point_id 정보 필요
-	Result_Require_AdjustQuantity = 12005 // 유효한 adjust_quantity 정보 필요
-	Result_Require_Symbol         = 12006 // 유효한 coin symbol 정보 필요
-	Result_Require_InnoUID        = 12007 // 유요한 inno uid 정보 필요
+	Result_Require_AUID                = 12000 // 유효한 au_id 정보 필요
+	Result_Require_MUID                = 12001 // 유효한 mu_id 정보 필요
+	Result_Require_AppID               = 12002 // 유효한 app_id 정보 필요
+	Result_Require_DatabaseID          = 12003 // 유효한 database_id 정보 필요
+	Result_Require_PointID             = 12004 // 유효한 point_id 정보 필요
+	Result_Require_AdjustQuantity      = 12005 // 유효한 adjust_quantity 정보 필요
+	Result_Require_Symbol              = 12006 // 유효한 coin symbol 정보 필요
+	Result_Require_InnoUID             = 12007 // 유요한 inno uid 정보 필요
+	Result_Require_Valid_BaseCoinID    = 12008 // 유효한 basecoin id 정보 필요
+	Result_Invalid_WalletAddress_Error = 12009 // wallet address
+	Result_Invalid_TxStatus            = 12010 // invalid tx status
 
 	Result_Error_MinPointQuantity             = 12100 // 포인트 최소 보유 수량 에러
 	Result_Error_MinCoinQuantity              = 12101 // 코인 최소 보유 수량 에러
@@ -51,14 +54,19 @@ const (
 	Result_RedisError_SetTransfer_Tx    = 18002 // redis set coin tranfer error
 	Result_RedisError_SetSwapInfo       = 18003 // redis set swap info error
 	Result_RedisError_WaitForProcessing = 18004 // redis lock return
+	Result_RedisError_GetSwapInfo       = 18005 // redis get swap info error
 
-	Result_Error_DB_GetPointAppList               = 18100 // db member point 조회 에러
-	Result_Error_DB_UpdateAppPoint                = 18101 // db point update 에러
-	Result_Error_DB_PostPointCoinSwap             = 18102 // db swap 에러
-	Result_Error_DB_GetAccountCoinByWalletAddress = 18103 // db 지갑 주소 기중 acount coin 조회 에러
-	Result_Error_DB_Get_Me_CoinList_Error         = 18104 // db coin 리스트 조회 에러
-	Result_Error_DB_Update_Me_Coin_Error          = 18105 // db coin 업데이트 에러
-	Result_Error_Db_GetAccountWallets             = 18106 // db 지갑 리스트 조회 에러
+	Result_Error_DB_GetPointAppList                    = 18100 // db member point 조회 에러
+	Result_Error_DB_UpdateAppPoint                     = 18101 // db point update 에러
+	Result_Error_DB_PostPointCoinSwap                  = 18102 // db swap 에러
+	Result_Error_DB_GetAccountCoinByWalletAddress      = 18103 // db 지갑 주소 기중 acount coin 조회 에러
+	Result_Error_DB_Get_Me_CoinList_Error              = 18104 // db coin 리스트 조회 에러
+	Result_Error_DB_Update_Me_Coin_Error               = 18105 // db coin 업데이트 에러
+	Result_Error_Db_GetAccountWallets                  = 18106 // db 지갑 리스트 조회 에러
+	Result_Error_Db_TransactExchangeGoods_Gasfee       = 18107 // db swap 가스비 처리 에러
+	Result_Error_Db_TransactExchangeGoods_TxStatus     = 18108 // db swap 상태 처리 실패
+	Result_Error_Db_TransactExchangeGoods_TransactedDT = 18109 // db swap 토큰 처리 실패
+	Result_Error_Db_Swap_Complete                      = 18110 // db swap 완료 처리 싶패
 
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
@@ -114,6 +122,7 @@ var ResultCodeText = map[int]string{
 	Result_RedisError_SetTransfer_Tx:    "Redis Coin transfer by Txid set error",
 	Result_RedisError_SetSwapInfo:       "Redis Swap set error",
 	Result_RedisError_WaitForProcessing: "Wait for previous processing.",
+	Result_RedisError_GetSwapInfo:       "Redis swap get error",
 
 	Result_Error_DB_GetPointAppList:               "db member point scan error",
 	Result_Error_DB_UpdateAppPoint:                "db point update error",
@@ -122,6 +131,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_DB_Get_Me_CoinList_Error:         "db get coin list info error",
 	Result_Error_DB_Update_Me_Coin_Error:          "db update coin info error",
 	Result_Error_Db_GetAccountWallets:             "db get account wallet list error",
+	Result_Error_Db_TransactExchangeGoods_Gasfee:  "db mod transaction exchanagegoods error",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
@@ -130,13 +140,16 @@ var ResultCodeText = map[int]string{
 	Result_Error_Invalid_data:   "	Invalid data received.",
 	Result_Error_duplicate_auid: "The app has duplicate AUIDs.",
 
-	Result_Require_AUID:           "Requires valid 'au_id' information.",
-	Result_Require_MUID:           "Requires valid 'mu_id' information.",
-	Result_Require_AppID:          "Requires valid 'app_id' information.",
-	Result_Require_DatabaseID:     "Requires valid 'database_id' information.",
-	Result_Require_PointID:        "Requires valid 'point_id' information.",
-	Result_Require_AdjustQuantity: "Requires valid 'adjust_quantity' information.",
-	Result_Require_Symbol:         "Requires valid 'symbol' information.",
+	Result_Require_AUID:                "Requires valid 'au_id' information.",
+	Result_Require_MUID:                "Requires valid 'mu_id' information.",
+	Result_Require_AppID:               "Requires valid 'app_id' information.",
+	Result_Require_DatabaseID:          "Requires valid 'database_id' information.",
+	Result_Require_PointID:             "Requires valid 'point_id' information.",
+	Result_Require_AdjustQuantity:      "Requires valid 'adjust_quantity' information.",
+	Result_Require_Symbol:              "Requires valid 'symbol' information.",
+	Result_Require_Valid_BaseCoinID:    "Requires valid 'basecoin_id' information.",
+	Result_Invalid_WalletAddress_Error: "Wallet Address is invalid",
+	Result_Invalid_TxStatus:            "TxStatus is invalid",
 
 	Result_Error_MinPointQuantity: "lack of minimum point quantity",
 	Result_Error_MinCoinQuantity:  "lack of munimum coin quantity",
