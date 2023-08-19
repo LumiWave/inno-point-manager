@@ -23,7 +23,8 @@ type ServerApp struct {
 	conf       *config.ServerConfig
 	configFile string
 
-	sysMonitor *schedule.SystemMonitor
+	sysMonitor          *schedule.SystemMonitor
+	swapExpireScheduler *schedule.SwapExpireScheduler
 }
 
 func (o *ServerApp) Init(configFile string) (err error) {
@@ -31,9 +32,9 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	base.AppendReturnCodeText(&resultcode.ResultCodeText)
 	context.AppendRequestParameter()
 
-	// if err := o.InitScheduler(); err != nil {
-	// 	return err
-	// }
+	if err := o.InitScheduler(); err != nil {
+		return err
+	}
 	auth.InitHttpClient()
 	o.InitTokenManagerServer(o.conf)
 	o.InitLogServer(o.conf)
@@ -71,8 +72,8 @@ func NewApp() (*ServerApp, error) {
 }
 
 func (o *ServerApp) InitScheduler() error {
-	o.sysMonitor = schedule.GetSystemMonitor()
-
+	//o.sysMonitor = schedule.GetSystemMonitor()
+	o.swapExpireScheduler = schedule.InitSwapExpireScheduler(o.conf)
 	return nil
 }
 

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	SWAP_status_init                 = int64(0)
+	SWAP_status_init                 = int64(1)
 	SWAP_status_fee_transfer_start   = int64(2)
 	SWAP_status_fee_transfer_success = int64(3)
 	SWAP_status_fee_transfer_fail    = int64(4)

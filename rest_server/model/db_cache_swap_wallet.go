@@ -32,6 +32,33 @@ func (o *DB) CacheSetSwapWallet(swapInfo *context.ReqSwapInfo) error {
 	return o.Cache.HMSet(MakeSwapWalletKey(), swapInfos)
 }
 
+// 전체 swap 정보 조회
+func (o *DB) CacheGetSwapWallets() (map[string]*context.ReqSwapInfo, []*context.ReqSwapInfo, error) {
+	if !o.Cache.Enable() {
+		log.Warnf("redis disable")
+	}
+
+	rMap, err := o.Cache.GetDB().HGetAll(MakeSwapWalletKey())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resMap := make(map[string]*context.ReqSwapInfo)
+	resList := []*context.ReqSwapInfo{}
+	for _, value := range rMap {
+		loadData := &context.ReqSwapInfo{}
+		if err := json.Unmarshal([]byte(value), loadData); err != nil {
+			log.Errorf("CacheGetSwapWallets unmarshal err : %v", err)
+			loadData = nil
+		} else {
+			resMap[loadData.WalletAddress] = loadData
+			resList = append(resList, loadData)
+		}
+	}
+
+	return resMap, resList, nil
+}
+
 // 단일 swap 정보 조회
 func (o *DB) CacheGetSwapWallet(walletAddress string) (*context.ReqSwapInfo, error) {
 	if !o.Cache.Enable() {

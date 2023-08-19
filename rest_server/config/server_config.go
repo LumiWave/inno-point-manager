@@ -50,6 +50,12 @@ type Wallets struct {
 	ParentWalletAddr string `yaml:"parent_wallet"`
 }
 
+type Schedule struct {
+	Name    string `yaml:"name"`
+	TermSec int64  `yaml:"term_sec"`
+	Enable  bool   `yaml:"schedule_enable"`
+}
+
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
@@ -64,6 +70,9 @@ type ServerConfig struct {
 	Auth                     ApiAuth               `yaml:"api_auth"`
 	TokenMgrServer           ApiTokenManagerServer `yaml:"api_token_manager_server"`
 	InnoLog                  ApiInno               `yaml:"inno-log"`
+
+	Schedules   []Schedule `yaml:"schedules"`
+	ScheduleMap map[string]Schedule
 }
 
 func GetInstance(filepath ...string) *ServerConfig {
@@ -77,10 +86,14 @@ func GetInstance(filepath ...string) *ServerConfig {
 		} else {
 			currentConfig.ParentWalletsMap = make(map[string]Wallets)
 			currentConfig.ParentWalletsMapBySymbol = make(map[string]Wallets)
-
 			for _, wallet := range currentConfig.ParentWallets {
 				currentConfig.ParentWalletsMap[wallet.ParentWalletAddr] = wallet
 				currentConfig.ParentWalletsMapBySymbol[wallet.Name] = wallet
+			}
+
+			currentConfig.ScheduleMap = make(map[string]Schedule)
+			for _, schedule := range currentConfig.Schedules {
+				currentConfig.ScheduleMap[schedule.Name] = schedule
 			}
 
 			if os.Getenv("ASPNETCORE_PORT") != "" {

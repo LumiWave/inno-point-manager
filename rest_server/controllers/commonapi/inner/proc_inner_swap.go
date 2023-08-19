@@ -291,7 +291,7 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		return resp
 	} else {
 		params.TxID = *txID
-		params.CreateAt = time.Now().Unix()
+		params.CreateAt = time.Now().UTC().Unix()
 		params.SwapWalletAddress = config.GetInstance().ParentWalletsMapBySymbol[params.BaseCoinSymbol].ParentWalletAddr
 		params.TxStatus = context.SWAP_status_init
 		// swap 임시 정보 redis에 저장
