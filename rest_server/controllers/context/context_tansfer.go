@@ -244,7 +244,7 @@ type Balance struct {
 	Symbol     string `json:"symbol"`
 	Balance    string `json:"balance"`
 	Address    string `json:"address"`
-	Decimal    int64  `json:"dicimal"`
+	Decimal    int64  `json:"decimal"`
 }
 type ResBalanceAll struct {
 	Balances []*Balance `json:"balances"`

@@ -126,6 +126,7 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TransactedDT(txID, txStatus int64, 
 }
 
 // swap 종료
+// point -> coin, coin->poin, 성공, 실패에 따라 인자값이 달라진다.
 func (o *DB) USPAU_XchgCmplt_Goods(params *context.ReqSwapInfo, completedDT string, isSuccess bool) error {
 	var rs orginMssql.ReturnStatus
 	if params.TxType == context.EventID_toCoin {
