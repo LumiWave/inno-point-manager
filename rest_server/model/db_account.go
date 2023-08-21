@@ -234,7 +234,7 @@ func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet,
 	accountWallets := []*context.AccountWallet{}
 	for rows.Next() {
 		accountWallet := &context.AccountWallet{}
-		if err := rows.Scan(&accountWallet.BaseCoinID, &accountWallet.WalletAddress, &accountWallet.ConnectionStatus, &accountWallet.ModifiedDT); err == nil {
+		if err := rows.Scan(&accountWallet.WalletID, &accountWallet.BaseCoinID, &accountWallet.WalletAddress, &accountWallet.ConnectionStatus, &accountWallet.ModifiedDT); err == nil {
 			accountWallets = append(accountWallets, accountWallet)
 		} else {
 			log.Errorf("USPAU_GetList_AccountWallets scan error : %v", err)
