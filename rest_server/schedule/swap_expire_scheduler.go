@@ -66,13 +66,67 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 		if value.CreateAt+10*60 < time.Now().UTC().Unix() && value.TxStatus < context.SWAP_status_fee_transfer_start {
 			log.Debugf("swap expire addr : %v, time:%v", value.WalletAddress, time.Unix(value.CreateAt, 0).Format(time.RFC3339))
 
-			if err := model.GetDB().USPAU_XchgCmplt_Goods(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
-				log.Errorf("USPAU_XchgCmplt_Goods err : %v, txid:%v wallet:%v", err, value.TxID, value.WalletAddress)
-			} else {
-				if err = model.GetDB().CacheDelSwapWallet(value.WalletAddress); err != nil {
-					log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, value.WalletAddress)
+			if value.TxType == context.EventID_toCoin {
+				// 현재 레디스에 포인트가 쌓이고 있을수 있으니 최종값으로 디비에 저장하고 스왑 포인트 복구 처리 해준다
+				pointKey := model.MakeMemberPointListKey(value.MUID)
+				mePointInfo, err := model.GetDB().GetCacheMemberPointList(pointKey)
+				if err != nil {
+					if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(value.MUID, value.DatabaseID); err != nil {
+						log.Errorf("GetPointAppList error : %v", err)
+					} else {
+						if point, ok := points[value.PointID]; ok {
+							value.PreviousPointQuantity = point.Quantity
+							value.AdjustPointQuantity = -value.AdjustPointQuantity
+							value.PointQuantity = value.PreviousPointQuantity + value.AdjustPointQuantity
+						}
+					}
+				} else {
+					// redis에 존재 한다면 강제로 db에 먼저 write
+					for _, point := range mePointInfo.Points {
+						var eventID context.EventID_type
+						if point.AdjustQuantity >= 0 {
+							eventID = context.EventID_add
+						} else {
+							eventID = context.EventID_sub
+						}
+
+						if point.AdjustQuantity != 0 {
+							if todayAcqQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
+								point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
+								log.Errorf("UpdateAppPoint error : %v", err)
+							} else {
+								//현재 일일 누적량, 날짜 업데이트
+								point.TodayQuantity = todayAcqQuantity
+								point.ResetDate = resetDate
+
+								point.AdjustQuantity = 0
+								point.PreQuantity = point.Quantity
+							}
+						} else {
+							point.AdjustQuantity = 0
+							point.PreQuantity = point.Quantity
+						}
+
+						// swap point quantity에 업데이트
+						if value.PointID == point.PointID && value.MUID == mePointInfo.MUID {
+							value.PreviousPointQuantity = point.Quantity
+							value.AdjustPointQuantity = -value.AdjustPointQuantity
+							value.PointQuantity = value.PreviousPointQuantity + value.AdjustPointQuantity
+						}
+					}
+
+					model.GetDB().DelCacheMemberPointList(pointKey)
+				}
+
+				if err := model.GetDB().USPAU_XchgCmplt_Goods(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
+					log.Errorf("USPAU_XchgCmplt_Goods err : %v, txid:%v wallet:%v", err, value.TxID, value.WalletAddress)
+				} else {
+					if err = model.GetDB().CacheDelSwapWallet(value.WalletAddress); err != nil {
+						log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, value.WalletAddress)
+					}
 				}
 			}
+
 		}
 	}
 	log.Debugf("swap expire checktime :%v", time.Now().UnixMilli()-startTime)

@@ -102,6 +102,47 @@ func (o *DB) GetPointAppList(MUID, DatabaseID int64) ([]*context.Point, error) {
 	return points, nil
 }
 
+// 맴버의 포인트 리스트 정보 조회
+func (o *DB) USPPO_GetList_MemberPoints(MUID, DatabaseID int64) ([]*context.Point, map[int64]*context.Point, error) {
+	mssql, ok := o.MssqlPointsRead[DatabaseID]
+	if !ok {
+		return nil, nil, errors.New(resultcode.ResultCodeText[resultcode.Result_Invalid_DBID])
+	}
+
+	var rs orginMssql.ReturnStatus
+	rows, err := mssql.GetDB().QueryContext(originCtx.Background(), USPPO_GetList_MemberPoints,
+		sql.Named("MUID", MUID),
+		&rs)
+	if err != nil {
+		log.Errorf("USPPO_GetList_MemberPoints QueryContext error : %v", err)
+		return nil, nil, err
+	}
+
+	defer rows.Close()
+
+	points := []*context.Point{}
+	mapPoints := make(map[int64]*context.Point)
+
+	for rows.Next() {
+		point := new(context.Point)
+		point.PointID = 0
+		point.Quantity = 0
+		if err := rows.Scan(&point.PointID, &point.Quantity); err != nil {
+			return nil, nil, err
+		}
+		point.PreQuantity = point.Quantity // load 시 동일하게 초기화
+		points = append(points, point)
+		mapPoints[point.PointID] = point
+	}
+
+	if rs != 1 {
+		log.Errorf("USPPO_GetList_MemberPoints returnStatus : %v", rs)
+		return nil, nil, errors.New(resultcode.ResultCodeText[resultcode.Result_DBError_Unknown])
+	}
+
+	return points, mapPoints, nil
+}
+
 // 맴버의 포인트 정보 조회
 func (o *DB) GetPointApp(MUID, PointID, DatabaseID int64) (int64, error) {
 	mssql, ok := o.MssqlPointsRead[DatabaseID]

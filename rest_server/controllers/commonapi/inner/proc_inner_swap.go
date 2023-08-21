@@ -43,20 +43,35 @@ func SwapGasFee(params *context.ReqSwapGasFee) *base.BaseResponse {
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 			} else {
+				// 포인트 누적이 연속적으로 처리 되지 못하도록 한다. lock
+				Lockkey := model.MakeMemberPointListLockKey(swapInfo.MUID)
+				mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+				if err := mutex.Lock(); err != nil {
+					log.Error("redis lock err:%v", err)
+					resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+					return resp
+				}
+
+				defer func() {
+					// 1-1. redis unlock
+					if ok, err := mutex.Unlock(); !ok || err != nil {
+						if err != nil {
+							log.Errorf("unlock err : %v", err)
+						}
+					}
+				}()
+
 				// 실패 완료 처리
-				// todo 최신 포인트 수량을 가져와서 복원할 포인트 정보를 다시 계산해서 완료 처리 한다.
-				if points, err := model.GetDB().GetPointAppList(swapInfo.MUID, swapInfo.DatabaseID); err != nil {
+				// 최신 포인트 수량을 가져와서 복원할 포인트 정보를 다시 계산해서 완료 처리 한다.
+				if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(swapInfo.MUID, swapInfo.DatabaseID); err != nil {
 					log.Errorf("GetPointAppList error : %v", err)
 					resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
 					return resp
 				} else {
-					for _, point := range points {
-						if point.PointID == swapInfo.PointID {
-							swapInfo.PreviousPointQuantity = point.Quantity
-							swapInfo.AdjustPointQuantity = -swapInfo.AdjustPointQuantity
-							swapInfo.PointQuantity = swapInfo.PreviousPointQuantity + swapInfo.AdjustPointQuantity
-							break
-						}
+					if point, ok := points[swapInfo.PointID]; ok {
+						swapInfo.PreviousPointQuantity = point.Quantity
+						swapInfo.AdjustPointQuantity = -swapInfo.AdjustPointQuantity
+						swapInfo.PointQuantity = swapInfo.PreviousPointQuantity + swapInfo.AdjustPointQuantity
 					}
 
 				}
