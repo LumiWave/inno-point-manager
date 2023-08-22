@@ -14,8 +14,9 @@ var gSwapExpireScheduler *SwapExpireScheduler
 var onceSwapExpireScheduler sync.Once
 
 type SwapExpireScheduler struct {
-	Running   bool //true:스케쥴실행중 , false:스케쥴중지
-	DebugMode bool //중간중간 로그찍을부분이있을때 true
+	Running     bool  //true:스케쥴실행중 , false:스케쥴중지
+	DebugMode   bool  //중간중간 로그찍을부분이있을때 true
+	ExpireCycle int64 // 만료 시간 second
 }
 
 func InitSwapExpireScheduler(conf *config.ServerConfig) *SwapExpireScheduler {
@@ -24,6 +25,7 @@ func InitSwapExpireScheduler(conf *config.ServerConfig) *SwapExpireScheduler {
 		onceSwapExpireScheduler.Do(func() {
 			gSwapExpireScheduler = new(SwapExpireScheduler)
 			gSwapExpireScheduler.Running = true
+			gSwapExpireScheduler.ExpireCycle = schedule.ExpireCycle
 			gSwapExpireScheduler.Run(schedule.TermSec)
 		})
 	}
@@ -54,7 +56,7 @@ func (o *SwapExpireScheduler) Run(sec int64) {
 
 func (o *SwapExpireScheduler) ScheduleProcess() {
 	// redis의 "SWAP-WALLET" 정보들 중에 일정 시간이 지나도 '수수료 입금 시작' 진행이 되고있지 않은 내역은 만료 처리 한다.
-	startTime := time.Now().UnixMilli()
+	//startTime := time.Now().UnixMilli()
 	_, list, err := model.GetDB().CacheGetSwapWallets()
 	if err != nil {
 		log.Errorf("CacheGetSwapWallets err : %v", err)
@@ -63,7 +65,7 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 
 	for _, value := range list {
 		// 수수료 전송 시작 상태가 아닌 정보중에 10분이 지난 정보는 swap 종료하고 삭제 처리한다.
-		if value.CreateAt+10*60 < time.Now().UTC().Unix() && value.TxStatus < context.SWAP_status_fee_transfer_start {
+		if value.CreateAt+o.ExpireCycle < time.Now().UTC().Unix() && value.TxStatus < context.SWAP_status_fee_transfer_start {
 			log.Debugf("swap expire addr : %v, time:%v", value.WalletAddress, time.Unix(value.CreateAt, 0).Format(time.RFC3339))
 
 			if value.TxType == context.EventID_toCoin {
@@ -129,5 +131,5 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 
 		}
 	}
-	log.Debugf("swap expire checktime :%v", time.Now().UnixMilli()-startTime)
+	//log.Debugf("swap expire checktime :%v", time.Now().UnixMilli()-startTime)
 }

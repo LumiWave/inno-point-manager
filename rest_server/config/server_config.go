@@ -51,9 +51,10 @@ type Wallets struct {
 }
 
 type Schedule struct {
-	Name    string `yaml:"name"`
-	TermSec int64  `yaml:"term_sec"`
-	Enable  bool   `yaml:"schedule_enable"`
+	Name        string `yaml:"name"`
+	TermSec     int64  `yaml:"term_sec"`
+	Enable      bool   `yaml:"schedule_enable"`
+	ExpireCycle int64  `yaml:"expire_cycle"`
 }
 
 type ServerConfig struct {

@@ -115,14 +115,19 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		}
 	}()
 
-	// 2. 부모지갑에 수수료 전송 중인지 체크
-	keyFromParent := model.MakeCoinTransferToParentWalletKey(params.AUID)
-	if _, err := model.GetDB().GetCacheCoinTransferFromParentWallet(keyFromParent); err == nil {
-		// 전송중인 기존 정보가 있다면 에러를 리턴한다.
+	// 2. 부모지갑에 수수료 전송 중인지 체크 한사람당 한번에 한 swap 가능 하도록 막는다.
+	if _, err := model.GetDB().CacheGetSwapWallet(params.WalletAddress); err == nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
 		resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 		return resp
 	}
+	// keyFromParent := model.MakeCoinTransferToParentWalletKey(params.AUID)
+	// if _, err := model.GetDB().GetCacheCoinTransferFromParentWallet(keyFromParent); err == nil {
+	// 	// 전송중인 기존 정보가 있다면 에러를 리턴한다.
+	// 	log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
+	// 	resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
+	// 	return resp
+	// }
 
 	// 3. redis에 해당 포인트 정보 존재하는지 check
 	// 있으면 강제로 db에 마지막 정보 업데이트 후 swap 진행 : 게임사에서 포인트 쌓을때 충돌 방지

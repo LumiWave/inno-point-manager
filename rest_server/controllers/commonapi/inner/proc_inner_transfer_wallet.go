@@ -1,8 +1,6 @@
 package inner
 
 import (
-	"fmt"
-	"math/big"
 	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
@@ -384,74 +382,96 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	// 외부 지갑에서 입금된것은 무조건 입금 처리 해준다.
-	// swap통한 부모 입금시 출금쪽에서 누적하기 때문에 넘긴다.
-	parentWallet, ok := config.GetInstance().ParentWalletsMap[fromAddr]
-	if ok && strings.EqualFold(fromAddr, parentWallet.ParentWalletAddr) {
+	// 부모지갑으로 입금된것만 처리한다.
+	parentWallet, ok := config.GetInstance().ParentWalletsMap[toAddr]
+	if !ok || !strings.EqualFold(toAddr, parentWallet.ParentWalletAddr) {
 		return resp
 	}
 
-	// 입금 주소로 db 검색해서 AUID추출
-	meCoin, err := model.GetDB().GetAccountCoinsByWalletAddress(toAddr, symbol)
-	if err != nil {
-		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
-			fromAddr, toAddr, symbol, value)
-		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+	// swap 수수료 입금 확인
+	// 1. fromAddr redis에서 정보 추출
+	// 2. txHash로 동일 한지 확인
+	// 2-1. 메인넷 콜백이 더 빨라서 redis에 txHash가 아직 저장되지 않았다면 전송 value가 동일한지 check해서 처리
+	if _, err := model.GetDB().CacheGetSwapWallet(fromAddr); err != nil {
+		log.Warnf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
 		return resp
 	}
 
-	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(meCoin.AUID)
-	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
-	if err := mutex.Lock(); err != nil {
-		log.Error("redis lock err:%v", err)
-		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
-		return resp
-	}
-
-	defer func() {
-		// 1-1. redis unlock
-		if ok, err := mutex.Unlock(); !ok || err != nil {
-			if err != nil {
-				log.Errorf("unlock err : %v", err)
-			}
-		}
-	}()
-
-	// lock이 풀렸다면 코인 수량이 변화하였을수도 있어서 다시 한번 더 불러온다.
-	meCoin, err = model.GetDB().GetAccountCoinsByWalletAddress(toAddr, symbol)
-	if err != nil {
-		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
-			fromAddr, toAddr, symbol, value)
-		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
-		return resp
-	}
-
-	if meCoin.CoinID == 0 {
-		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
-			fromAddr, toAddr, symbol, value)
-		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
-		return resp
-	}
-
-	// USPAU_Mod_AccountCoins 호출 하여 코인량 갱신
-	valueAmount, _ := new(big.Float).SetString(value)
-	scale := new(big.Float).SetFloat64(1)
-	scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-	valueAmount = new(big.Float).Quo(valueAmount, scale)
-	adjustQuantity, _ := valueAmount.Float64()
-
-	if err := model.GetDB().UpdateAccountCoins(
-		meCoin.AUID,
-		meCoin.CoinID,
-		model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
-		toAddr,
-		meCoin.Quantity,
-		adjustQuantity,
-		meCoin.Quantity+adjustQuantity,
-		context.LogID_external_wallet,
-		context.EventID_add,
-		txHash); err != nil {
-		log.Errorf("UpdateAccountCoins error : %v", err)
-	}
 	return resp
 }
+
+// func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string, decimal int) *base.BaseResponse {
+// 	resp := new(base.BaseResponse)
+// 	resp.Success()
+
+// 	// 외부 지갑에서 입금된것은 무조건 입금 처리 해준다.
+// 	// swap통한 부모 입금시 출금쪽에서 누적하기 때문에 넘긴다.
+// 	parentWallet, ok := config.GetInstance().ParentWalletsMap[fromAddr]
+// 	if ok && strings.EqualFold(fromAddr, parentWallet.ParentWalletAddr) {
+// 		return resp
+// 	}
+
+// 	// 입금 주소로 db 검색해서 AUID추출
+// 	meCoin, err := model.GetDB().GetAccountCoinsByWalletAddress(toAddr, symbol)
+// 	if err != nil {
+// 		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
+// 			fromAddr, toAddr, symbol, value)
+// 		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+// 		return resp
+// 	}
+
+// 	Lockkey := model.MakeCoinTransferFromUserWalletLockKey(meCoin.AUID)
+// 	mutex := model.GetDB().RedSync.NewMutex(Lockkey)
+// 	if err := mutex.Lock(); err != nil {
+// 		log.Error("redis lock err:%v", err)
+// 		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+// 		return resp
+// 	}
+
+// 	defer func() {
+// 		// 1-1. redis unlock
+// 		if ok, err := mutex.Unlock(); !ok || err != nil {
+// 			if err != nil {
+// 				log.Errorf("unlock err : %v", err)
+// 			}
+// 		}
+// 	}()
+
+// 	// lock이 풀렸다면 코인 수량이 변화하였을수도 있어서 다시 한번 더 불러온다.
+// 	meCoin, err = model.GetDB().GetAccountCoinsByWalletAddress(toAddr, symbol)
+// 	if err != nil {
+// 		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
+// 			fromAddr, toAddr, symbol, value)
+// 		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+// 		return resp
+// 	}
+
+// 	if meCoin.CoinID == 0 {
+// 		log.Errorf("not exist deposit info fromAddr:%v, toAddr:%v, symbol:%v, amount:%v",
+// 			fromAddr, toAddr, symbol, value)
+// 		resp.SetReturn(resultcode.Result_Error_DB_GetAccountCoinByWalletAddress)
+// 		return resp
+// 	}
+
+// 	// USPAU_Mod_AccountCoins 호출 하여 코인량 갱신
+// 	valueAmount, _ := new(big.Float).SetString(value)
+// 	scale := new(big.Float).SetFloat64(1)
+// 	scale.SetString("1e" + fmt.Sprintf("%d", decimal))
+// 	valueAmount = new(big.Float).Quo(valueAmount, scale)
+// 	adjustQuantity, _ := valueAmount.Float64()
+
+// 	if err := model.GetDB().UpdateAccountCoins(
+// 		meCoin.AUID,
+// 		meCoin.CoinID,
+// 		model.GetDB().Coins[meCoin.CoinID].BaseCoinID,
+// 		toAddr,
+// 		meCoin.Quantity,
+// 		adjustQuantity,
+// 		meCoin.Quantity+adjustQuantity,
+// 		context.LogID_external_wallet,
+// 		context.EventID_add,
+// 		txHash); err != nil {
+// 		log.Errorf("UpdateAccountCoins error : %v", err)
+// 	}
+// 	return resp
+// }

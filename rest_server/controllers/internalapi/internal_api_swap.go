@@ -31,7 +31,7 @@ func (o *InternalAPI) PostPointCoinSwap(c echo.Context) error {
 func (o *InternalAPI) PutSwapGasFee(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 
-	params := context.NewReqSwapStatus()
+	params := context.NewSwapGasFee()
 	if err := ctx.EchoContext.Bind(params); err != nil {
 		log.Error(err)
 		return base.BaseJSONInternalServerError(c, err)
@@ -42,4 +42,21 @@ func (o *InternalAPI) PutSwapGasFee(c echo.Context) error {
 	}
 
 	return commonapi.PutSwapGasFee(params, ctx)
+}
+
+// swap 진행 상태 정보 조회
+func (o *InternalAPI) GetSwapInprogressNotExist(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqSwapIniprogress()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(ctx); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetSwapInprogressNotExist(params, ctx)
 }
