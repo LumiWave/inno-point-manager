@@ -58,28 +58,6 @@ func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgre
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
 
-func PostCoinTransferResultDeposit(params *context.ReqCoinTransferResDeposit, c echo.Context) error {
-	resp := new(base.BaseResponse)
-	resp.Success()
-
-	if err := inner.TransferResultDeposit(params); err != nil {
-		resp = err
-	}
-
-	return c.JSON(http.StatusOK, resp)
-}
-
-func PostCoinTransferResultWithdrawal(params *context.ReqCoinTransferResWithdrawal, c echo.Context) error {
-	resp := new(base.BaseResponse)
-	resp.Success()
-
-	if err := inner.TransferResultWithdrawal(params); err != nil {
-		resp = err
-	}
-
-	return c.JSON(http.StatusOK, resp)
-}
-
 func GetCoinFee(params *context.ReqCoinFee, c echo.Context) error {
 	resp := new(base.BaseResponse)
 	resp.Success()

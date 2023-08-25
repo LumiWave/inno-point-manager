@@ -1,9 +1,8 @@
 package inner
 
 import (
-	"fmt"
 	"math"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
@@ -14,7 +13,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
-func SwapGasFee(params *context.ReqSwapGasFee) *base.BaseResponse {
+func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
@@ -22,23 +21,36 @@ func SwapGasFee(params *context.ReqSwapGasFee) *base.BaseResponse {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_GetSwapInfo])
 		resp.SetReturn(resultcode.Result_RedisError_GetSwapInfo)
 	} else {
-		swapInfo.TxHash = params.TxHash
 		swapInfo.TxStatus = params.TxStatus
 
 		switch params.TxStatus {
 		case context.SWAP_status_fee_transfer_start, context.SWAP_status_fee_transfer_success: // swap 수수료 전송 시작
+			swapInfo.TxHash = params.TxHash
 			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 			} else {
-				if err := model.GetDB().USPWA_Mod_TransactExchangeGoods_Gasfee(swapInfo.TxID,
+				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Gasfee(swapInfo.TxID,
 					params.TxStatus,
 					params.TxHash,
-					fmt.Sprintf("%f", swapInfo.SwapFee)); err != nil {
+					strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64)); err != nil {
 					resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
 				}
 			}
-		case context.SWAP_status_fee_transfer_fail:
+		case context.SWAP_status_token_transfer_start: // swap용 토큰 전송 시작 ( coin->point swap)
+			swapInfo.SwapCoin.TokenTxHash = params.TxHash
+			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
+				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
+			} else {
+				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TransactedDT(swapInfo.TxID,
+					params.TxStatus,
+					params.TxHash,
+					time.Now().Format("2006-01-02 15:04:05.000")); err != nil {
+					resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
+				}
+			}
+		case context.SWAP_status_fee_transfer_fail, context.SWAP_status_token_transfer_fail:
 			if err := model.GetDB().CacheDelSwapWallet(params.FromWalletAddress); err != nil { // swap 수수료 전송 실패
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
@@ -73,7 +85,6 @@ func SwapGasFee(params *context.ReqSwapGasFee) *base.BaseResponse {
 						swapInfo.AdjustPointQuantity = -swapInfo.AdjustPointQuantity
 						swapInfo.PointQuantity = swapInfo.PreviousPointQuantity + swapInfo.AdjustPointQuantity
 					}
-
 				}
 				if err := model.GetDB().USPAU_XchgCmplt_Goods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
 					resp.SetReturn(resultcode.Result_Error_Db_Swap_Complete)
@@ -121,13 +132,6 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 		return resp
 	}
-	// keyFromParent := model.MakeCoinTransferToParentWalletKey(params.AUID)
-	// if _, err := model.GetDB().GetCacheCoinTransferFromParentWallet(keyFromParent); err == nil {
-	// 	// 전송중인 기존 정보가 있다면 에러를 리턴한다.
-	// 	log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
-	// 	resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
-	// 	return resp
-	// }
 
 	// 3. redis에 해당 포인트 정보 존재하는지 check
 	// 있으면 강제로 db에 마지막 정보 업데이트 후 swap 진행 : 게임사에서 포인트 쌓을때 충돌 방지
@@ -206,9 +210,7 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 					return resp
 				}
 			} else {
-				log.Errorf("coinsMap not exist coinID : %v, auid:%v", params.PointID, params.AUID)
-				resp.SetReturn(resultcode.Result_DBError)
-				return resp
+				// 내 지갑 코인 정보에 데이터가 없다는것은 최초 스왑인경우 이고 무조건 성공 처리해준다.
 			}
 		}
 		// 포인트 보유수량이 전환량 보다 큰지 확인
@@ -242,11 +244,7 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 					resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
 					return resp
 				}
-			} // else {
-			// 	log.Errorf("accountPoint not exist pointid : %v, auid:%v, muid:%v", params.PointID, params.AUID, params.MUID)
-			// 	resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
-			// 	return resp
-			// }
+			}
 		}
 
 		absAdjustCoinQuantity := math.Abs(params.AdjustCoinQuantity)
@@ -259,68 +257,15 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		}
 	}
 
-	parentWallet := ""
-	target := int64(0)
-	transInfo := &context.ReqCoinTransferFromUserWallet{}
-	for _, wallet := range config.GetInstance().ParentWallets {
-		if strings.EqualFold(wallet.Name, params.BaseCoinSymbol) {
-			//feeWallet = wallet.FeeWalletAddr
-			parentWallet = wallet.ParentWalletAddr
-		}
-	}
-	// 5. point->coin 시 부모지갑에 수수료 전송
-	if params.TxType == context.EventID_toCoin {
-		target = context.From_user_to_fee_wallet
-		//수수로 전송을 위해 basecoin 정보를 찾아서 입력한다.
-		baseCoinId := int64(0)
-		if coin, ok := model.GetDB().CoinsBySymbol[params.BaseCoinSymbol]; ok {
-			baseCoinId = coin.CoinId
-		} else {
-			resp.SetReturn(resultcode.Result_Require_Valid_BaseCoinID)
-			return resp
-		}
-
-		transInfo = &context.ReqCoinTransferFromUserWallet{
-			AUID:           params.AUID,
-			CoinID:         baseCoinId,
-			CoinSymbol:     params.BaseCoinSymbol,
-			BaseCoinSymbol: params.BaseCoinSymbol,
-			FromAddress:    params.WalletAddress,
-			ToAddress:      parentWallet,
-			Quantity:       params.SwapFee,
-			Target:         target,
-		}
-	} else if params.TxType == context.EventID_toPoint { // 6. coin->point 시 부모지갑에 코인 전송
-		target = context.From_user_to_parent_wallet
-		transInfo = &context.ReqCoinTransferFromUserWallet{
-			AUID:           params.AUID,
-			CoinID:         params.CoinID,
-			CoinSymbol:     params.CoinSymbol,
-			BaseCoinSymbol: params.BaseCoinSymbol,
-			FromAddress:    params.WalletAddress,
-			ToAddress:      parentWallet,
-			Quantity:       params.AdjustCoinQuantity,
-			Target:         target,
-		}
-
-		transInfo.Quantity = math.Abs(params.AdjustCoinQuantity) // swap 시 음수로 넘어온다.
-	}
-
 	if txID, err := model.GetDB().USPAU_XchgStrt_Goods(params); err != nil {
 		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 		return resp
 	} else {
 		params.TxID = *txID
 		params.CreateAt = time.Now().UTC().Unix()
-		params.SwapWalletAddress = config.GetInstance().ParentWalletsMapBySymbol[params.BaseCoinSymbol].ParentWalletAddr
+		params.ToWalletAddress = config.GetInstance().ParentWalletsMapBySymbol[params.BaseCoinSymbol].ParentWalletAddr
 		params.TxStatus = context.SWAP_status_init
-		// swap 임시 정보 redis에 저장
-		// swapKey := model.MakeSwapKey(params.WalletAddress)
-		// if err := model.GetDB().SetCacheSwapInfo(swapKey, params); err != nil {
-		// 	log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
-		// 	resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
-		// 	return resp
-		// }
+
 		if err := model.GetDB().CacheSetSwapWallet(params); err != nil {
 			log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 			resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)

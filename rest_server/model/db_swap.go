@@ -13,8 +13,8 @@ import (
 
 const (
 	USPAU_XchgStrt_Goods                         = "[dbo].[USPAU_XchgStrt_Goods]"
-	USPWA_Mod_TransactExchangeGoods_Gasfee       = "[dbo].[USPWA_Mod_TransactExchangeGoods_Gasfee]"
-	USPWA_Mod_TransactExchangeGoods_TxStatus     = "[dbo].[USPWA_Mod_TransactExchangeGoods_TxStatus]"
+	USPAU_Mod_TransactExchangeGoods_Gasfee       = "[dbo].[USPAU_Mod_TransactExchangeGoods_Gasfee]"
+	USPAU_Mod_TransactExchangeGoods_TxStatus     = "[dbo].[USPAU_Mod_TransactExchangeGoods_TxStatus]"
 	USPAU_Mod_TransactExchangeGoods_TransactedDT = "[dbo].[USPAU_Mod_TransactExchangeGoods_TransactedDT]"
 	USPAU_XchgCmplt_Goods                        = "[dbo].[USPAU_XchgCmplt_Goods]"
 )
@@ -56,46 +56,46 @@ func (o *DB) USPAU_XchgStrt_Goods(params *context.ReqSwapInfo) (*int64, error) {
 
 // 가스비 처리
 // txStatus 2:수수료 전송 시작, 3:수수료 전송 성공, 4:수수료 전송 실패
-func (o *DB) USPWA_Mod_TransactExchangeGoods_Gasfee(txID int64, txStatus int64, txHash, gasFee string) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_Gasfee(txID int64, txStatus int64, txHash, gasFee string) error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPWA_Mod_TransactExchangeGoods_Gasfee,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Gasfee,
 		sql.Named("TxID", txID),
 		sql.Named("TxStatus", txStatus),
 		sql.Named("TxHash", txHash),
 		sql.Named("Gasfee", gasFee),
 		&rs)
 	if err != nil {
-		log.Errorf("USPWA_Mod_TransactExchangeGoods_Gasfee QueryContext err : %v", err)
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_Gasfee QueryContext err : %v", err)
 		return err
 	}
 
 	defer rows.Close()
 
 	if rs != 1 {
-		log.Errorf("USPWA_Mod_TransactExchangeGoods_Gasfee returnvalue error : %v", rs)
-		return errors.New("USPWA_Mod_TransactExchangeGoods_Gasfee returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_Gasfee returnvalue error : %v", rs)
+		return errors.New("USPAU_Mod_TransactExchangeGoods_Gasfee returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return nil
 }
 
 // swap 거래 상태 갱신
-func (o *DB) USPWA_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64) error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPWA_Mod_TransactExchangeGoods_TxStatus,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
 		sql.Named("TxID", txID),
 		sql.Named("TxStatus", txStatus),
 		&rs)
 	if err != nil {
-		log.Errorf("USPWA_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)
 		return err
 	}
 
 	defer rows.Close()
 
 	if rs != 1 {
-		log.Errorf("USPWA_Mod_TransactExchangeGoods_TxStatus returnvalue error : %v", rs)
-		return errors.New("USPWA_Mod_TransactExchangeGoods_TxStatus returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus returnvalue error : %v", rs)
+		return errors.New("USPAU_Mod_TransactExchangeGoods_TxStatus returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return nil

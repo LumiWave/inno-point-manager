@@ -77,6 +77,7 @@ func (o *DB) CacheGetSwapWallet(walletAddress string) (*context.ReqSwapInfo, err
 		log.Errorf("CacheGetSwapWallet unmarshal err : %v", err)
 		loadData = nil
 	}
+
 	return loadData, err
 }
 

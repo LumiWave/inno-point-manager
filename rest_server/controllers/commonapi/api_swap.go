@@ -28,11 +28,11 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
 
-func PutSwapGasFee(params *context.ReqSwapGasFee, ctx *context.PointManagerContext) error {
+func PutSwapStatus(params *context.ReqSwapStatus, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.SwapGasFee(params); err != nil {
+	if err := inner.PutSwapStatus(params); err != nil {
 		resp = err
 	}
 

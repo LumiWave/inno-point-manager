@@ -34,6 +34,7 @@ type SwapCoin struct {
 	BaseCoinSymbol     string  `json:"base_coin_symbol"`
 	WalletAddress      string  `json:"walletaddress"`
 	AdjustCoinQuantity float64 `json:"adjust_coin_quantity"` // 요청 인자
+	TokenTxHash        string  `json:"token_tx_hash"`        // swap 코인 전송 txhash
 }
 
 type ReqSwapInfo struct {
@@ -47,7 +48,7 @@ type ReqSwapInfo struct {
 	SwapFeeCoinID     int64   `json:"swap_fee_coin_id"` // 코인 수수료 전송용 코인 아이디
 	SwapFeeCoinSymbol string  `json:"swap_fee_coin_symbol"`
 	SwapFee           float64 `json:"swap_fee"` // point->coin 시 전환시 부모지갑에 전송될 코인량 coin->point는 0 고정
-	SwapWalletAddress string  `json:"swap_fee_to_wallet"`
+	ToWalletAddress   string  `json:"to_wallet"`
 	InnoUID           string  `json:"inno_uid"`
 	TxID              int64   `json:"tx_id"`
 	CreateAt          int64   `json:"create_at"`
@@ -66,18 +67,19 @@ func (o *ReqSwapInfo) CheckValidate(ctx *PointManagerContext) *base.BaseResponse
 ////////////////////////////////////////
 
 // swap 상태 변경 요청 : (수료 전송 후 tx정보 저장)
-type ReqSwapGasFee struct {
+type ReqSwapStatus struct {
+	TxID              int64  `json:"tx_id"`
 	TxStatus          int64  `json:"tx_status"`
 	TxHash            string `json:"tx_hash"`
 	FromWalletAddress string `json:"from_wallet_address"`
 }
 
-func NewSwapGasFee() *ReqSwapGasFee {
-	return new(ReqSwapGasFee)
+func NewReqSwapStatus() *ReqSwapStatus {
+	return new(ReqSwapStatus)
 }
 
-func (o *ReqSwapGasFee) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
-	if o.TxStatus < 2 && o.TxStatus > 4 {
+func (o *ReqSwapStatus) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	if o.TxStatus < SWAP_status_fee_transfer_start && o.TxStatus > SWAP_status_fee_transfer_fail {
 		return base.MakeBaseResponse(resultcode.Result_Invalid_TxStatus)
 	}
 	if len(o.FromWalletAddress) == 0 {

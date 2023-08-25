@@ -119,16 +119,15 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 
 					model.GetDB().DelCacheMemberPointList(pointKey)
 				}
-
-				if err := model.GetDB().USPAU_XchgCmplt_Goods(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
-					log.Errorf("USPAU_XchgCmplt_Goods err : %v, txid:%v wallet:%v", err, value.TxID, value.WalletAddress)
-				} else {
-					if err = model.GetDB().CacheDelSwapWallet(value.WalletAddress); err != nil {
-						log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, value.WalletAddress)
-					}
-				}
 			}
 
+			if err := model.GetDB().USPAU_XchgCmplt_Goods(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
+				log.Errorf("USPAU_XchgCmplt_Goods err : %v, txid:%v wallet:%v", err, value.TxID, value.WalletAddress)
+			} else {
+				if err = model.GetDB().CacheDelSwapWallet(value.WalletAddress); err != nil {
+					log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, value.WalletAddress)
+				}
+			}
 		}
 	}
 	//log.Debugf("swap expire checktime :%v", time.Now().UnixMilli()-startTime)
