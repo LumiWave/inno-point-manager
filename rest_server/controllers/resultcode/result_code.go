@@ -132,7 +132,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_DB_Update_Me_Coin_Error:          "db update coin info error",
 	Result_Error_Db_GetAccountWallets:             "db get account wallet list error",
 	Result_Error_Db_TransactExchangeGoods_Gasfee:  "db mod transaction exchanagegoods error",
-	Result_Error_Db_Swap_Complete:                 "db swap complet error",
+	Result_Error_Db_Swap_Complete:                 "db swap complete error",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
