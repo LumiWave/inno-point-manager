@@ -14,7 +14,7 @@ func PostWalletWebHookETHDeposit(params *context.ReqPostWalletETHResult, ctx *co
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.TransferResultDepositWallet(params.FromAddr, params.ToAddr, params.Value, params.Symbol, params.TxHash, 18); err != nil {
+	if err := inner.TransferResultDepositWallet(params.FromAddr, params.ToAddr, params.Value, params.Symbol, params.TxHash, int64(params.TransactionFee), 18); err != nil {
 		resp = err
 	}
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
@@ -53,7 +53,13 @@ func PostWalletWebHookSUIDeposit(params *context.SUI_CB_Balance_Changes, ctx *co
 		}
 	}
 
-	if err := inner.TransferResultDepositWallet(fromAddr, toAddr, value, symbol, params.Digest, 9); err != nil {
+	comput, _ := strconv.ParseInt(params.GasUsed.ComputationCost, 10, 64)
+	cost, _ := strconv.ParseInt(params.GasUsed.StorageCost, 10, 64)
+	rebate, _ := strconv.ParseInt(params.GasUsed.StorageRebate, 10, 64)
+
+	gasFee := comput + cost - rebate
+
+	if err := inner.TransferResultDepositWallet(fromAddr, toAddr, value, symbol, params.Digest, gasFee, 9); err != nil {
 		resp = err
 	}
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

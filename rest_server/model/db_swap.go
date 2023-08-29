@@ -12,18 +12,18 @@ import (
 )
 
 const (
-	USPAU_XchgStrt_Goods                         = "[dbo].[USPAU_XchgStrt_Goods]"
-	USPAU_Mod_TransactExchangeGoods_Gasfee       = "[dbo].[USPAU_Mod_TransactExchangeGoods_Gasfee]"
-	USPAU_Mod_TransactExchangeGoods_TxStatus     = "[dbo].[USPAU_Mod_TransactExchangeGoods_TxStatus]"
-	USPAU_Mod_TransactExchangeGoods_TransactedDT = "[dbo].[USPAU_Mod_TransactExchangeGoods_TransactedDT]"
-	USPAU_XchgCmplt_Goods                        = "[dbo].[USPAU_XchgCmplt_Goods]"
+	USPAU_Strt_ExchangeGoods                    = "[dbo].[USPAU_Strt_ExchangeGoods]"
+	USPAU_Mod_TransactExchangeGoods_Exchangefee = "[dbo].[USPAU_Mod_TransactExchangeGoods_Exchangefee]"
+	USPAU_Mod_TransactExchangeGoods_TxStatus    = "[dbo].[USPAU_Mod_TransactExchangeGoods_TxStatus]"
+	USPAU_Mod_TransactExchangeGoods_Coin        = "[dbo].[USPAU_Mod_TransactExchangeGoods_Coin]"
+	USPAU_Cmplt_ExchangeGoods                   = "[dbo].[USPAU_Cmplt_ExchangeGoods]"
 )
 
 // 스왑 시작 : 코인 <-> 포인트
-func (o *DB) USPAU_XchgStrt_Goods(params *context.ReqSwapInfo) (*int64, error) {
+func (o *DB) USPAU_Strt_ExchangeGoods(params *context.ReqSwapInfo) (*int64, error) {
 	txID := int64(0)
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_XchgStrt_Goods,
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Strt_ExchangeGoods,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", params.MUID),
 		sql.Named("AppID", params.AppID),
@@ -40,15 +40,15 @@ func (o *DB) USPAU_XchgStrt_Goods(params *context.ReqSwapInfo) (*int64, error) {
 		sql.Named("TxID", sql.Out{Dest: &txID}),
 		&rs)
 	if err != nil {
-		log.Errorf("USPAU_XchgStrt_Goods QueryContext err : %v", err)
+		log.Errorf("USPAU_Strt_ExchangeGoods QueryContext err : %v", err)
 		return nil, err
 	}
 
 	defer rows.Close()
 
 	if rs != 1 {
-		log.Errorf("USPAU_XchgStrt_Goods returnvalue error : %v", rs)
-		return &txID, errors.New("USPAU_XchgStrt_Goods returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Strt_ExchangeGoods returnvalue error : %v", rs)
+		return &txID, errors.New("USPAU_Strt_ExchangeGoods returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return &txID, nil
@@ -56,42 +56,74 @@ func (o *DB) USPAU_XchgStrt_Goods(params *context.ReqSwapInfo) (*int64, error) {
 
 // 가스비 처리
 // txStatus 2:수수료 전송 시작, 3:수수료 전송 성공, 4:수수료 전송 실패
-func (o *DB) USPAU_Mod_TransactExchangeGoods_Gasfee(txID int64, txStatus int64, txHash, gasFee string) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_Exchangefee(txID int64, txStatus int64, txHash, swapFee string, baseCoinID int64, gasFee string) error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Gasfee,
-		sql.Named("TxID", txID),
-		sql.Named("TxStatus", txStatus),
-		sql.Named("TxHash", txHash),
-		sql.Named("Gasfee", gasFee),
-		&rs)
-	if err != nil {
-		log.Errorf("USPAU_Mod_TransactExchangeGoods_Gasfee QueryContext err : %v", err)
-		return err
+	if txStatus == context.SWAP_status_fee_transfer_success {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Exchangefee,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			sql.Named("TxHash", txHash),
+			sql.Named("ExchangeFee", swapFee),
+			sql.Named("BaseCoinID", baseCoinID),
+			sql.Named("Gasfee", gasFee),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_Exchangefee QueryContext err : %v", err)
+			return err
+		}
+
+		defer rows.Close()
+	} else {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Exchangefee,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			sql.Named("TxHash", txHash),
+			sql.Named("ExchangeFee", swapFee),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_Exchangefee QueryContext err : %v", err)
+			return err
+		}
+
+		defer rows.Close()
 	}
 
-	defer rows.Close()
-
 	if rs != 1 {
-		log.Errorf("USPAU_Mod_TransactExchangeGoods_Gasfee returnvalue error : %v", rs)
-		return errors.New("USPAU_Mod_TransactExchangeGoods_Gasfee returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_Exchangefee returnvalue error : %v", rs)
+		return errors.New("USPAU_Mod_TransactExchangeGoods_Exchangefee returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return nil
 }
 
 // swap 거래 상태 갱신
-func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64, baseCoinID int64, gasFee string) error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
-		sql.Named("TxID", txID),
-		sql.Named("TxStatus", txStatus),
-		&rs)
-	if err != nil {
-		log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)
-		return err
-	}
+	if txStatus == context.SWAP_status_fee_transfer_success || txStatus == context.SWAP_status_token_transfer_success {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			sql.Named("BaseCoinID", baseCoinID),
+			sql.Named("Gasfee", gasFee),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)
+			return err
+		}
 
-	defer rows.Close()
+		defer rows.Close()
+	} else {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)
+			return err
+		}
+
+		defer rows.Close()
+	}
 
 	if rs != 1 {
 		log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus returnvalue error : %v", rs)
@@ -102,24 +134,41 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64) erro
 }
 
 // swap 토큰 처리 : transactionedDT => time.Now().Format("2006-01-02 15:04:05.000")
-func (o *DB) USPAU_Mod_TransactExchangeGoods_TransactedDT(txID, txStatus int64, txHash, transactedDT string) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_Coin(txID, txStatus int64, txHash, transactedDT string, baseCoinID int64, gasFee string) error {
 	var rs orginMssql.ReturnStatus
-	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TransactedDT,
-		sql.Named("TxID", txID),
-		sql.Named("TxStatus", txStatus),
-		sql.Named("TxHash", txHash),
-		sql.Named("TransactedDT", transactedDT),
-		&rs)
-	if err != nil {
-		log.Errorf("USPAU_Mod_TransactExchangeGoods_TransactedDT QueryContext err : %v", err)
-		return err
+	if txStatus == context.SWAP_status_token_transfer_success {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Coin,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			sql.Named("TxHash", txHash),
+			sql.Named("TransactedDT", transactedDT),
+			sql.Named("BaseCoinID", baseCoinID),
+			sql.Named("Gasfee", gasFee),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_Coin QueryContext err : %v", err)
+			return err
+		}
+
+		defer rows.Close()
+	} else {
+		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_Coin,
+			sql.Named("TxID", txID),
+			sql.Named("TxStatus", txStatus),
+			sql.Named("TxHash", txHash),
+			sql.Named("TransactedDT", transactedDT),
+			&rs)
+		if err != nil {
+			log.Errorf("USPAU_Mod_TransactExchangeGoods_Coin QueryContext err : %v", err)
+			return err
+		}
+
+		defer rows.Close()
 	}
 
-	defer rows.Close()
-
 	if rs != 1 {
-		log.Errorf("USPAU_Mod_TransactExchangeGoods_TransactedDT returnvalue error : %v", rs)
-		return errors.New("USPAU_Mod_TransactExchangeGoods_TransactedDT returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Mod_TransactExchangeGoods_Coin returnvalue error : %v", rs)
+		return errors.New("USPAU_Mod_TransactExchangeGoods_Coin returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
 	return nil
@@ -127,21 +176,21 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TransactedDT(txID, txStatus int64, 
 
 // swap 종료
 // point -> coin, coin->poin, 성공, 실패에 따라 인자값이 달라진다.
-func (o *DB) USPAU_XchgCmplt_Goods(params *context.ReqSwapInfo, completedDT string, isSuccess bool) error {
+func (o *DB) USPAU_Cmplt_ExchangeGoods(params *context.ReqSwapInfo, completedDT string, isSuccess bool) error {
 	var rs orginMssql.ReturnStatus
 	if params.TxType == context.EventID_toCoin {
 		if isSuccess {
-			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_XchgCmplt_Goods,
+			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Cmplt_ExchangeGoods,
 				sql.Named("TxID", params.TxID),
 				sql.Named("CompletedDT", completedDT),
 				&rs)
 			if err != nil {
-				log.Errorf("USPAU_XchgCmplt_Goods QueryContext err : %v", err)
+				log.Errorf("USPAU_Cmplt_ExchangeGoods QueryContext err : %v", err)
 				return err
 			}
 			defer rows.Close()
 		} else {
-			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_XchgCmplt_Goods,
+			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Cmplt_ExchangeGoods,
 				sql.Named("TxID", params.TxID),
 				sql.Named("PointID", params.PointID),
 				sql.Named("PointPreQuantity", params.PreviousPointQuantity),
@@ -150,14 +199,14 @@ func (o *DB) USPAU_XchgCmplt_Goods(params *context.ReqSwapInfo, completedDT stri
 				sql.Named("CompletedDT", completedDT),
 				&rs)
 			if err != nil {
-				log.Errorf("USPAU_XchgCmplt_Goods QueryContext err : %v", err)
+				log.Errorf("USPAU_Cmplt_ExchangeGoods QueryContext err : %v", err)
 				return err
 			}
 			defer rows.Close()
 		}
 	} else if params.TxType == context.EventID_toPoint {
 		if isSuccess {
-			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_XchgCmplt_Goods,
+			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Cmplt_ExchangeGoods,
 				sql.Named("TxID", params.TxID),
 				sql.Named("PointID", params.PointID),
 				sql.Named("PointPreQuantity", params.PreviousPointQuantity),
@@ -166,24 +215,24 @@ func (o *DB) USPAU_XchgCmplt_Goods(params *context.ReqSwapInfo, completedDT stri
 				sql.Named("CompletedDT", completedDT),
 				&rs)
 			if err != nil {
-				log.Errorf("USPAU_XchgCmplt_Goods QueryContext err : %v", err)
+				log.Errorf("USPAU_Cmplt_ExchangeGoods QueryContext err : %v", err)
 				return err
 			}
 			defer rows.Close()
 		} else {
-			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_XchgCmplt_Goods,
+			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Cmplt_ExchangeGoods,
 				sql.Named("TxID", params.TxID),
 				&rs)
 			if err != nil {
-				log.Errorf("USPAU_XchgCmplt_Goods QueryContext err : %v", err)
+				log.Errorf("USPAU_Cmplt_ExchangeGoods QueryContext err : %v", err)
 				return err
 			}
 			defer rows.Close()
 		}
 	}
 	if rs != 1 {
-		log.Errorf("USPAU_XchgCmplt_Goods returnvalue error : %v", rs)
-		return errors.New("USPAU_XchgCmplt_Goods returnvalue error " + strconv.Itoa(int(rs)))
+		log.Errorf("USPAU_Cmplt_ExchangeGoods returnvalue error : %v", rs)
+		return errors.New("USPAU_Cmplt_ExchangeGoods returnvalue error " + strconv.Itoa(int(rs)))
 	}
 	return nil
 }

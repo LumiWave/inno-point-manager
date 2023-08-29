@@ -54,6 +54,7 @@ type ReqSwapInfo struct {
 	CreateAt          int64   `json:"create_at"`
 	TxHash            string  `json:"tx_hash"`
 	TxStatus          int64   `json:"tx_status"`
+	TxGasFee          float64 `json:"tx_gas_fee"`
 }
 
 func NewReqSwapInfo() *ReqSwapInfo {

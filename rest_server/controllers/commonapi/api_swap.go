@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
@@ -38,6 +39,7 @@ func GetSwapInprogressNotExist(params *context.ReqSwapInprogress, ctx *context.P
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	log.Debugf("GetSwapInprogressNotExist auid : %v", params.AUID)
 	// 내 지갑 정보를 가져와서 모든 지갑을 뒤져버 진행 중에 있는지 체크
 	swapInfos := []*context.ReqSwapInfo{}
 	mapWallet := make(map[string]string)
@@ -50,10 +52,13 @@ func GetSwapInprogressNotExist(params *context.ReqSwapInprogress, ctx *context.P
 				}
 			}
 		}
-	}
-	if len(swapInfos) > 0 {
-		resp.Value = swapInfos
-		resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
+		if len(swapInfos) > 0 {
+			resp.Value = swapInfos
+			resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
+		}
+	} else {
+		log.Errorf("USPAU_GetList_AccountWallets err : %v, auid:%v", err, params.AUID)
+		resp.SetReturn(resultcode.Result_Error_Db_GetAccountWallets)
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

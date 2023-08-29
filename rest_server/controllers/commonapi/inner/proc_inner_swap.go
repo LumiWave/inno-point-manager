@@ -30,10 +30,10 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 			} else {
-				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Gasfee(swapInfo.TxID,
+				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Exchangefee(swapInfo.TxID,
 					params.TxStatus,
 					params.TxHash,
-					strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64)); err != nil {
+					strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64), swapInfo.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err != nil {
 					resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
 				}
 			}
@@ -43,10 +43,10 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 			} else {
-				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TransactedDT(swapInfo.TxID,
+				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Coin(swapInfo.TxID,
 					params.TxStatus,
 					params.TxHash,
-					time.Now().Format("2006-01-02 15:04:05.000")); err != nil {
+					time.Now().Format("2006-01-02 15:04:05.000"), 0, ""); err != nil {
 					resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
 				}
 			}
@@ -86,7 +86,7 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 						swapInfo.PointQuantity = swapInfo.PreviousPointQuantity + swapInfo.AdjustPointQuantity
 					}
 				}
-				if err := model.GetDB().USPAU_XchgCmplt_Goods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
+				if err := model.GetDB().USPAU_Cmplt_ExchangeGoods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
 					resp.SetReturn(resultcode.Result_Error_Db_Swap_Complete)
 				}
 			}
@@ -257,7 +257,7 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		}
 	}
 
-	if txID, err := model.GetDB().USPAU_XchgStrt_Goods(params); err != nil {
+	if txID, err := model.GetDB().USPAU_Strt_ExchangeGoods(params); err != nil {
 		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
 		return resp
 	} else {
