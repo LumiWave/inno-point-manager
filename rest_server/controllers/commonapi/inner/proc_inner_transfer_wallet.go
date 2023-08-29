@@ -66,8 +66,14 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 				return resp
 			}
 
+			scale := new(big.Float).SetFloat64(1)
+			scale.SetString("1e" + fmt.Sprintf("%d", decimal))
+			feeAmount, _ := new(big.Float).SetString(fee)
+			feeAmount = new(big.Float).Quo(feeAmount, scale)
+			fe := feeAmount.String()
+
 			swapInfo.TxStatus = context.SWAP_status_token_transfer_fail
-			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fee); err == nil {
+			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
 				// swap 토큰 전송 실패난 경우 디비에만 실패 처리 해두고 레디스 그대로 두고 cs 처리 유도한다.
 			}
 		}
@@ -97,8 +103,14 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 			return resp
 		}
 
+		scale := new(big.Float).SetFloat64(1)
+		scale.SetString("1e" + fmt.Sprintf("%d", decimal))
+		feeAmount, _ := new(big.Float).SetString(fee)
+		feeAmount = new(big.Float).Quo(feeAmount, scale)
+		fe := feeAmount.String()
+
 		swapInfo.TxStatus = context.SWAP_status_token_transfer_success
-		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fee); err == nil {
+		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
 			model.GetDB().CacheDelSwapWallet(toAddr)
 			if err := model.GetDB().USPAU_Cmplt_ExchangeGoods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), true); err != nil {
 				log.Errorf("USPAU_Cmplt_ExchangeGoods err : %v", err)
