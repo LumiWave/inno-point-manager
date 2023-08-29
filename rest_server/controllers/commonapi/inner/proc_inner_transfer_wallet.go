@@ -186,6 +186,11 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 			feeAmount, _ := new(big.Float).SetString(value)
 			feeAmount = new(big.Float).Quo(feeAmount, scale)
 			fe, _ := feeAmount.Float64()
+
+			gasFeeAmount := new(big.Float).SetInt64(gasFee)
+			gasFeeAmount = new(big.Float).Quo(gasFeeAmount, scale)
+			swapInfo.TxGasFee, _ = gasFeeAmount.Float64()
+
 			if swapInfo.SwapFee == fe {
 				// db에 수수료 전송 성공 저장
 				if err := SwapFeeSuccess(swapInfo, txHash); err == nil {
