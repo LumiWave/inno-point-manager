@@ -21,23 +21,28 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_GetSwapInfo])
 		resp.SetReturn(resultcode.Result_RedisError_GetSwapInfo)
 	} else {
-		swapInfo.TxStatus = params.TxStatus
-
 		switch params.TxStatus {
 		case context.SWAP_status_fee_transfer_start, context.SWAP_status_fee_transfer_success: // swap 수수료 전송 시작
-			swapInfo.TxHash = params.TxHash
-			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
-				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
-				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
-			} else {
-				if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Exchangefee(swapInfo.TxID,
-					params.TxStatus,
-					params.TxHash,
-					strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64), swapInfo.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err != nil {
-					resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
+			// 콜백이 먼저 들어와서 상태가 진행 된 경우는 버린다.
+			if swapInfo.TxStatus < params.TxStatus {
+				swapInfo.TxStatus = params.TxStatus
+				swapInfo.TxHash = params.TxHash
+				if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
+					log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+					resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
+				} else {
+					if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_Exchangefee(swapInfo.TxID,
+						params.TxStatus,
+						params.TxHash,
+						strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64), swapInfo.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err != nil {
+						resp.SetReturn(resultcode.Result_Error_Db_TransactExchangeGoods_Gasfee)
+					}
 				}
+			} else {
+				log.Warnf("swap not equal status redis:%v, rev:%v", swapInfo.TxStatus, params.TxStatus)
 			}
 		case context.SWAP_status_token_transfer_start: // swap용 토큰 전송 시작 ( coin->point swap)
+			swapInfo.TxStatus = params.TxStatus
 			swapInfo.SwapCoin.TokenTxHash = params.TxHash
 			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
 				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
