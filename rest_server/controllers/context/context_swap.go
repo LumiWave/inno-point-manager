@@ -49,6 +49,7 @@ type ReqSwapInfo struct {
 	SwapFeeCoinSymbol string  `json:"swap_fee_coin_symbol"`
 	SwapFee           float64 `json:"swap_fee"` // point->coin 시 전환시 부모지갑에 전송될 코인량 coin->point는 0 고정
 	SwapFeeT          string  `json:"swap_fee_string"`
+	SwapFeeD          string  `json:"swap_fee_string_d"`
 	ToWalletAddress   string  `json:"to_wallet"`
 	InnoUID           string  `json:"inno_uid"`
 	TxID              int64   `json:"tx_id"`
