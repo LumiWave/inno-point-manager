@@ -110,3 +110,8 @@ func (o *ReqSwapInprogress) CheckValidate(ctx *PointManagerContext) *base.BaseRe
 }
 
 ////////////////////////////////////////
+
+// swap 정보 삭제
+type DeleteDeleteSwapInfo struct {
+	WalletAddress string `query:"wallet_address"`
+}

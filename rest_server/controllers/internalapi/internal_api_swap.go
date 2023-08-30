@@ -60,3 +60,16 @@ func (o *InternalAPI) GetSwapInprogressNotExist(c echo.Context) error {
 
 	return commonapi.GetSwapInprogressNotExist(params, ctx)
 }
+
+// swap 정보 삭제
+func (o *InternalAPI) DeleteDeleteSwapInfo(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := &context.DeleteDeleteSwapInfo{}
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	return commonapi.DeleteDeleteSwapInfo(params, ctx)
+}

@@ -63,3 +63,14 @@ func GetSwapInprogressNotExist(params *context.ReqSwapInprogress, ctx *context.P
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
+
+func DeleteDeleteSwapInfo(params *context.DeleteDeleteSwapInfo, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	if err := model.GetDB().CacheDelSwapWallet(params.WalletAddress); err != nil {
+		log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, params.WalletAddress)
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
