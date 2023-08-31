@@ -1,9 +1,7 @@
 package inner
 
 import (
-	"fmt"
 	"math"
-	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +12,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/util"
 )
 
 func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash, status string, decimal int) *base.BaseResponse {
@@ -66,11 +65,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 				return resp
 			}
 
-			scale := new(big.Float).SetFloat64(1)
-			scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-			feeAmount, _ := new(big.Float).SetString(fee)
-			feeAmount = new(big.Float).Quo(feeAmount, scale)
-			fe := feeAmount.String()
+			fe := util.ToDecimalEncStr(fee, int64(decimal))
 
 			swapInfo.TxStatus = context.SWAP_status_token_transfer_fail
 			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
@@ -103,11 +98,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 			return resp
 		}
 
-		scale := new(big.Float).SetFloat64(1)
-		scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-		feeAmount, _ := new(big.Float).SetString(fee)
-		feeAmount = new(big.Float).Quo(feeAmount, scale)
-		fe := feeAmount.String()
+		fe := util.ToDecimalEncStr(fee, int64(decimal))
 
 		swapInfo.TxStatus = context.SWAP_status_token_transfer_success
 		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
@@ -158,15 +149,11 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 		} else if len(swapInfo.TxHash) == 0 {
 			// 2-1. 메인넷 콜백이 더 빨라서 redis에 txHash가 아직 저장되지 않았다면 (TxStatus가 1(초기화) 상태) 경우에만 전송 value가 동일한지 check해서 처리
 			if swapInfo.TxStatus == context.SWAP_status_init {
-				scale := new(big.Float).SetFloat64(1)
-				scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-				feeAmount, _ := new(big.Float).SetString(value)
-				feeAmount = new(big.Float).Quo(feeAmount, scale)
-				fe, _ := feeAmount.Float64()
+				fe := util.ToDecimalEncf(value, int64(decimal))
 
-				gasFeeAmount := new(big.Float).SetInt64(gasFee)
-				gasFeeAmount = new(big.Float).Quo(gasFeeAmount, scale)
-				swapInfo.TxGasFee, _ = gasFeeAmount.Float64()
+				basecoinID := model.GetDB().CoinsBySymbol[symbol].BaseCoinID
+				basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
+				swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
 
 				if swapInfo.SwapFee == fe { // swap 수수료로 전송 받은 양이 동일하다면 정상 swap 수수료 수신으로 인식하고 정상 처리 해준다.
 					// db에 수수료 전송 성공 저장
@@ -181,15 +168,11 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 				log.Errorf("invalid status txhash:%v, from:%v", txHash, fromAddr)
 			}
 		} else if strings.EqualFold(swapInfo.TxHash, txHash) {
-			scale := new(big.Float).SetFloat64(1)
-			scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-			feeAmount, _ := new(big.Float).SetString(value)
-			feeAmount = new(big.Float).Quo(feeAmount, scale)
-			fe, _ := feeAmount.Float64()
+			fe := util.ToDecimalEncf(value, int64(decimal))
 
-			gasFeeAmount := new(big.Float).SetInt64(gasFee)
-			gasFeeAmount = new(big.Float).Quo(gasFeeAmount, scale)
-			swapInfo.TxGasFee, _ = gasFeeAmount.Float64()
+			basecoinID := model.GetDB().CoinsBySymbol[symbol].BaseCoinID
+			basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
+			swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
 
 			if swapInfo.SwapFee == fe {
 				// db에 수수료 전송 성공 저장
@@ -203,15 +186,11 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 		}
 	} else if swapInfo.TxType == context.EventID_toPoint {
 		// coin -> point 인 경우 토큰 입금 확인이 되면 포인트 DB 처리 해준다.
-		scale := new(big.Float).SetFloat64(1)
-		scale.SetString("1e" + fmt.Sprintf("%d", decimal))
-		feeAmount, _ := new(big.Float).SetString(value)
-		feeAmount = new(big.Float).Quo(feeAmount, scale)
-		fe, _ := feeAmount.Float64()
+		fe := util.ToDecimalEncf(value, int64(decimal))
 
-		gasFeeAmount := new(big.Float).SetInt64(gasFee)
-		gasFeeAmount = new(big.Float).Quo(gasFeeAmount, scale)
-		swapInfo.TxGasFee, _ = gasFeeAmount.Float64()
+		basecoinID := model.GetDB().CoinsBySymbol[symbol].BaseCoinID
+		basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
+		swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
 
 		if strings.EqualFold(swapInfo.SwapCoin.TokenTxHash, txHash) {
 			// 시퀀스에 맞게 입금 콜백이 온경우
