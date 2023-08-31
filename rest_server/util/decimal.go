@@ -24,7 +24,7 @@ func ToDecimalDecf(value float64, decimal int64) float64 {
 
 // 0.00004 => "4000000" string
 func ToDecimalDecStr(value float64, decimal int64) string {
-	return toDecimalDec(value, decimal).String()
+	return toDecimalDec(value, decimal).Text('f', -1)
 }
 
 func toDecimalEnc(value string, decimal int64) *big.Float {
