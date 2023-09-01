@@ -41,10 +41,11 @@ type SUI_CB_GasUsed struct {
 }
 
 type SUI_CB_Balance_Change struct {
-	Owner    string `json:"owner"`
-	ObjectID string `json:"object_id"`
-	Symbol   string `json:"symbol"`
-	Amount   string `json:"amount"`
+	Owner      string `json:"owner"`
+	ObjectID   string `json:"object_id"`
+	Symbol     string `json:"symbol"`
+	RealSymbol string `json:"real_symbol"`
+	Amount     string `json:"amount"`
 }
 
 type SUI_CB_Balance_Changes struct {
@@ -91,6 +92,8 @@ type SUI_CB_NFT_Burn_Json struct {
 type SUI_CB_NFT struct {
 	Status         string                  `json:"status"`
 	ErrorMessage   string                  `json:"error_message"`
+	Symbol         string                  `json:"symbol"`
+	RealSymbol     string                  `json:"real_symbol"`
 	Sender         string                  `json:"sender"`
 	Digest         string                  `json:"digest"`
 	NFTObjectID    string                  `json:"nft_obejct_id"`
