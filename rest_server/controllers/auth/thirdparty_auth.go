@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -32,6 +31,7 @@ type VerifyAuthToken struct {
 	LoginType int64  `json:"login_type"`
 	Uuid      string `json:"uuid"`
 	InnoUID   string `json:"inno_uid"`
+	AUID      int64  `json:"au_id"`
 }
 
 type AuthResponse struct {
@@ -40,16 +40,16 @@ type AuthResponse struct {
 	Value   VerifyAuthToken `json:"value"`
 }
 
-/////////////////////////
-func CheckAuthToken(authToken string) (bool, *VerifyAuthToken, error) {
+// ///////////////////////
+func CheckAuthToken(authToken string) (*VerifyAuthToken, *AuthResponse, error) {
 	conf := config.GetInstance()
 
 	callURL := fmt.Sprintf("%s%s", conf.Auth.ApiAuthDomain, conf.Auth.ApiAuthVerify)
 
 	req, err := http.NewRequest("GET", callURL, bytes.NewBuffer(nil))
 	if err != nil {
-		log.Errorf("NewRequest error : %v", err)
-		return false, nil, err
+		log.Errorf("%v", err)
+		return nil, nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -58,7 +58,7 @@ func CheckAuthToken(authToken string) (bool, *VerifyAuthToken, error) {
 
 	if err != nil {
 		log.Errorf("membership resp: %v, err: %v", resp, err)
-		return false, nil, err
+		return nil, nil, err
 	}
 	defer func() {
 		if err = resp.Body.Close(); err != nil {
@@ -71,14 +71,14 @@ func CheckAuthToken(authToken string) (bool, *VerifyAuthToken, error) {
 	err = decoder.Decode(baseResp)
 	if err != nil {
 		log.Errorf("resp: %v, docode err: %v", resp, err)
-		return false, nil, err
+		return nil, nil, err
 	}
 
 	if baseResp.Message != "success" {
-		err := errors.New(baseResp.Message)
-		log.Errorf("resp: %v, body close err: %v", resp, err)
-		return false, nil, err
+		//err := errors.New(baseResp.Message)
+		//log.Errorf("resp: %v, body close err: %v", resp, err)
+		return nil, baseResp, nil
 	}
 
-	return true, &baseResp.Value, nil
+	return &baseResp.Value, baseResp, nil
 }

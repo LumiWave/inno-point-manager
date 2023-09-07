@@ -51,15 +51,25 @@ func PreCheck(c echo.Context) base.PreCheckResponse {
 			}
 		}
 
-		if ret, value, err := auth.CheckAuthToken(author[0][7:]); err != nil || !ret {
+		if value, returnValue, err := auth.CheckAuthToken(author[0][7:]); err != nil {
 			res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
 			return base.PreCheckResponse{
 				IsSucceed: false,
 				Response:  res,
 			}
 		} else {
-			base.GetContext(c).(*context.PointManagerContext).SetVerifyAuthToken(value)
-			log.Debugf("from : [companyid:%v][appid:%v][logintype:%v]", value.CompanyID, value.AppID, value.LoginType)
+			if value != nil {
+				base.GetContext(c).(*context.PointManagerContext).SetVerifyAuthToken(value)
+				log.Debugf("from : [companyid:%v][appid:%v][logintype:%v][au_id:%v]", value.CompanyID, value.AppID, value.LoginType, value.AUID)
+			} else {
+				res := new(base.BaseResponse)
+				res.Return = returnValue.Return
+				res.Message = returnValue.Message
+				return base.PreCheckResponse{
+					IsSucceed: false,
+					Response:  res,
+				}
+			}
 		}
 	}
 
