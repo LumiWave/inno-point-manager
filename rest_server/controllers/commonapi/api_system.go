@@ -123,6 +123,7 @@ func GetMeta(c echo.Context) error {
 	swapList := context.Meta{
 		PointList: model.GetDB().ScanPointsMap,
 		AppCoins:  model.GetDB().ScanPointsOfApp,
+		Coins:     model.GetDB().Coins,
 	}
 
 	resp.Value = swapList

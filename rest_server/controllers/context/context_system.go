@@ -74,4 +74,5 @@ func NewPSPointUpdate() *PSPointUpdate {
 type Meta struct {
 	PointList interface{} `json:"point_list"`
 	AppCoins  interface{} `json:"app_coins"`
+	Coins     interface{} `json:"coins"`
 }
