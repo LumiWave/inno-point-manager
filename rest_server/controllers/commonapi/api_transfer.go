@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
@@ -52,6 +53,32 @@ func GetCoinTransferExistInProgress(params *context.GetCoinTransferExistInProgre
 	if resp.Return != 0 {
 		if res := inner.IsExistInprogressTransferFromUserWallet(params); res != nil {
 			resp = res
+		}
+	}
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+func GetCoinObjects(req *context.ReqCoinObjects, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	params := &token_manager_server.ReqCoinObjects{
+		WalletAddress:   req.WalletAddress,
+		ContractAddress: req.ContractAddress,
+	}
+
+	if res, err := token_manager_server.GetInstance().GetCoinObjectIDS(params); err != nil {
+		log.Errorf("GetCoinObjectIDS err : %v,  wallet:%v, contract:%v ", err, req.WalletAddress, req.ContractAddress)
+		resp.SetReturn(resultcode.ResultInternalServerError)
+	} else {
+		if res.Common.Return == 0 {
+			resValue := new(context.ResCoinObjects)
+			resValue.ObjectIDs = res.Value.ObjectIDs
+			resp.Value = resValue
+		} else {
+			log.Errorf("GetCoinObjectIDS error return : %v, %s, wallet:%v, contract:%v", res.Common.Return, res.Common.Message, req.WalletAddress, req.ContractAddress)
+			resp.SetReturn(resultcode.ResultInternalServerError)
 		}
 	}
 

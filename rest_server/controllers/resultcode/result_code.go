@@ -31,6 +31,7 @@ const (
 	Result_Require_Valid_BaseCoinID    = 12008 // 유효한 basecoin id 정보 필요
 	Result_Invalid_WalletAddress_Error = 12009 // wallet address
 	Result_Invalid_TxStatus            = 12010 // invalid tx status
+	Result_Invalid_ContractAddress     = 12011 // invalid contract address
 
 	Result_Error_MinPointQuantity             = 12100 // 포인트 최소 보유 수량 에러
 	Result_Error_MinCoinQuantity              = 12101 // 코인 최소 보유 수량 에러
@@ -151,6 +152,7 @@ var ResultCodeText = map[int]string{
 	Result_Require_Valid_BaseCoinID:    "Requires valid 'basecoin_id' information.",
 	Result_Invalid_WalletAddress_Error: "Wallet Address is invalid",
 	Result_Invalid_TxStatus:            "TxStatus is invalid",
+	Result_Invalid_ContractAddress:     "Requires valid 'contract_address' information.",
 
 	Result_Error_MinPointQuantity: "lack of minimum point quantity",
 	Result_Error_MinCoinQuantity:  "lack of munimum coin quantity",

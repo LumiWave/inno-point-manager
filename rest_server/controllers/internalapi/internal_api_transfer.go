@@ -62,6 +62,22 @@ func (o *InternalAPI) GetCoinTransferExistInProgress(c echo.Context) error {
 	return commonapi.GetCoinTransferExistInProgress(params, ctx)
 }
 
+func (o *InternalAPI) GetCoinObjects(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqCoinObjects()
+	if err := c.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetCoinObjects(params, ctx)
+}
+
 func (o *InternalAPI) GetCoinFee(c echo.Context) error {
 	params := context.NewReqCoinFee()
 	if err := c.Bind(params); err != nil {

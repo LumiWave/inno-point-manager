@@ -67,6 +67,21 @@ type ResBalanc struct {
 
 ////////////////////////////////////////
 
+// //////// sui 코인/토큰 보유 object id 리스트 조회
+type ReqCoinObjects struct {
+	WalletAddress   string `url:"wallet_address"`
+	ContractAddress string `url:"contract_address"`
+}
+
+type ResCoinObjects struct {
+	Common
+	Value struct {
+		ObjectIDs []string `json:"object_ids"`
+	} `json:"value"`
+}
+
+////////////////////////////////////////
+
 // /////// 코인 가스비 요청
 type ReqCoinFee struct {
 	Symbol string `url:"base_symbol"`

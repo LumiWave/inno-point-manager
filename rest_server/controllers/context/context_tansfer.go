@@ -171,6 +171,32 @@ func (o *ReqCoinTransferResWithdrawal) CheckValidate() *base.BaseResponse {
 
 ////////////////////////////////////////
 
+// sui coin object id 리스트 조회
+type ReqCoinObjects struct {
+	WalletAddress   string `query:"wallet_address"`
+	ContractAddress string `query:"contract_address"`
+}
+
+func NewReqCoinObjects() *ReqCoinObjects {
+	return new(ReqCoinObjects)
+}
+
+func (o *ReqCoinObjects) CheckValidate() *base.BaseResponse {
+	if len(o.WalletAddress) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Invalid_WalletAddress_Error)
+	}
+	if len(o.ContractAddress) == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Invalid_ContractAddress)
+	}
+	return nil
+}
+
+type ResCoinObjects struct {
+	ObjectIDs []string `json:"object_ids"`
+}
+
+////////////////////////////////////////
+
 // /////// 코인 수수료
 type ReqCoinFee struct {
 	Symbol string `query:"symbol"`
