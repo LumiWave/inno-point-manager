@@ -16,38 +16,35 @@ type AccountAuthLog struct {
 }
 
 type AccountCoinLog struct {
-	LogDt         string  `json:"log_dt"`
-	LogID         int64   `json:"log_id"`
-	EventID       int64   `json:"event_id"`
-	TxHash        string  `json:"tx_hash"`
-	AUID          int64   `json:"au_id"`
-	CoinID        int64   `json:"coin_id"`
-	BaseCoinID    int64   `json:"basecoin_id"`
-	WalletAddress string  `json:"wallet_address"`
-	PreQuantity   float64 `json:"previous_quantity"`
-	AdjQuantity   float64 `json:"adjust_quantity"`
-	Quantity      float64 `json:"quantity"`
+	LogDt         string `json:"log_dt"`
+	LogID         int64  `json:"log_id"`
+	EventID       int64  `json:"event_id"`
+	TxHash        string `json:"tx_hash"`
+	AUID          int64  `json:"au_id"`
+	CoinID        int64  `json:"coin_id"`
+	BaseCoinID    int64  `json:"basecoin_id"`
+	WalletAddress string `json:"wallet_address"`
+	AdjQuantity   string `json:"adjust_quantity"`
+	WalletID      int64  `json:"wallet_id"`
 }
 
 type ExchangeGoodsLog struct {
-	LogDt            string  `json:"log_dt"`
-	LogID            int64   `json:"log_id"`
-	EventID          int64   `json:"event_id"`
-	TxHash           string  `json:"tx_hash"`
-	AUID             int64   `json:"au_id"`
-	InnoUID          string  `json:"inno_uid"`
-	MUID             int64   `json:"mu_id"`
-	AppID            int64   `json:"app_id"`
-	CoinID           int64   `json:"coin_id"`
-	BaseCoinID       int64   `json:"basecoin_id"`
-	WalletAddress    string  `json:"wallet_address"`
-	PreCoinQuantity  float64 `json:"previous_coin_quantity"`
-	AdjCoinQuantity  float64 `json:"adjust_coin_quantity"`
-	CoinQuantity     float64 `json:"coin_quantity"`
-	PointID          int64   `json:"point_id"`
-	PrePointQuantity int64   `json:"previous_point_quantity"`
-	AdjPointQuantity int64   `json:"adjust_point_quantity"`
-	PointQuantity    int64   `json:"point_quantity"`
+	LogDt            string `json:"log_dt"`
+	LogID            int64  `json:"log_id"`
+	EventID          int64  `json:"event_id"`
+	TxHash           string `json:"tx_hash"`
+	TxID             int64  `json:"tx_id"`
+	AUID             int64  `json:"au_id"`
+	InnoUID          string `json:"inno_uid"`
+	MUID             int64  `json:"mu_id"`
+	AppID            int64  `json:"app_id"`
+	CoinID           int64  `json:"coin_id"`
+	BaseCoinID       int64  `json:"basecoin_id"`
+	WalletAddress    string `json:"wallet_address"`
+	AdjCoinQuantity  string `json:"adjust_coin_quantity"`
+	PointID          int64  `json:"point_id"`
+	AdjPointQuantity int64  `json:"adjust_point_quantity"`
+	WalletID         int64  `json:"wallet_id"`
 }
 
 type MemberAuthLog struct {
@@ -69,7 +66,5 @@ type MemberPointsLog struct {
 	MUID        int64  `json:"mu_id"`
 	AppID       int64  `json:"app_id"`
 	PointID     int64  `json:"point_id"`
-	PreQuantity int64  `json:"previous_quantity"`
 	AdjQuantity int64  `json:"adjust_quantity"`
-	Quantity    int64  `json:"quantity"`
 }

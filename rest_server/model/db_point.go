@@ -246,9 +246,7 @@ func (o *DB) UpdateAppPoint(dbID, muID, pointID, preQuantity, adjQuantity, quant
 		MUID:        muID,
 		AppID:       o.ScanPointsOfApp[pointID].AppId,
 		PointID:     pointID,
-		PreQuantity: preQuantity,
 		AdjQuantity: adjQuantity,
-		Quantity:    quantity,
 	}
 	go api_inno_log.GetInstance().PostMemberPoints(apiParams)
 
