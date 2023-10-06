@@ -197,6 +197,17 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		model.GetDB().DelCacheMemberPointList(pointKey)
 	}
 
+	// 로그를 위한 wallet ID 조회
+	if _, wallets, err := model.GetDB().USPAU_GetList_AccountWallets(params.AUID); err == nil {
+		if wallet, ok := wallets[params.WalletAddress]; ok {
+			params.WalletID = wallet.WalletID
+		} else {
+			log.Errorf("Not exist available wallet auid: %v", params.AUID)
+			resp.SetReturn(resultcode.Result_Error_Db_GetAccountWallets)
+			return resp
+		}
+	}
+
 	// 4. 전환 정보 검증
 	pointInfo := model.GetDB().AppPointsMap[params.AppID].PointsMap[params.PointID]
 	if params.TxType == context.EventID_toCoin {

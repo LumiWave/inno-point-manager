@@ -68,7 +68,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 			fe := util.ToDecimalEncStr(fee, int64(decimal))
 
 			swapInfo.TxStatus = context.SWAP_status_token_transfer_fail
-			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
+			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.BaseCoinID, fe, swapInfo); err == nil {
 				// swap 토큰 전송 실패난 경우 디비에만 실패 처리 해두고 레디스 그대로 두고 cs 처리 유도한다.
 			}
 		}
@@ -101,7 +101,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 		fe := util.ToDecimalEncStr(fee, int64(decimal))
 
 		swapInfo.TxStatus = context.SWAP_status_token_transfer_success
-		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, fe); err == nil {
+		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.BaseCoinID, fe, swapInfo); err == nil {
 			model.GetDB().CacheDelSwapWallet(toAddr)
 			if err := model.GetDB().USPAU_Cmplt_ExchangeGoods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), true); err != nil {
 				log.Errorf("USPAU_Cmplt_ExchangeGoods err : %v", err)
@@ -195,7 +195,7 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 		if strings.EqualFold(swapInfo.SwapCoin.TokenTxHash, txHash) {
 			// 시퀀스에 맞게 입금 콜백이 온경우
 			swapInfo.TxStatus = context.SWAP_status_token_transfer_success
-			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err == nil {
+			if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64), swapInfo); err == nil {
 				if err := model.GetDB().USPAU_Cmplt_ExchangeGoods(swapInfo, time.Now().Format("2006-01-02 15:04:05.000"), true); err != nil {
 					log.Errorf("USPAU_Cmplt_ExchangeGoods err : %v", err)
 				} else {
@@ -248,7 +248,7 @@ func SwapFeeSuccess(swapInfo *context.ReqSwapInfo, txHash string) error {
 		// 수수료 전송 시작 상태에서 완료 콜백이 들어온경우
 		swapInfo.TxStatus = context.SWAP_status_fee_transfer_success
 
-		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(swapInfo.TxID, swapInfo.TxStatus, model.GetDB().Coins[swapInfo.SwapFeeCoinID].BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err != nil {
+		if err := model.GetDB().USPAU_Mod_TransactExchangeGoods_TxStatus(model.GetDB().Coins[swapInfo.SwapFeeCoinID].BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64), swapInfo); err != nil {
 			return err
 		}
 		if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {

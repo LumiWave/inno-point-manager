@@ -16,7 +16,7 @@ func GetBalanceAll(auid int64) *base.BaseResponse {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if wallets, err := model.GetDB().USPAU_GetList_AccountWallets(auid); err == nil {
+	if wallets, _, err := model.GetDB().USPAU_GetList_AccountWallets(auid); err == nil {
 		resBalanceAll := &context.ResBalanceAll{}
 		resBalanceAll.Balances = []*context.Balance{}
 		for _, wallet := range wallets {

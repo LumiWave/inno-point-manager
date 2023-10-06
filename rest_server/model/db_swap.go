@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
@@ -97,12 +99,12 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_Exchangefee(txID int64, txStatus in
 }
 
 // swap 거래 상태 갱신
-func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64, baseCoinID int64, gasFee string) error {
+func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(baseCoinID int64, gasFee string, swapInfo *context.ReqSwapInfo) error {
 	var rs orginMssql.ReturnStatus
-	if txStatus == context.SWAP_status_fee_transfer_success || txStatus == context.SWAP_status_token_transfer_success {
+	if swapInfo.TxStatus == context.SWAP_status_fee_transfer_success || swapInfo.TxStatus == context.SWAP_status_token_transfer_success {
 		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
-			sql.Named("TxID", txID),
-			sql.Named("TxStatus", txStatus),
+			sql.Named("TxID", swapInfo.TxID),
+			sql.Named("TxStatus", swapInfo.TxStatus),
 			sql.Named("BaseCoinID", baseCoinID),
 			sql.Named("Gasfee", gasFee),
 			&rs)
@@ -112,10 +114,34 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(txID, txStatus int64, base
 		}
 
 		defer rows.Close()
+		if swapInfo.TxStatus == context.SWAP_status_token_transfer_success {
+
+			strAdjCoinQuantity := strconv.FormatFloat(swapInfo.AdjustCoinQuantity, 'f', -1, 64)
+
+			apiParams := &api_inno_log.ExchangeGoodsLog{
+				LogDt:            time.Now().Format("2006-01-02 15:04:05.000"),
+				LogID:            context.LogID_exchange,
+				EventID:          swapInfo.TxType,
+				TxHash:           swapInfo.TokenTxHash,
+				TxID:             swapInfo.TxID,
+				AUID:             swapInfo.AUID,
+				InnoUID:          swapInfo.InnoUID,
+				MUID:             swapInfo.MUID,
+				AppID:            swapInfo.AppID,
+				CoinID:           swapInfo.CoinID,
+				BaseCoinID:       baseCoinID,
+				WalletAddress:    swapInfo.WalletAddress,
+				AdjCoinQuantity:  strAdjCoinQuantity,
+				PointID:          swapInfo.PointID,
+				AdjPointQuantity: swapInfo.AdjustPointQuantity,
+				WalletID:         swapInfo.WalletID,
+			}
+			go api_inno_log.GetInstance().PostExchangeGoods(apiParams)
+		}
 	} else {
 		rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Mod_TransactExchangeGoods_TxStatus,
-			sql.Named("TxID", txID),
-			sql.Named("TxStatus", txStatus),
+			sql.Named("TxID", swapInfo.TxID),
+			sql.Named("TxStatus", swapInfo.TxStatus),
 			&rs)
 		if err != nil {
 			log.Errorf("USPAU_Mod_TransactExchangeGoods_TxStatus QueryContext err : %v", err)

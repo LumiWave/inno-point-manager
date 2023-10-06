@@ -216,23 +216,25 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 }
 
 // 내 지갑 리스트 요청
-func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet, error) {
+func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet, map[string]*context.AccountWallet, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountWallets,
 		sql.Named("AUID", auid),
 		&rs)
 	if err != nil {
 		log.Errorf("%v QueryContext err : %v", USPAU_GetList_AccountWallets, err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	defer rows.Close()
 
 	accountWallets := []*context.AccountWallet{}
+	accountWalletsMap := make(map[string]*context.AccountWallet)
 	for rows.Next() {
 		accountWallet := &context.AccountWallet{}
 		if err := rows.Scan(&accountWallet.WalletID, &accountWallet.BaseCoinID, &accountWallet.WalletAddress, &accountWallet.ConnectionStatus, &accountWallet.ModifiedDT); err == nil {
 			accountWallets = append(accountWallets, accountWallet)
+			accountWalletsMap[accountWallet.WalletAddress] = accountWallet
 		} else {
 			log.Errorf("USPAU_GetList_AccountWallets scan error : %v", err)
 		}
@@ -240,8 +242,8 @@ func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet,
 
 	if rs != 1 {
 		log.Errorf("%v returnvalue error : %v", USPAU_GetList_AccountWallets, rs)
-		return nil, errors.New("USPAU_GetList_AccountWallets returnvalue error " + strconv.Itoa(int(rs)))
+		return nil, nil, errors.New("USPAU_GetList_AccountWallets returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
-	return accountWallets, nil
+	return accountWallets, accountWalletsMap, nil
 }
