@@ -136,6 +136,7 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(baseCoinID int64, gasFee s
 				AdjPointQuantity: swapInfo.AdjustPointQuantity,
 				WalletID:         swapInfo.WalletID,
 			}
+			log.Debugf("log : %v", apiParams)
 			go api_inno_log.GetInstance().PostExchangeGoods(apiParams)
 		}
 	} else {

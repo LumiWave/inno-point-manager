@@ -184,6 +184,20 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 				log.Errorf("not equal swap fee redis:%v, rev:%v, txid:%v", swapInfo.SwapFee, fe, swapInfo.TxID)
 			}
 		}
+
+		// 로그 전송
+		// apiParams := &api_inno_log.AccountCoinLog{
+		// 	LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+		// 	LogID:         int64(logID),
+		// 	EventID:       int64(eventID),
+		// 	TxHash:        txHash,
+		// 	AUID:          auid,
+		// 	CoinID:        coinid,
+		// 	BaseCoinID:    baseCoinID,
+		// 	WalletAddress: walletAddress,
+		// 	AdjQuantity:   adjustCoinQuantity,
+		// }
+		// go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 	} else if swapInfo.TxType == context.EventID_toPoint {
 		// coin -> point 인 경우 토큰 입금 확인이 되면 포인트 DB 처리 해준다.
 		fe := util.ToDecimalEncf(value, int64(decimal))
