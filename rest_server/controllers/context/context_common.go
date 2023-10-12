@@ -20,10 +20,13 @@ const (
 	EventID_toCoin  = 3 // 포인트->코인
 	EventID_toPoint = 4 // 코인->포인트
 
-	EventID_normal_purchase = 9 // 일반 상품 구매
-	EventID_auction_deposit = 10 // 경매 입찰 보증금 납부
+	EventID_normal_purchase        = 9  // 일반 상품 구매
+	EventID_auction_deposit        = 10 // 경매 입찰 보증금 납부
 	EventID_auction_deposit_refund = 11 // 경매 입찰 보증금 환급
-	EventID_auction_purchase = 12 // 경매 상품 구매
+	EventID_auction_purchase       = 12 // 경매 상품 구매
+
+	EventID_add_fee = 24 // 수수료 재화 증가 : swap시 수수료 받았을때
+	EventID_sub_fee = 25 // 수수료 재화 감소 : 수수료 명목으로 서비스 제공할때
 )
 
 type ContextKey struct {

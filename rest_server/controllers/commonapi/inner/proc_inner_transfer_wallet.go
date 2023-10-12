@@ -9,6 +9,7 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
 	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
+	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
@@ -77,7 +78,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 	}
 
 	// 성공 분기처리
-	if txType.Target == context.From_user_to_fee_wallet {
+	if txType.Target == context.From_user_to_fee_wallet { // not used
 	} else if txType.Target == context.From_parent_to_other_wallet { // 부모지갑에서 자식지갑으로 코인 전송 : swap point->coin, 혹은 부모 지갑에서 출금
 		// 부모지갑에서 자식지갑으로 입금시 swap으로 간주하고 swap 처리 진행한다.
 		parentKey := model.MakeCoinTransferFromParentWalletKey(txType.AUID)
@@ -107,6 +108,20 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 				log.Errorf("USPAU_Cmplt_ExchangeGoods err : %v", err)
 			}
 		}
+
+		apiParams := &api_inno_log.AccountCoinLog{
+			LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+			LogID:         int64(context.LogID_exchange),
+			EventID:       int64(context.EventID_sub),
+			TxHash:        txHash,
+			AUID:          swapInfo.AUID,
+			CoinID:        swapInfo.CoinID,
+			BaseCoinID:    swapInfo.BaseCoinID,
+			WalletAddress: swapInfo.ToWalletAddress,
+			AdjQuantity:   "-" + strconv.FormatFloat(swapInfo.SwapCoin.AdjustCoinQuantity, 'f', -1, 64),
+		}
+		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
+
 	} else if txType.Target == context.From_user_to_parent_wallet { // 자식 지갑에서 부모 지갑으로 전송 : swap coin->point
 	} else if txType.Target == context.From_user_to_other_wallet { // 자식지갑에서 다른 지갑으로 코인 전송
 		model.GetDB().DelCacheCoinTransfer(tKey) //tx 삭제
@@ -185,19 +200,19 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 			}
 		}
 
-		// 로그 전송
-		// apiParams := &api_inno_log.AccountCoinLog{
-		// 	LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
-		// 	LogID:         int64(logID),
-		// 	EventID:       int64(eventID),
-		// 	TxHash:        txHash,
-		// 	AUID:          auid,
-		// 	CoinID:        coinid,
-		// 	BaseCoinID:    baseCoinID,
-		// 	WalletAddress: walletAddress,
-		// 	AdjQuantity:   adjustCoinQuantity,
-		// }
-		// go api_inno_log.GetInstance().PostAccountCoins(apiParams)
+		// 수수료 입금 로그 전송
+		apiParams := &api_inno_log.AccountCoinLog{
+			LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+			LogID:         int64(context.LogID_exchange),
+			EventID:       int64(context.EventID_add_fee),
+			TxHash:        txHash,
+			AUID:          swapInfo.AUID,
+			CoinID:        swapInfo.SwapFeeCoinID,
+			BaseCoinID:    model.GetDB().CoinsBySymbol[symbol].BaseCoinID,
+			WalletAddress: swapInfo.ToWalletAddress,
+			AdjQuantity:   strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64),
+		}
+		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 	} else if swapInfo.TxType == context.EventID_toPoint {
 		// coin -> point 인 경우 토큰 입금 확인이 되면 포인트 DB 처리 해준다.
 		fe := util.ToDecimalEncf(value, int64(decimal))
@@ -236,6 +251,20 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 				}
 			}
 		}
+
+		// 역스왑 토큰 입금 로그 전송
+		apiParams := &api_inno_log.AccountCoinLog{
+			LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+			LogID:         int64(context.LogID_exchange),
+			EventID:       int64(context.EventID_sub),
+			TxHash:        txHash,
+			AUID:          swapInfo.AUID,
+			CoinID:        swapInfo.CoinID,
+			BaseCoinID:    swapInfo.BaseCoinID,
+			WalletAddress: swapInfo.ToWalletAddress,
+			AdjQuantity:   strconv.FormatFloat(swapInfo.SwapCoin.AdjustCoinQuantity, 'f', -1, 64),
+		}
+		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 
 	} else {
 		log.Errorf("not exist txType : %v, from:%v, txHash:%v", swapInfo.TxType, fromAddr, txHash)

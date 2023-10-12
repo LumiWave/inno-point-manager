@@ -5,13 +5,13 @@ import (
 	"math/big"
 )
 
-// 4000000 => 0.00004 float64
+// "4000000" => 0.00004 float64
 func ToDecimalEncf(value string, decimal int64) float64 {
 	fValue, _ := toDecimalEnc(value, decimal).Float64()
 	return fValue
 }
 
-// 4000000 => "0.00004" string
+// "4000000" => "0.00004" string
 func ToDecimalEncStr(value string, decimal int64) string {
 	return toDecimalEnc(value, decimal).Text('f', -1)
 }
