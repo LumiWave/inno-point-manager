@@ -18,8 +18,13 @@ func PostCoinTransferFromParentWallet(params *context.ReqCoinTransferFromParentW
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := inner.TransferFromParentWallet(params, true); err != nil {
-		resp = err
+	if params.IsNormalTransfer {
+		// 부모지갑에서 단순 출금용
+		resp = inner.TransferFromParentWalletNormal(params, params.IsNormalTransfer)
+	} else {
+		if err := inner.TransferFromParentWallet(params, true); err != nil {
+			resp = err
+		}
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

@@ -15,6 +15,57 @@ import (
 	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
 )
 
+func TransferFromParentWalletNormal(params *context.ReqCoinTransferFromParentWallet, isLockCheck bool) *base.BaseResponse {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	coinInfo := model.GetDB().CoinsBySymbol[params.CoinSymbol]
+	scale := new(big.Float).SetInt64(1)
+	scale.SetString("1e" + fmt.Sprintf("%d", coinInfo.Decimal))
+
+	valueAmount := new(big.Float).SetFloat64(params.Quantity)
+	valueAmount = new(big.Float).Mul(valueAmount, scale)
+	nAmount := new(big.Int)
+	valueAmount.Int(nAmount)
+	amount := nAmount.String()
+
+	//2. tokenmanager에 외부 전송 요청, 전송 transaction 유효한지 확인
+	req := &token_manager_server.ReqSendFromParentWallet{
+		BaseSymbol: model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol,
+		Contract: func() string {
+			// 코인 타입이면 contract 정보를 를 보내지 않는다.
+			if strings.EqualFold(model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID].BaseCoinSymbol, coinInfo.CoinSymbol) {
+				return ""
+			}
+			return coinInfo.ContractAddress
+		}(),
+		ToAddress: params.ToAddress,
+		Amount:    amount,
+		Memo:      strconv.FormatInt(params.AUID, 10),
+	}
+	if res, err := token_manager_server.GetInstance().PostSendFromParentWallet(req); err != nil {
+		resp.SetReturn(resultcode.ResultInternalServerError)
+		return resp
+	} else {
+		if res.Return != 0 { // token manager 전송 에러
+			resp.Return = res.Return
+			resp.Message = res.Message
+			return resp
+		}
+
+		if !res.Value.IsSuccess {
+			resp.SetReturn(resultcode.ResultInternalServerError)
+		}
+
+		//params.ReqId = res.Value.ReqId
+		//params.TransactionId = res.Value.TransactionId
+		params.TransactionId = res.Value.TxHash
+		resp.Value = params
+	}
+
+	return resp
+}
+
 func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, isLockCheck bool) *base.BaseResponse {
 
 	resp := new(base.BaseResponse)
