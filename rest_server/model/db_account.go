@@ -232,7 +232,7 @@ func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet,
 	accountWalletsMap := make(map[string]*context.AccountWallet)
 	for rows.Next() {
 		accountWallet := &context.AccountWallet{}
-		if err := rows.Scan(&accountWallet.WalletID, &accountWallet.BaseCoinID, &accountWallet.WalletAddress, &accountWallet.ConnectionStatus, &accountWallet.ModifiedDT); err == nil {
+		if err := rows.Scan(&accountWallet.WalletID, &accountWallet.BaseCoinID, &accountWallet.WalletAddress, &accountWallet.WalletTypeID, &accountWallet.ConnectionStatus, &accountWallet.ModifiedDT); err == nil {
 			accountWallets = append(accountWallets, accountWallet)
 			accountWalletsMap[accountWallet.WalletAddress] = accountWallet
 		} else {

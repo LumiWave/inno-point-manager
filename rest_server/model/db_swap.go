@@ -32,6 +32,7 @@ func (o *DB) USPAU_Strt_ExchangeGoods(params *context.ReqSwapInfo) (*int64, erro
 		sql.Named("DatabaseID", params.DatabaseID),
 		sql.Named("BaseCoinID", params.BaseCoinID),
 		sql.Named("WalletAddress", params.WalletAddress),
+		sql.Named("WalletTypeID", params.WalletTypeID),
 		sql.Named("CoinID", params.CoinID),
 		sql.Named("CoinAdjQuantity", params.AdjustCoinQuantity),
 		sql.Named("PointID", params.PointID),

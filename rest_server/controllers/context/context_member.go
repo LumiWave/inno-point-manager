@@ -107,6 +107,7 @@ type AccountWallet struct {
 	WalletID         int64  `json:"walllet_id"`
 	BaseCoinID       int64  `json:"base_coin_id"`
 	WalletAddress    string `json:"wallet_address"`
+	WalletTypeID     int64  `json:"wallet_type_id"`
 	ConnectionStatus int    `json:"connection_status"`
 	ModifiedDT       string `json:"modified_dt"`
 }

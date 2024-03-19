@@ -33,6 +33,7 @@ type SwapCoin struct {
 	BaseCoinID         int64   `json:"base_coin_id"` // 요청 인자
 	BaseCoinSymbol     string  `json:"base_coin_symbol"`
 	WalletAddress      string  `json:"walletaddress"`
+	WalletTypeID       int64   `json:"wallet_type_id"`
 	WalletID           int64   `json:"wallet_id"`
 	AdjustCoinQuantity float64 `json:"adjust_coin_quantity"` // 요청 인자
 	TokenTxHash        string  `json:"token_tx_hash"`        // swap 코인 전송 txhash
