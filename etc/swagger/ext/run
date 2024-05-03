@@ -1,1 +1,1 @@
-http-server -p 9090 -S -C onbuffcerti.crt.pem -o &
+http-server -p 9090 -S -C lumiwavecerti.crt.pem -o &

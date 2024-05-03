@@ -1,11 +1,11 @@
 bin/
 
 etc/swagger/ext/key.pem
-etc/swagger/ext/onbuffcerti.crt.pem
+etc/swagger/ext/lumiwavecerti.crt.pem
 
 
-etc/onbuffcerti.crt
-etc/onbuffcerti.key
+etc/lumiwavecerti.crt
+etc/lumiwavecerti.key
 etc/conf/config.dev.yml
 etc/conf/config.live.yml
 etc/conf/config.local.yml
