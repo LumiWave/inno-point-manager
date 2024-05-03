@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/LumiWave/baseutil/log"
 )
 
 type MemberPointInfo struct {
