@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/util"
+	"github.com/LumiWave/baseapp/base"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/config"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/api_inno_log"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/LumiWave/inno-point-manager/rest_server/model"
+	"github.com/LumiWave/inno-point-manager/rest_server/util"
 )
 
 func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash, status string, decimal int) *base.BaseResponse {

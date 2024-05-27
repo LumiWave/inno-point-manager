@@ -6,10 +6,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/api_inno_log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/api_inno_log"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
 

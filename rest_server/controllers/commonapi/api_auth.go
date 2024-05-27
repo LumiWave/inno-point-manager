@@ -3,7 +3,7 @@ package commonapi
 import (
 	"net/http"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/LumiWave/baseapp/base"
 	"github.com/labstack/echo"
 )
 

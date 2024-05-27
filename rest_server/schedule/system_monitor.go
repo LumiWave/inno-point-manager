@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/config"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"

@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi/inner"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/baseapp/base"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/commonapi/inner"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 )
 
 func PostWalletWebHookETHDeposit(params *context.ReqPostWalletETHResult, ctx *context.PointManagerContext) error {

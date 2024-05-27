@@ -3,8 +3,8 @@ package context
 import (
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/LumiWave/baseapp/base"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 )
 
 // /////// 회원 추가

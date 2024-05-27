@@ -3,10 +3,10 @@ package context
 import (
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
+	"github.com/LumiWave/baseapp/base"
 )
 
-///////// app 포인트 처리 모니터링
+// /////// app 포인트 처리 모니터링
 type ReqPointAppMonitoring struct {
 	MUID int64 `query:"mu_id"`
 }
@@ -19,7 +19,7 @@ func (o *ReqPointAppMonitoring) CheckValidate() *base.BaseResponse {
 	return nil
 }
 
-///////// Me Coin List
+// /////// Me Coin List
 type ReqMeCoin struct {
 	AUID int64 `json:"au_id" query:"au_id"`
 }
@@ -47,7 +47,7 @@ type MeCoin struct {
 
 ////////////////////////////////////////
 
-///////// Me Coin update
+// /////// Me Coin update
 type ReqUpdateMeCoin struct {
 	AUID          int64   `json:"au_id"`
 	CoinID        int64   `json:"coin_id"`

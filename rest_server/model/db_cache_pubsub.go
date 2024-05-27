@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/basedb"
-	"github.com/ONBUFF-IP-TOKEN/baseutil/datetime"
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
+	"github.com/LumiWave/basedb"
+	"github.com/LumiWave/baseutil/datetime"
+	"github.com/LumiWave/baseutil/log"
 )
 
 func (o *DB) PublishEvent(channel string, val interface{}) error {

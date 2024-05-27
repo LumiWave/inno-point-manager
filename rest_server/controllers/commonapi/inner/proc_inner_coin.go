@@ -3,12 +3,12 @@ package inner
 import (
 	"strings"
 
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/token_manager_server"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
+	"github.com/LumiWave/baseapp/base"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/token_manager_server"
+	"github.com/LumiWave/inno-point-manager/rest_server/model"
 )
 
 // auid에 해당하는 모든 지갑의 balance 정보 수집

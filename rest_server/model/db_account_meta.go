@@ -4,8 +4,8 @@ import (
 	originCtx "context"
 	"database/sql"
 
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 	orginMssql "github.com/denisenkom/go-mssqldb"
 )
 

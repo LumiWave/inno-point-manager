@@ -1,15 +1,15 @@
 package externalapi
 
 import (
-	"github.com/ONBUFF-IP-TOKEN/baseapp/base"
-	baseconf "github.com/ONBUFF-IP-TOKEN/baseapp/config"
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/auth"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/commonapi"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/resultcode"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
+	"github.com/LumiWave/baseapp/base"
+	baseconf "github.com/LumiWave/baseapp/config"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/config"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/auth"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/commonapi"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
+	"github.com/LumiWave/inno-point-manager/rest_server/model"
 	"github.com/labstack/echo"
 )
 

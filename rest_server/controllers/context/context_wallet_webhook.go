@@ -1,6 +1,6 @@
 package context
 
-import "github.com/ONBUFF-IP-TOKEN/baseapp/base"
+import "github.com/LumiWave/baseapp/base"
 
 type ReqPostWalletETHResult struct {
 	PlatformID     int64  `json:"platform_id"`

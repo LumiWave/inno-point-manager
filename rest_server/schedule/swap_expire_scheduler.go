@@ -4,10 +4,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ONBUFF-IP-TOKEN/baseutil/log"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/config"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/controllers/context"
-	"github.com/ONBUFF-IP-TOKEN/inno-point-manager/rest_server/model"
+	"github.com/LumiWave/baseutil/log"
+	"github.com/LumiWave/inno-point-manager/rest_server/config"
+	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
+	"github.com/LumiWave/inno-point-manager/rest_server/model"
 )
 
 var gSwapExpireScheduler *SwapExpireScheduler
