@@ -118,6 +118,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 			CoinID:        swapInfo.CoinID,
 			BaseCoinID:    swapInfo.BaseCoinID,
 			WalletAddress: swapInfo.ToWalletAddress,
+			WalletTypeID:  swapInfo.WalletTypeID,
 			AdjQuantity:   "-" + strconv.FormatFloat(swapInfo.SwapCoin.AdjustCoinQuantity, 'f', -1, 64),
 		}
 		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
@@ -210,6 +211,7 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 			CoinID:        swapInfo.SwapFeeCoinID,
 			BaseCoinID:    model.GetDB().CoinsBySymbol[symbol].BaseCoinID,
 			WalletAddress: swapInfo.ToWalletAddress,
+			WalletTypeID:  swapInfo.WalletTypeID,
 			AdjQuantity:   strconv.FormatFloat(swapInfo.SwapFee, 'f', -1, 64),
 		}
 		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
@@ -262,6 +264,7 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 			CoinID:        swapInfo.CoinID,
 			BaseCoinID:    swapInfo.BaseCoinID,
 			WalletAddress: swapInfo.ToWalletAddress,
+			WalletTypeID:  swapInfo.WalletTypeID,
 			AdjQuantity:   strconv.FormatFloat(swapInfo.SwapCoin.AdjustCoinQuantity, 'f', -1, 64),
 		}
 		go api_inno_log.GetInstance().PostAccountCoins(apiParams)

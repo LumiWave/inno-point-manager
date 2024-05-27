@@ -24,6 +24,7 @@ type AccountCoinLog struct {
 	CoinID        int64  `json:"coin_id"`
 	BaseCoinID    int64  `json:"basecoin_id"`
 	WalletAddress string `json:"wallet_address"`
+	WalletTypeID  int64  `json:"wallet_type_id"`
 	AdjQuantity   string `json:"adjust_quantity"`
 	WalletID      int64  `json:"wallet_id"`
 }
@@ -41,6 +42,7 @@ type ExchangeGoodsLog struct {
 	CoinID           int64  `json:"coin_id"`
 	BaseCoinID       int64  `json:"basecoin_id"`
 	WalletAddress    string `json:"wallet_address"`
+	WalletTypeID     int64  `json:"wallet_type_id"`
 	AdjCoinQuantity  string `json:"adjust_coin_quantity"`
 	PointID          int64  `json:"point_id"`
 	AdjPointQuantity int64  `json:"adjust_point_quantity"`

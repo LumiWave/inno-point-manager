@@ -132,6 +132,7 @@ func (o *DB) USPAU_Mod_TransactExchangeGoods_TxStatus(baseCoinID int64, gasFee s
 				CoinID:           swapInfo.CoinID,
 				BaseCoinID:       baseCoinID,
 				WalletAddress:    swapInfo.WalletAddress,
+				WalletTypeID:     swapInfo.WalletTypeID,
 				AdjCoinQuantity:  strAdjCoinQuantity,
 				PointID:          swapInfo.PointID,
 				AdjPointQuantity: swapInfo.AdjustPointQuantity,
