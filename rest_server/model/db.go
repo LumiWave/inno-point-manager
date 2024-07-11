@@ -49,6 +49,8 @@ type Coin struct {
 	DailyLimitedAcqExchangeQuantity float64 `json:"daily_limited_acq_exchange_quantity"`
 	ExchangeFees                    float64 `json:"exchange_fees"`
 	IsRechargeable                  bool    `json:"is_rechargeable"`
+	RechargeURL                     string  `json:"recharge_url"`
+	CustomProperties                string  `json:"custom_properties"`
 }
 
 type AppCoin struct {
