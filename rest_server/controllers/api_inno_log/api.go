@@ -66,8 +66,8 @@ func (o *ServerInfo) PostMemberPoints(req *MemberPointsLog) (*Common, error) {
 	return data.(*Common), nil
 }
 
-func (o *ServerInfo) PostExchangeGoods(req *ExchangeGoodsLog) (*Common, error) {
-	api := ApiList[Api_post_exchange_goods]
+func (o *ServerInfo) PostExchange(req *ExchangeLogs) (*Common, error) {
+	api := ApiList[Api_post_exchange]
 	callUrl := fmt.Sprintf("%s%s%s", o.IntHostUri, o.IntVer, api.Uri)
 
 	pbytes, _ := json.Marshal(req)

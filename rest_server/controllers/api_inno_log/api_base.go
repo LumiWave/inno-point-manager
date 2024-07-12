@@ -15,11 +15,11 @@ import (
 type api_kind int
 
 const (
-	Api_post_account_auth   = 0 // web 사용자 로그 : PostAccountAuth
-	Api_post_member_auth    = 1 // app 사용자 로그 : PostMemberAuth
-	Api_post_account_coins  = 2 // mod account coins 로그 : PostAccountCoins
-	Api_post_member_points  = 3 // mod member point 로그 : PostMemberPoints
-	Api_post_exchange_goods = 4 // exchange goods 로그 : PostExchangeGoods
+	Api_post_account_auth  = 0 // web 사용자 로그 : PostAccountAuth
+	Api_post_member_auth   = 1 // app 사용자 로그 : PostMemberAuth
+	Api_post_account_coins = 2 // mod account coins 로그 : PostAccountCoins
+	Api_post_member_points = 3 // mod member point 로그 : PostMemberPoints
+	Api_post_exchange      = 4 // exchange 로그 : PostExchange
 )
 
 type ApiInfo struct {
@@ -31,11 +31,11 @@ type ApiInfo struct {
 }
 
 var ApiList = map[api_kind]ApiInfo{
-	Api_post_account_auth:   ApiInfo{ApiType: Api_post_account_auth, Uri: "/account/auth", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
-	Api_post_member_auth:    ApiInfo{ApiType: Api_post_member_auth, Uri: "/member/auth", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
-	Api_post_account_coins:  ApiInfo{ApiType: Api_post_account_coins, Uri: "/account/coins", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
-	Api_post_member_points:  ApiInfo{ApiType: Api_post_member_points, Uri: "/member/points", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
-	Api_post_exchange_goods: ApiInfo{ApiType: Api_post_exchange_goods, Uri: "/account/exchangegoods", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
+	Api_post_account_auth:  ApiInfo{ApiType: Api_post_account_auth, Uri: "/account/auth", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
+	Api_post_member_auth:   ApiInfo{ApiType: Api_post_member_auth, Uri: "/member/auth", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
+	Api_post_account_coins: ApiInfo{ApiType: Api_post_account_coins, Uri: "/account/coins", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
+	Api_post_member_points: ApiInfo{ApiType: Api_post_member_points, Uri: "/member/points", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
+	Api_post_exchange:      ApiInfo{ApiType: Api_post_exchange, Uri: "/account/exchange", Method: "POST", ResponseFuncType: func() interface{} { return new(Common) }, client: NewClient()},
 }
 
 func NewClient() *http.Client {

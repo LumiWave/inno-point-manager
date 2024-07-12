@@ -40,14 +40,14 @@ func UpdateAppPoint(req *context.ReqPointAppUpdate, appId int64) (*context.Point
 			return nil, err
 		} else {
 			// 2-1-1. Account points 로드
-			if accountPoint, err := model.GetDB().GetListAccountPoints(0, req.MUID); err != nil {
+			if appPoint, err := model.GetDB().USPAU_GetList_AccountApplicationPoints(0, req.MUID); err != nil {
 				return nil, err
 			} else {
 				// merge
 				for _, point := range points {
-					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayAcqQuantity
-						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
+					if point.PointID == appPoint.PointID {
+						point.TodayQuantity = appPoint.TodayAcqQuantity
+						if t, err := time.Parse("2006-01-02T15:04:05Z", appPoint.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 							point.ResetDate = time.Now().Format("2006-01-02")
 							point.TodayQuantity = 0
@@ -188,14 +188,14 @@ func LoadPointList(MUID, DatabaseID, appId int64) (*context.PointInfo, error) {
 			return nil, err
 		} else {
 			// 2-1-1. Account points 로드
-			if accountPoint, err := model.GetDB().GetListAccountPoints(0, MUID); err != nil {
+			if appPoint, err := model.GetDB().USPAU_GetList_AccountApplicationPoints(0, MUID); err != nil {
 				return nil, err
 			} else {
 				// merge
 				for _, point := range points {
-					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayAcqQuantity
-						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
+					if point.PointID == appPoint.PointID {
+						point.TodayQuantity = appPoint.TodayAcqQuantity
+						if t, err := time.Parse("2006-01-02T15:04:05Z", appPoint.ResetDate); err != nil {
 							log.Errorf("time.Parse [err%v]", err)
 						} else {
 							point.ResetDate = t.Format("2006-01-02")
@@ -236,14 +236,14 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 			}
 
 			// 2-1-1. Account points 로드
-			if accountPoint, err := model.GetDB().GetListAccountPoints(0, MUID); err != nil {
+			if appPoint, err := model.GetDB().USPAU_GetList_AccountApplicationPoints(0, MUID); err != nil {
 				return nil, err
 			} else {
 				// merge
 				for _, point := range points {
-					if val, ok := accountPoint[point.PointID]; ok {
-						point.TodayQuantity = val.TodayAcqQuantity
-						if t, err := time.Parse("2006-01-02T15:04:05Z", val.ResetDate); err != nil {
+					if point.PointID == appPoint.PointID {
+						point.TodayQuantity = appPoint.TodayAcqQuantity
+						if t, err := time.Parse("2006-01-02T15:04:05Z", appPoint.ResetDate); err != nil {
 							log.Errorf("time parese error :%v", err)
 						} else {
 							point.ResetDate = t.Format("2006-01-02")
@@ -298,5 +298,5 @@ func LoadPoint(MUID, PointID, DatabaseID, appId int64) (*context.PointInfo, erro
 }
 
 func checkTodayPoint(point *context.Point, appId int64, reqAdjustQuantity *int64) bool {
-	return point.TodayQuantity+point.AdjustQuantity+*reqAdjustQuantity < model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitedAcqQuantity
+	return point.TodayQuantity+point.AdjustQuantity+*reqAdjustQuantity < model.GetDB().AppPointsMap[appId].PointsMap[point.PointID].DaliyLimitAcqQuantity
 }

@@ -86,8 +86,8 @@ type AccountCoin struct {
 	//Quantity                  float64   `json:"quantity"`
 	TodayAcqQuantity          float64   `json:"today_acq_quantity" query:"today_acq_quantity"`
 	TodayCnsmQuantity         float64   `json:"today_cnsm_quantity" query:"today_cnsm_quantity"`
-	TodayAcqExchangeQuantity  float64   `json:"today_acq_exchange_quantity" query:"today_acq_exchange_quantity"`
-	TodayCnsmExchangeQuantity float64   `json:"today_cnsm_exchange_quantity" query:"today_cnsm_exchange_quantity"`
+	TodayExchangeAcqQuantity  float64   `json:"today_exchange_acq_quantity" query:"today_exchange_acq_quantity"`
+	TodayExchangeCnsmQuantity float64   `json:"today_exchange_cnsm_quantity" query:"today_exchange_cnsm_quantity"`
 	ResetDate                 time.Time `json:"reset_date" query:"reset_date"`
 }
 
@@ -111,3 +111,18 @@ type AccountWallet struct {
 	ConnectionStatus int    `json:"connection_status"`
 	ModifiedDT       string `json:"modified_dt"`
 }
+
+////////////////////////////////////////
+
+// /////// Me App Point List
+type ReqMeAppPoint struct {
+	AUID              int64  `json:"au_id" query:"au_id"`
+	MUID              int64  `json:"mu_id" query:"mu_id"`
+	AppID             int64  `json:"app_id"`
+	PointID           int64  `json:"point_id" query:"point_id"`
+	TodayAcqQuantity  int64  `json:"today_acq_quantity" query:"today_acq_quantity"`
+	TodayCnsmQuantity int64  `json:"today_cnsm_quantity" query:"today_cnsm_quantity"`
+	ResetDate         string `json:"reset_date" query:"reset_date"`
+}
+
+////////////////////////////////////////

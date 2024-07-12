@@ -28,7 +28,16 @@ func (o *DB) CacheSetSwapWallet(swapInfo *context.ReqSwapInfo) error {
 	}
 
 	swapInfos := make(map[string]interface{})
-	swapInfos[swapInfo.WalletAddress] = swapInfo
+
+	if swapInfo.TxType == context.EventID_P2C {
+		swapInfos[swapInfo.SwapToCoin.WalletAddress] = swapInfo
+	} else if swapInfo.TxType == context.EventID_C2P {
+		swapInfos[swapInfo.SwapFromCoin.WalletAddress] = swapInfo
+	} else if swapInfo.TxType == context.EventID_C2C { // C2C는 from(실제코인 전송 콜백 확인용), to(수수료 콜백 확인용) 둘다 남긴다.
+		swapInfos[swapInfo.SwapToCoin.WalletAddress] = swapInfo
+		swapInfos[swapInfo.SwapFromCoin.WalletAddress] = swapInfo
+	}
+
 	return o.Cache.HMSet(MakeSwapWalletKey(), swapInfos)
 }
 
@@ -51,7 +60,13 @@ func (o *DB) CacheGetSwapWallets() (map[string]*context.ReqSwapInfo, []*context.
 			log.Errorf("CacheGetSwapWallets unmarshal err : %v", err)
 			loadData = nil
 		} else {
-			resMap[loadData.WalletAddress] = loadData
+			if loadData.TxType == context.EventID_P2C {
+				resMap[loadData.SwapToCoin.WalletAddress] = loadData
+			} else if loadData.TxType == context.EventID_C2P || loadData.TxType == context.EventID_C2C {
+				resMap[loadData.SwapFromCoin.WalletAddress] = loadData
+			}
+
+			//resMap[loadData.WalletAddress] = loadData
 			resList = append(resList, loadData)
 		}
 	}

@@ -40,7 +40,7 @@ func GetSwapInprogressNotExist(params *context.ReqSwapInprogress, ctx *context.P
 	resp.Success()
 
 	log.Debugf("GetSwapInprogressNotExist auid : %v", params.AUID)
-	// 내 지갑 정보를 가져와서 모든 지갑을 뒤져버 진행 중에 있는지 체크
+	// 내 지갑 정보를 가져와서 모든 지갑을 뒤져버 진행 중에 있는지 캐시 정보로 체크
 	swapInfos := []*context.ReqSwapInfo{}
 	mapWallet := make(map[string]string)
 	if wallets, _, err := model.GetDB().USPAU_GetList_AccountWallets(params.AUID); err == nil {
@@ -48,7 +48,11 @@ func GetSwapInprogressNotExist(params *context.ReqSwapInprogress, ctx *context.P
 			if _, ok := mapWallet[wallet.WalletAddress]; !ok {
 				if swapInfo, err := model.GetDB().CacheGetSwapWallet(wallet.WalletAddress); err == nil {
 					swapInfos = append(swapInfos, swapInfo)
-					mapWallet[swapInfo.WalletAddress] = swapInfo.WalletAddress
+					if swapInfo.TxType == context.EventID_P2C {
+						mapWallet[swapInfo.SwapToCoin.WalletAddress] = swapInfo.SwapToCoin.WalletAddress
+					} else if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_C2C {
+						mapWallet[swapInfo.SwapFromCoin.WalletAddress] = swapInfo.SwapFromCoin.WalletAddress
+					}
 				}
 			}
 		}

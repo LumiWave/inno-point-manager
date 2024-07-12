@@ -66,20 +66,20 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 	for _, value := range list {
 		// 수수료 전송 시작 상태가 아닌 정보중에 10분이 지난 정보는 swap 종료하고 삭제 처리한다.
 		if value.CreateAt+o.ExpireCycle < time.Now().UTC().Unix() && value.TxStatus < context.SWAP_status_fee_transfer_start {
-			log.Debugf("swap expire addr : %v, time:%v", value.WalletAddress, time.Unix(value.CreateAt, 0).Format(time.RFC3339))
+			log.Debugf("swap expire addr : fromWallet:%v, toWallet:%v, time:%v", value.SwapFromCoin.WalletAddress, value.SwapToCoin.WalletAddress, time.Unix(value.CreateAt, 0).Format(time.RFC3339))
 
-			if value.TxType == context.EventID_toCoin {
+			if value.TxType == context.EventID_P2C {
 				// 현재 레디스에 포인트가 쌓이고 있을수 있으니 최종값으로 디비에 저장하고 스왑 포인트 복구 처리 해준다
-				pointKey := model.MakeMemberPointListKey(value.MUID)
+				pointKey := model.MakeMemberPointListKey(value.SwapFromPoint.MUID)
 				mePointInfo, err := model.GetDB().GetCacheMemberPointList(pointKey)
 				if err != nil {
-					if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(value.MUID, value.DatabaseID); err != nil {
+					if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(value.SwapFromPoint.MUID, value.SwapFromPoint.DatabaseID); err != nil {
 						log.Errorf("GetPointAppList error : %v", err)
 					} else {
-						if point, ok := points[value.PointID]; ok {
-							value.PreviousPointQuantity = point.Quantity
-							value.AdjustPointQuantity = -value.AdjustPointQuantity
-							value.PointQuantity = value.PreviousPointQuantity + value.AdjustPointQuantity
+						if point, ok := points[value.SwapFromPoint.PointID]; ok {
+							value.SwapFromPoint.PreviousPointQuantity = point.Quantity
+							value.SwapFromPoint.AdjustPointQuantity = -value.SwapFromPoint.AdjustPointQuantity
+							value.SwapFromPoint.PointQuantity = value.SwapFromPoint.PreviousPointQuantity + value.SwapFromPoint.AdjustPointQuantity
 						}
 					}
 				} else {
@@ -110,10 +110,10 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 						}
 
 						// swap point quantity에 업데이트
-						if value.PointID == point.PointID && value.MUID == mePointInfo.MUID {
-							value.PreviousPointQuantity = point.Quantity
-							value.AdjustPointQuantity = -value.AdjustPointQuantity
-							value.PointQuantity = value.PreviousPointQuantity + value.AdjustPointQuantity
+						if value.SwapFromPoint.PointID == point.PointID && value.SwapFromPoint.MUID == mePointInfo.MUID {
+							value.SwapFromPoint.PreviousPointQuantity = point.Quantity
+							value.SwapFromPoint.AdjustPointQuantity = -value.SwapFromPoint.AdjustPointQuantity
+							value.SwapFromPoint.PointQuantity = value.SwapFromPoint.PreviousPointQuantity + value.SwapFromPoint.AdjustPointQuantity
 						}
 					}
 
@@ -121,11 +121,17 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 				}
 			}
 
-			if err := model.GetDB().USPAU_Cmplt_ExchangeGoods(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
-				log.Errorf("USPAU_Cmplt_ExchangeGoods err : %v, txid:%v wallet:%v", err, value.TxID, value.WalletAddress)
+			if err := model.GetDB().USPAU_Cmplt_Exchanges(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
+				log.Errorf("USPAU_Cmplt_Exchanges err : %v, txid:%v fromwallet:%v, towallet:%v", err, value.TxID, value.SwapFromCoin.WalletAddress, value.SwapToCoin.WalletAddress)
 			} else {
-				if err = model.GetDB().CacheDelSwapWallet(value.WalletAddress); err != nil {
-					log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, value.WalletAddress)
+				walletAddr := ""
+				if value.TxType == context.EventID_P2C {
+					walletAddr = value.SwapToCoin.WalletAddress
+				} else if value.TxType == context.EventID_C2P || value.TxType == context.EventID_C2C {
+					walletAddr = value.SwapFromCoin.WalletAddress
+				}
+				if err = model.GetDB().CacheDelSwapWallet(walletAddr); err != nil {
+					log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, walletAddr)
 				}
 			}
 		}

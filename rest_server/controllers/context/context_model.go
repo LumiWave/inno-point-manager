@@ -9,12 +9,12 @@ type PointDB struct {
 
 // me app/point info
 type AccountPoint struct {
-	AppId   int64 `json:"app_id"`
+	//AppId   int64 `json:"app_id"`
 	PointId int64 `json:"point_id"`
 	//TodayLimitedQuantity      int64  `json:"today_limited_quantity"`
-	TodayAcqQuantity          int64  `json:"today_acq_quantity"`
-	TodayCnsmQuantity         int64  `json:"today_cnsm_quantity"`
-	TodayAcqExchangeQuantity  int64  `json:"today_acq_exchange_quantity" query:"today_acq_exchange_quantity"`
-	TodayCnsmExchangeQuantity int64  `json:"today_cnsm_exchange_quantity" query:"today_cnsm_exchange_quantity"`
+	//TodayAcqQuantity          int64  `json:"today_acq_quantity"`
+	//TodayCnsmQuantity         int64  `json:"today_cnsm_quantity"`
+	TodayExchangeAcqQuantity  int64  `json:"today_exchange_acq_quantity" query:"today_exchange_acq_quantity"`
+	TodayExchangeCnsmQuantity int64  `json:"today_exchange_cnsm_quantity" query:"today_exchange_cnsm_quantity"`
 	ResetDate                 string `json:"reset_date"`
 }

@@ -11,9 +11,13 @@ const (
 	SWAP_status_fee_transfer_success = int64(3)
 	SWAP_status_fee_transfer_fail    = int64(4)
 
-	SWAP_status_token_transfer_start   = int64(5)
-	SWAP_status_token_transfer_success = int64(6)
-	SWAP_status_token_transfer_fail    = int64(7)
+	SWAP_status_token_transfer_withdrawal_start   = int64(5) // 법인 지갑에서 토큰 출금 시작
+	SWAP_status_token_transfer_withdrawal_success = int64(6) // 법인 지갑에서 토큰 출금 성공
+	SWAP_status_token_transfer_withdrawal_fail    = int64(7) // 법인 지갑에서 토큰 출금 실패
+
+	SWAP_status_token_transfer_deposit_start   = int64(8) // 법인 지갑으로 토큰 입금 시작
+	SWAP_status_token_transfer_deposit_success = int64(9) // 법인 지갑으로 토큰 입금 성공
+	SWAP_status_token_transfer_deposit_fail    = int64(0) // 법인 지갑으로 토큰 입금 실패
 )
 
 // /////// member app coin swap 요청
@@ -33,19 +37,27 @@ type SwapCoin struct {
 	BaseCoinID         int64   `json:"base_coin_id"` // 요청 인자
 	BaseCoinSymbol     string  `json:"base_coin_symbol"`
 	WalletAddress      string  `json:"walletaddress"`
+	ToWalletAddress    string  `json:"to_wallet"`
 	WalletTypeID       int64   `json:"wallet_type_id"`
 	WalletID           int64   `json:"wallet_id"`
 	AdjustCoinQuantity float64 `json:"adjust_coin_quantity"` // 요청 인자
 	TokenTxHash        string  `json:"token_tx_hash"`        // swap 코인 전송 txhash
+	IsComplete         bool    `json:"is_complete"`          // 전송 완료 여부
 }
 
 type ReqSwapInfo struct {
 	AUID int64 `json:"au_id"`
 
-	SwapPoint `json:"point"`
-	SwapCoin  `json:"coin"`
+	//SwapPoint `json:"point"`
+	//SwapCoin `json:"coin"`
 
-	TxType int64 `json:"tx_type"` // 3: point->coin,  4: coin->point
+	SwapFromPoint SwapPoint `json:"from_point"`
+	SwapToPoint   SwapPoint `json:"to_point"`
+
+	SwapFromCoin SwapCoin `json:"from_coin"`
+	SwapToCoin   SwapCoin `json:"to_coin"`
+
+	TxType int64 `json:"tx_type"` // 3: point->coin,  4: coin->point, 26: coin->coin
 
 	SwapFeeCoinID     int64   `json:"swap_fee_coin_id"` // 코인 수수료 전송용 코인 아이디
 	SwapFeeCoinSymbol string  `json:"swap_fee_coin_symbol"`
@@ -57,6 +69,7 @@ type ReqSwapInfo struct {
 	TxID              int64   `json:"tx_id"`
 	CreateAt          int64   `json:"create_at"`
 	TxHash            string  `json:"tx_hash"`
+	IsFeeComplete     bool    `json:"is_fee_complete"`
 	TxStatus          int64   `json:"tx_status"`
 	TxGasFee          float64 `json:"tx_gas_fee"`
 }
@@ -118,3 +131,72 @@ func (o *ReqSwapInprogress) CheckValidate(ctx *PointManagerContext) *base.BaseRe
 type DeleteDeleteSwapInfo struct {
 	WalletAddress string `query:"wallet_address"`
 }
+
+// / 스왑 가능 메타 데이터 정보
+// coin to coin
+type SwapC2C struct {
+	// FromBaseCoinID는 전환할 재료 코인의 계열 ID입니다.
+	FromBaseCoinID int64 `json:"from_base_coin_id"`
+
+	// FromID는 전환할 재료의 ID입니다.
+	FromID int64 `json:"from_id"`
+
+	// ToBaseCoinID는 받을 코인의 계열 ID입니다.
+	ToBaseCoinID int64 `json:"to_base_coin_id"`
+
+	// ToID는 받을 코인의 ID입니다.
+	ToID int64 `json:"to_id"`
+
+	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
+	IsEnabled bool `json:"is_enabled"`
+
+	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
+	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
+
+	// ExchangeRatio는 받을 전환 비율을 나타냅니다.
+	ExchangeRatio float64 `json:"exchange_ratio"`
+}
+
+// point to coin
+type SwapP2C struct {
+	// FromID는 전환할 재료의 포인트 ID입니다.
+	FromID int64 `json:"from_id"`
+
+	// ToBaseCoinID는 받을 코인의 계열 ID입니다.
+	ToBaseCoinID int64 `json:"to_base_coin_id"`
+
+	// ToID는 받을 코인의 ID입니다.
+	ToID int64 `json:"to_id"`
+
+	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
+	IsEnabled bool `json:"is_enabled"`
+
+	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
+	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
+
+	// ExchangeRatio는 받을 전환 비율을 나타냅니다.
+	ExchangeRatio float64 `json:"exchange_ratio"`
+}
+
+// coin to point 정보
+type SwapC2P struct {
+	// FromBaseCoinID는 전환할 재료 코인의 계열 ID입니다.
+	FromBaseCoinID int64 `json:"from_base_coin_id"`
+
+	// FromID는 전환할 재료의 ID입니다.
+	FromID int64 `json:"from_id"`
+
+	// ToID는 받을 포인트의 ID입니다.
+	ToID int64 `json:"to_id"`
+
+	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
+	IsEnabled bool `json:"is_enabled"`
+
+	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
+	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
+
+	// ExchangeRatio는 받을 전환 비율을 나타냅니다.
+	ExchangeRatio float64 `json:"exchange_ratio"`
+}
+
+////////////////////////////////////////

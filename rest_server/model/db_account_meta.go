@@ -55,14 +55,15 @@ func (o *DB) GetPointList() error {
 
 	o.ScanPointsMap = make(map[int64]PointInfo)
 
-	var pointId int64
+	var pointId, dailyLimitExchangeAcqQuantity int64
 	var pointName, iconPath string
 	for rows.Next() {
-		if err := rows.Scan(&pointId, &pointName, &iconPath); err == nil {
+		if err := rows.Scan(&pointId, &pointName, &iconPath, &dailyLimitExchangeAcqQuantity); err == nil {
 			info := PointInfo{
-				PointId:   pointId,
-				PointName: pointName,
-				IconUrl:   iconPath,
+				PointId:                       pointId,
+				PointName:                     pointName,
+				IconUrl:                       iconPath,
+				DailyLimitExchangeAcqQuantity: dailyLimitExchangeAcqQuantity,
 			}
 			o.ScanPointsMap[pointId] = info
 		} else {
@@ -122,9 +123,11 @@ func (o *DB) GetCoins() error {
 			&coin.Decimal,
 			&coin.ExplorePath,
 			&coin.IconUrl,
-			&coin.DailyLimitedAcqExchangeQuantity,
+			&coin.DailyLimitExchangeAcqQuantity,
 			&coin.ExchangeFees,
-			&coin.IsRechargeable); err == nil {
+			&coin.IsRechargeable,
+			&coin.RechargeURL,
+			&coin.CustomProperties); err == nil {
 			o.Coins[coin.CoinId] = coin
 			o.CoinsBySymbol[coin.CoinSymbol] = coin
 		} else {
@@ -141,7 +144,7 @@ func (o *DB) GetCoins() error {
 					appCoin.CoinSymbol = coin.CoinSymbol
 					appCoin.ContractAddress = coin.ContractAddress
 					appCoin.IconUrl = coin.IconUrl
-					appCoin.DailyLimitedAcqExchangeQuantity = coin.DailyLimitedAcqExchangeQuantity
+					appCoin.DailyLimitExchangeAcqQuantity = coin.DailyLimitExchangeAcqQuantity
 					appCoin.ExchangeFees = coin.ExchangeFees
 					break
 				}
@@ -219,15 +222,14 @@ func (o *DB) GetAppPoints() error {
 
 	o.ScanPointsOfApp = make(map[int64]*AppPointInfo)
 
-	var appId, pointId, minExchangeQuantity, daliyLimiteAcqQuantity, dailyLimitedAcqExchangeQuantity sql.NullInt64
-	var exchangeRatio sql.NullFloat64
+	var appId, pointId, daliyLimitAcqQuantity sql.NullInt64
+
 	for rows.Next() {
-		if err := rows.Scan(&appId, &pointId, &minExchangeQuantity, &exchangeRatio, &daliyLimiteAcqQuantity, &dailyLimitedAcqExchangeQuantity); err == nil {
+		if err := rows.Scan(&appId, &pointId, &daliyLimitAcqQuantity); err == nil {
 			temp := o.ScanPointsMap[pointId.Int64]
-			temp.ExchangeRatio = exchangeRatio.Float64
-			temp.MinExchangeQuantity = minExchangeQuantity.Int64
-			temp.DaliyLimitedAcqQuantity = daliyLimiteAcqQuantity.Int64
-			temp.DailyLimitedAcqExchangeQuantity = dailyLimitedAcqExchangeQuantity.Int64
+			// temp.ExchangeRatio = exchangeRatio.Float64
+			// temp.MinExchangeQuantity = minExchangeQuantity.Int64
+			temp.DaliyLimitAcqQuantity = daliyLimitAcqQuantity.Int64
 
 			o.AppPointsMap[appId.Int64].Points = append(o.AppPointsMap[appId.Int64].Points, &temp)
 			o.AppPointsMap[appId.Int64].PointsMap[pointId.Int64] = &temp

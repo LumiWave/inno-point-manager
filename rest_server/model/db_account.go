@@ -18,15 +18,15 @@ const (
 	USPAU_Get_AccountBaseCoins_By_WalletAddress = "[dbo].[USPAU_Get_AccountBaseCoins_By_WalletAddress]"
 	USPAU_Mod_AccountCoins                      = "[dbo].[USPAU_Mod_AccountCoins]"
 
-	USPAU_GetList_AccountWallets = "[dbo].[USPAU_GetList_AccountWallets]"
+	USPAU_GetList_AccountWallets           = "[dbo].[USPAU_GetList_AccountWallets]"
+	USPAU_GetList_AccountApplicationPoints = "[dbo].[USPAU_GetList_AccountApplicationPoints]"
 )
 
 // 계정 일일 포인트량 조회
-func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountPoint, error) {
+func (o *DB) GetListAccountPoints(auid int64) (map[int64]*context.AccountPoint, error) {
 	var rs orginMssql.ReturnStatus
 	rows, err := o.MssqlAccountRead.GetDB().QueryContext(originCtx.Background(), USPAU_GetList_AccountPoints,
 		sql.Named("AUID", auid),
-		sql.Named("MUID", muid),
 		&rs)
 	if err != nil {
 		log.Errorf("USPAU_GetList_AccountPoints QueryContext err : %v", err)
@@ -38,12 +38,10 @@ func (o *DB) GetListAccountPoints(auid, muid int64) (map[int64]*context.AccountP
 	accountPoints := make(map[int64]*context.AccountPoint)
 	for rows.Next() {
 		accountPoint := context.AccountPoint{}
-		if err := rows.Scan(&accountPoint.AppId,
+		if err := rows.Scan(
 			&accountPoint.PointId,
-			&accountPoint.TodayAcqQuantity,
-			&accountPoint.TodayCnsmQuantity,
-			&accountPoint.TodayAcqExchangeQuantity,
-			&accountPoint.TodayCnsmExchangeQuantity,
+			&accountPoint.TodayExchangeAcqQuantity,
+			&accountPoint.TodayExchangeCnsmQuantity,
 			&accountPoint.ResetDate); err == nil {
 			accountPoints[accountPoint.PointId] = &accountPoint
 		} else if err != nil {
@@ -81,8 +79,8 @@ func (o *DB) GetAccountCoins(auid int64) ([]*context.AccountCoin, map[int64]*con
 			//&accountCoin.Quantity,
 			&accountCoin.TodayAcqQuantity,
 			&accountCoin.TodayCnsmQuantity,
-			&accountCoin.TodayAcqExchangeQuantity,
-			&accountCoin.TodayCnsmExchangeQuantity,
+			&accountCoin.TodayExchangeAcqQuantity,
+			&accountCoin.TodayExchangeCnsmQuantity,
 			&accountCoin.ResetDate); err == nil {
 			accountCoins = append(accountCoins, accountCoin)
 			accountCoinsMap[accountCoin.CoinID] = accountCoin
@@ -198,20 +196,6 @@ func (o *DB) UpdateAccountCoins(auid, coinid, baseCoinID int64, walletAddress st
 		return errors.New("USPAU_Mod_AccountCoins returnvalue error " + strconv.Itoa(int(rs)))
 	}
 
-	// apiParams := &api_inno_log.AccountCoinLog{
-	// 	LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
-	// 	LogID:         int64(logID),
-	// 	EventID:       int64(eventID),
-	// 	TxHash:        txHash,
-	// 	AUID:          auid,
-	// 	CoinID:        coinid,
-	// 	BaseCoinID:    baseCoinID,
-	// 	WalletAddress: walletAddress,
-	// 	AdjQuantity:   adjustCoinQuantity,
-
-	// }
-	// go api_inno_log.GetInstance().PostAccountCoins(apiParams)
-
 	return nil
 }
 
@@ -246,4 +230,37 @@ func (o *DB) USPAU_GetList_AccountWallets(auid int64) ([]*context.AccountWallet,
 	}
 
 	return accountWallets, accountWalletsMap, nil
+}
+
+func (o *DB) USPAU_GetList_AccountApplicationPoints(auid, muid int64) (*context.ReqMeAppPoint, error) {
+	var returnValue orginMssql.ReturnStatus
+	proc := USPAU_GetList_AccountApplicationPoints
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), proc,
+		sql.Named("AUID", auid),
+		sql.Named("MUID", muid),
+		&returnValue)
+
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	if err != nil {
+		log.Errorf("%s QueryContext error : %v", proc, err)
+		return nil, err
+	}
+
+	points := &context.ReqMeAppPoint{}
+	for rows.Next() {
+		if err := rows.Scan(&points.AppID, &points.PointID, &points.TodayAcqQuantity, &points.TodayCnsmQuantity, &points.ResetDate); err != nil {
+			log.Errorf("%s Scan error : %v", proc, err)
+			return nil, err
+		}
+	}
+
+	if returnValue != 1 {
+		log.Errorf("%s returnvalue error : %v", proc, returnValue)
+		return nil, errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
+	}
+
+	return points, nil
 }

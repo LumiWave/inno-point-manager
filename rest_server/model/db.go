@@ -17,13 +17,11 @@ import (
 )
 
 type PointInfo struct {
-	PointId                         int64   `json:"point_id,omitempty"`
-	PointName                       string  `json:"point_name,omitempty"`
-	IconUrl                         string  `json:"icon_url,omitempty"`
-	MinExchangeQuantity             int64   `json:"minimum_exchange_quantity"`
-	ExchangeRatio                   float64 `json:"exchange_ratio"`
-	DaliyLimitedAcqQuantity         int64   `json:"daliy_limited_acq_quantity,omitempty"`
-	DailyLimitedAcqExchangeQuantity int64   `json:"daily_limited_acq_exchange_quantity,omitempty"`
+	PointId                       int64  `json:"point_id,omitempty"`
+	PointName                     string `json:"point_name,omitempty"`
+	IconUrl                       string `json:"icon_url,omitempty"`
+	DaliyLimitAcqQuantity         int64  `json:"daliy_limit_acq_quantity,omitempty"`
+	DailyLimitExchangeAcqQuantity int64  `json:"daily_limit_exchange_acq_quantity,omitempty"` // 일일 제한 전환 획득량
 }
 
 type AppPointInfo struct {
@@ -38,17 +36,19 @@ type AppPointInfo struct {
 }
 
 type Coin struct {
-	BaseCoinID                      int64   `json:"base_coin_id"`
-	CoinId                          int64   `json:"coin_id,omitempty"`
-	CoinName                        string  `json:"coin_name"`
-	CoinSymbol                      string  `json:"coin_symbol,omitempty"`
-	ContractAddress                 string  `json:"contract_address,omitempty"`
-	Decimal                         int64   `json:"decimal"`
-	ExplorePath                     string  `json:"explore_path"`
-	IconUrl                         string  `json:"icon_url,omitempty"`
-	DailyLimitedAcqExchangeQuantity float64 `json:"daily_limited_acq_exchange_quantity"`
-	ExchangeFees                    float64 `json:"exchange_fees"`
-	IsRechargeable                  bool    `json:"is_rechargeable"`
+	BaseCoinID                    int64   `json:"base_coin_id"`
+	CoinId                        int64   `json:"coin_id,omitempty"`
+	CoinName                      string  `json:"coin_name"`
+	CoinSymbol                    string  `json:"coin_symbol,omitempty"`
+	ContractAddress               string  `json:"contract_address,omitempty"`
+	Decimal                       int64   `json:"decimal"`
+	ExplorePath                   string  `json:"explore_path"`
+	IconUrl                       string  `json:"icon_url,omitempty"`
+	DailyLimitExchangeAcqQuantity float64 `json:"daily_limit_exchange_acq_quantity"`
+	ExchangeFees                  float64 `json:"exchange_fees"`
+	IsRechargeable                bool    `json:"is_rechargeable"`
+	RechargeURL                   string  `json:"recharge_url"`
+	CustomProperties              string  `json:"custom_properties"`
 }
 
 type AppCoin struct {
@@ -80,6 +80,14 @@ type DB struct {
 	BaseCoinMapByCoinID map[int64]*context.BaseCoinInfo  // 전체 base coin 정보 : key coin symbol
 	BaseCoinMapBySymbol map[string]*context.BaseCoinInfo // 전체 base coin 정보 : key coin symbol
 	BaseCoins           context.BaseCoinList
+
+	SwapAbleC2Cs []*context.SwapC2C // coin to coin 전환 정보
+	SwapAbleP2Cs []*context.SwapP2C // point to coin 전환 정보
+	SwapAbleC2Ps []*context.SwapC2P // coin to point 전환 정보
+
+	SwapAbleC2CsMap map[int64]map[int64]*context.SwapC2C // coin to coin 전환 : key from coin id, key to coin id
+	SwapAbleP2CsMap map[int64]map[int64]*context.SwapP2C // point to coin 전환 : key from coin id, key to point id
+	SwapAbleC2PsMap map[int64]map[int64]*context.SwapC2P // coint to point 전환 : key from point id, key to coin id
 
 	RedSync *redsync.Redsync
 }
@@ -190,6 +198,9 @@ func LoadDBPoint() {
 	gDB.GetApps()
 	gDB.GetAppPoints()
 	gDB.GetBaseCoins()
+	gDB.USPAU_Scan_ExchangeCoinToCoins()
+	gDB.USPAU_Scan_ExchangePointToCoins()
+	gDB.USPAU_Scan_ExchangeCoinToPoints()
 }
 
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {
