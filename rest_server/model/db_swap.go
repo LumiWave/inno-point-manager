@@ -337,7 +337,16 @@ func (o *DB) USPAU_Scan_ExchangeCoinToCoins() error {
 	for rows.Next() {
 		swapAble := &context.SwapC2C{}
 
-		if err := rows.Scan(&swapAble.FromBaseCoinID, &swapAble.FromID, &swapAble.ToBaseCoinID, &swapAble.ToID, &swapAble.IsEnabled, &swapAble.MinimumExchangeQuantity, &swapAble.ExchangeRatio); err != nil {
+		if err := rows.Scan(&swapAble.FromBaseCoinID,
+			&swapAble.FromID,
+			&swapAble.ToBaseCoinID,
+			&swapAble.ToID,
+			&swapAble.IsEnabled,
+			&swapAble.IsVisible,
+			&swapAble.SortOrder,
+			&swapAble.MinimumExchangeQuantity,
+			&swapAble.ExchangeRatio); err != nil {
+			log.Errorf("USPAU_Scan_ExchangeCoinToCoins Scan error : %v", err)
 			log.Errorf("%v Scan error : %v", proc, err)
 			return err
 		} else {
@@ -377,7 +386,14 @@ func (o *DB) USPAU_Scan_ExchangePointToCoins() error {
 	for rows.Next() {
 		swapAble := &context.SwapP2C{}
 
-		if err := rows.Scan(&swapAble.FromID, &swapAble.ToBaseCoinID, &swapAble.ToID, &swapAble.IsEnabled, &swapAble.MinimumExchangeQuantity, &swapAble.ExchangeRatio); err != nil {
+		if err := rows.Scan(&swapAble.FromID,
+			&swapAble.ToBaseCoinID,
+			&swapAble.ToID,
+			&swapAble.IsEnabled,
+			&swapAble.IsVisible,
+			&swapAble.SortOrder,
+			&swapAble.MinimumExchangeQuantity,
+			&swapAble.ExchangeRatio); err != nil {
 			log.Errorf("%v Scan error : %v", proc, err)
 			return err
 		} else {
@@ -418,7 +434,14 @@ func (o *DB) USPAU_Scan_ExchangeCoinToPoints() error {
 	for rows.Next() {
 		swapAble := &context.SwapC2P{}
 
-		if err := rows.Scan(&swapAble.FromBaseCoinID, &swapAble.FromID, &swapAble.ToID, &swapAble.IsEnabled, &swapAble.MinimumExchangeQuantity, &swapAble.ExchangeRatio); err != nil {
+		if err := rows.Scan(&swapAble.FromBaseCoinID,
+			&swapAble.FromID,
+			&swapAble.ToID,
+			&swapAble.IsEnabled,
+			&swapAble.IsVisible,
+			&swapAble.SortOrder,
+			&swapAble.MinimumExchangeQuantity,
+			&swapAble.ExchangeRatio); err != nil {
 			log.Errorf("%v Scan error : %v", proc, err)
 			return err
 		} else {

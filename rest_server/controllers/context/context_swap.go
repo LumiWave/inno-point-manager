@@ -150,6 +150,12 @@ type SwapC2C struct {
 	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
 	IsEnabled bool `json:"is_enabled"`
 
+	// 화면에 표출 여부
+	IsVisible bool `json:"is_visible"`
+
+	// 정렬 정보
+	SortOrder int64 `json:"sort_order"`
+
 	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
 	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
 
@@ -171,6 +177,12 @@ type SwapP2C struct {
 	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
 	IsEnabled bool `json:"is_enabled"`
 
+	// 화면에 표출 여부
+	IsVisible bool `json:"is_visible"`
+
+	// 정렬 정보
+	SortOrder int64 `json:"sort_order"`
+
 	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
 	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
 
@@ -191,6 +203,12 @@ type SwapC2P struct {
 
 	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
 	IsEnabled bool `json:"is_enabled"`
+
+	// 화면에 표출 여부
+	IsVisible bool `json:"is_visible"`
+
+	// 정렬 정보
+	SortOrder int64 `json:"sort_order"`
 
 	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
 	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
