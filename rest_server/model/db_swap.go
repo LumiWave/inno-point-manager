@@ -343,7 +343,6 @@ func (o *DB) USPAU_Scan_ExchangeCoinToCoins() error {
 			&swapAble.ToID,
 			&swapAble.IsEnabled,
 			&swapAble.IsVisible,
-			&swapAble.SortOrder,
 			&swapAble.MinimumExchangeQuantity,
 			&swapAble.ExchangeRatio); err != nil {
 			log.Errorf("USPAU_Scan_ExchangeCoinToCoins Scan error : %v", err)
@@ -391,7 +390,6 @@ func (o *DB) USPAU_Scan_ExchangePointToCoins() error {
 			&swapAble.ToID,
 			&swapAble.IsEnabled,
 			&swapAble.IsVisible,
-			&swapAble.SortOrder,
 			&swapAble.MinimumExchangeQuantity,
 			&swapAble.ExchangeRatio); err != nil {
 			log.Errorf("%v Scan error : %v", proc, err)
@@ -439,7 +437,6 @@ func (o *DB) USPAU_Scan_ExchangeCoinToPoints() error {
 			&swapAble.ToID,
 			&swapAble.IsEnabled,
 			&swapAble.IsVisible,
-			&swapAble.SortOrder,
 			&swapAble.MinimumExchangeQuantity,
 			&swapAble.ExchangeRatio); err != nil {
 			log.Errorf("%v Scan error : %v", proc, err)

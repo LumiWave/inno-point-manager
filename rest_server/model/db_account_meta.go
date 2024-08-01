@@ -55,15 +55,16 @@ func (o *DB) GetPointList() error {
 
 	o.ScanPointsMap = make(map[int64]PointInfo)
 
-	var pointId, dailyLimitExchangeAcqQuantity int64
+	var pointId, dailyLimitExchangeAcqQuantity, exchangeSortOrder int64
 	var pointName, iconPath string
 	for rows.Next() {
-		if err := rows.Scan(&pointId, &pointName, &iconPath, &dailyLimitExchangeAcqQuantity); err == nil {
+		if err := rows.Scan(&pointId, &pointName, &iconPath, &dailyLimitExchangeAcqQuantity, &exchangeSortOrder); err == nil {
 			info := PointInfo{
 				PointId:                       pointId,
 				PointName:                     pointName,
 				IconUrl:                       iconPath,
 				DailyLimitExchangeAcqQuantity: dailyLimitExchangeAcqQuantity,
+				ExchangeSortOrder:             exchangeSortOrder,
 			}
 			o.ScanPointsMap[pointId] = info
 		} else {
@@ -127,6 +128,7 @@ func (o *DB) GetCoins() error {
 			&coin.ExchangeFees,
 			&coin.IsRechargeable,
 			&coin.RechargeURL,
+			&coin.ExchangeSortOrder,
 			&coin.CustomProperties); err == nil {
 			o.Coins[coin.CoinId] = coin
 			o.CoinsBySymbol[coin.CoinSymbol] = coin
