@@ -49,7 +49,7 @@ type Coin struct {
 	ExchangeFees                  float64 `json:"exchange_fees"`
 	IsRechargeable                bool    `json:"is_rechargeable"`
 	RechargeURL                   string  `json:"recharge_url"`
-	ExchangeSortOrder             int64   `json:"exchnage_sort_order"`
+	ExchangeSortOrder             int64   `json:"exchange_sort_order"`
 	CustomProperties              string  `json:"custom_properties"`
 }
 
