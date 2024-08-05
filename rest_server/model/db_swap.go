@@ -143,7 +143,7 @@ func (o *DB) USPAU_Mod_TransactExchanges_ExchangeFees(txID int64, txStatus int64
 			sql.Named("TxID", txID),
 			sql.Named("TxStatus", txStatus),
 			sql.Named("TxHash", txHash),
-			sql.Named("ExchangeFee", swapFee),
+			sql.Named("ExchangeFees", swapFee),
 			&rs)
 		if err != nil {
 			log.Errorf("USPAU_Mod_TransactExchanges_ExchangeFees QueryContext err : %v", err)
