@@ -20,6 +20,7 @@ const (
 	EventID_P2C = 3  // 포인트->코인
 	EventID_C2P = 4  // 코인->포인트
 	EventID_C2C = 26 // 코인 -> 코인
+	EventID_P2P = 28 // 포인트 -> 포인트
 
 	EventID_normal_purchase        = 9  // 일반 상품 구매
 	EventID_auction_deposit        = 10 // 경매 입찰 보증금 납부

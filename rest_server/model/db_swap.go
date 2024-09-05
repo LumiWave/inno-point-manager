@@ -17,10 +17,12 @@ const (
 	USPAU_Mod_TransactExchanges_TxStatus     = "[dbo].[USPAU_Mod_TransactExchanges_TxStatus]"
 	USPAU_Mod_TransactExchanges_Coin         = "[dbo].[USPAU_Mod_TransactExchanges_Coin]"
 	USPAU_Cmplt_Exchanges                    = "[dbo].[USPAU_Cmplt_Exchanges]"
+	USPAU_Exchn_PointToPoints                = "[dbo].[USPAU_Exchn_PointToPoints]"
 
-	USPAU_Scan_ExchangeCoinToCoins  = "[dbo].[USPAU_Scan_ExchangeCoinToCoins]"
-	USPAU_Scan_ExchangePointToCoins = "[dbo].[USPAU_Scan_ExchangePointToCoins]"
-	USPAU_Scan_ExchangeCoinToPoints = "[dbo].[USPAU_Scan_ExchangeCoinToPoints]"
+	USPAU_Scan_ExchangeCoinToCoins   = "[dbo].[USPAU_Scan_ExchangeCoinToCoins]"
+	USPAU_Scan_ExchangePointToCoins  = "[dbo].[USPAU_Scan_ExchangePointToCoins]"
+	USPAU_Scan_ExchangeCoinToPoints  = "[dbo].[USPAU_Scan_ExchangeCoinToPoints]"
+	USPAU_Scan_ExchangePointToPoints = "[dbo].[USPAU_Scan_ExchangePointToPoints]"
 )
 
 // 스왑 시작 : 코인 <-> 포인트
@@ -30,17 +32,21 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Strt_Exchanges,
 		sql.Named("AUID", params.AUID),
 		sql.Named("MUID", func() int64 {
-			if params.TxType == context.EventID_P2C {
+			if params.TxType == context.EventID_P2C ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapFromPoint.MUID
-			} else if params.TxType == context.EventID_C2P {
+			} else if params.TxType == context.EventID_C2P ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapToPoint.MUID
 			}
 			return 0
 		}()),
 		sql.Named("DatabaseID", func() int64 {
-			if params.TxType == context.EventID_P2C {
+			if params.TxType == context.EventID_P2C ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapFromPoint.DatabaseID
-			} else if params.TxType == context.EventID_C2P {
+			} else if params.TxType == context.EventID_C2P ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapToPoint.DatabaseID
 			}
 			return 0
@@ -51,7 +57,8 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 		sql.Named("FromWalletID", params.SwapFromCoin.WalletID),
 		sql.Named("FromWalletAddress", params.SwapFromCoin.WalletAddress),
 		sql.Named("FromID", func() int64 {
-			if params.TxType == context.EventID_P2C {
+			if params.TxType == context.EventID_P2C ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapFromPoint.PointID
 			} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_C2C {
 				return params.SwapFromCoin.CoinID
@@ -59,7 +66,8 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 			return 0
 		}()),
 		sql.Named("FromAdjQuantity", func() string {
-			if params.TxType == context.EventID_P2C {
+			if params.TxType == context.EventID_P2C ||
+				params.TxType == context.EventID_P2P {
 				return strconv.FormatInt(params.SwapFromPoint.AdjustPointQuantity, 10)
 			} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_C2C {
 				return strconv.FormatFloat(params.SwapFromCoin.AdjustCoinQuantity, 'f', -1, 64)
@@ -71,7 +79,8 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 		sql.Named("ToWalletID", params.SwapToCoin.WalletID),
 		sql.Named("ToWalletAddress", params.SwapToCoin.WalletAddress),
 		sql.Named("ToID", func() int64 {
-			if params.TxType == context.EventID_C2P {
+			if params.TxType == context.EventID_C2P ||
+				params.TxType == context.EventID_P2P {
 				return params.SwapToPoint.PointID
 			} else if params.TxType == context.EventID_P2C || params.TxType == context.EventID_C2C {
 				return params.SwapToCoin.CoinID
@@ -79,7 +88,8 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 			return 0
 		}()),
 		sql.Named("ToAdjQuantity", func() string {
-			if params.TxType == context.EventID_C2P {
+			if params.TxType == context.EventID_C2P ||
+				params.TxType == context.EventID_P2P {
 				return strconv.FormatInt(params.SwapToPoint.AdjustPointQuantity, 10)
 			} else if params.TxType == context.EventID_P2C || params.TxType == context.EventID_C2C {
 				return strconv.FormatFloat(params.SwapToCoin.AdjustCoinQuantity, 'f', -1, 64)
@@ -87,17 +97,17 @@ func (o *DB) USPAU_Strt_Exchanges(params *context.ReqSwapInfo) (*int64, error) {
 			return ""
 		}()),
 		sql.Named("PrePointQuantity", func() int64 {
-			if params.TxType == context.EventID_C2P {
+			if params.TxType == context.EventID_C2P || params.TxType == context.EventID_P2P {
 				return params.SwapToPoint.PreviousPointQuantity
-			} else if params.TxType == context.EventID_P2C {
+			} else if params.TxType == context.EventID_P2C || params.TxType == context.EventID_P2P {
 				return params.SwapFromPoint.PreviousPointQuantity
 			}
 			return 0
 		}()),
 		sql.Named("PointQuantity", func() int64 {
-			if params.TxType == context.EventID_C2P {
+			if params.TxType == context.EventID_C2P || params.TxType == context.EventID_P2P {
 				return params.SwapToPoint.PointQuantity
-			} else if params.TxType == context.EventID_P2C {
+			} else if params.TxType == context.EventID_P2C || params.TxType == context.EventID_P2P {
 				return params.SwapFromPoint.PointQuantity
 			}
 			return 0
@@ -308,6 +318,20 @@ func (o *DB) USPAU_Cmplt_Exchanges(params *context.ReqSwapInfo, completedDT stri
 			return err
 		}
 		defer rows.Close()
+	} else if params.TxType == context.EventID_P2P {
+		if isSuccess {
+			rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Cmplt_Exchanges,
+				sql.Named("TxID", params.TxID),
+				sql.Named("CompletedDT", completedDT),
+				&rs)
+			if err != nil {
+				log.Errorf("USPAU_Cmplt_Exchanges QueryContext err : %v", err)
+				return err
+			}
+			defer rows.Close()
+		} else {
+			// none
+		}
 	}
 	if rs != 1 {
 		log.Errorf("USPAU_Cmplt_Exchanges returnvalue error : %v", rs)
@@ -456,4 +480,81 @@ func (o *DB) USPAU_Scan_ExchangeCoinToPoints() error {
 		return errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
 	}
 	return nil
+}
+
+func (o *DB) USPAU_Scan_ExchangePointToPoints() error {
+	var returnValue orginMssql.ReturnStatus
+	proc := USPAU_Scan_ExchangePointToPoints
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), proc,
+		&returnValue)
+
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	if err != nil {
+		log.Errorf("%v QueryContext error : %v", proc, err)
+		return nil
+	}
+
+	o.SwapAbleP2Ps = nil
+	o.SwapAbleP2PsMap = make(map[int64]map[int64]*context.SwapP2P)
+
+	for rows.Next() {
+		swapAble := &context.SwapP2P{}
+
+		if err := rows.Scan(
+			&swapAble.FromID,
+			&swapAble.ToID,
+			&swapAble.IsEnabled,
+			&swapAble.IsVisible,
+			&swapAble.MinimumExchangeQuantity,
+			&swapAble.ExchangeRatio); err != nil {
+			log.Errorf("%v Scan error : %v", proc, err)
+			return err
+		} else {
+			o.SwapAbleP2Ps = append(o.SwapAbleP2Ps, swapAble)
+
+			if o.SwapAbleP2PsMap[swapAble.FromID] == nil {
+				o.SwapAbleP2PsMap[swapAble.FromID] = make(map[int64]*context.SwapP2P)
+			}
+			o.SwapAbleP2PsMap[swapAble.FromID][swapAble.ToID] = swapAble
+		}
+	}
+
+	if returnValue != 1 {
+		log.Errorf("%v returnvalue error : %v", proc, returnValue)
+		return errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
+	}
+	return nil
+}
+
+func (o *DB) USPAU_Exchn_PointToPoints(params *context.ReqSwapInfo) (int64, error) {
+	var rs orginMssql.ReturnStatus
+	txID := int64(0)
+	rows, err := o.MssqlAccountAll.GetDB().QueryContext(originCtx.Background(), USPAU_Exchn_PointToPoints,
+		sql.Named("AUID", params.AUID),
+		sql.Named("FromID", params.SwapFromPoint.PointID),
+		sql.Named("FromAdjPointQuantity", params.SwapFromPoint.AdjustPointQuantity),
+		sql.Named("FromPrePointQuantity", params.SwapFromPoint.PreviousPointQuantity),
+		sql.Named("FromPointQuantity", params.SwapFromPoint.PointQuantity),
+		sql.Named("ToID", params.SwapToPoint.PointID),
+		sql.Named("ToAdjPointQuantity", params.SwapToPoint.AdjustPointQuantity),
+		sql.Named("ToPrePointQuantity", params.SwapToPoint.PreviousPointQuantity),
+		sql.Named("ToPointQuantity", params.SwapToPoint.PointQuantity),
+		sql.Named("TxID", sql.Out{Dest: &txID}),
+		&rs)
+	if err != nil {
+		log.Errorf("USPAU_Exchn_PointToPoints QueryContext err : %v", err)
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	if rs != 1 {
+		log.Errorf("USPAU_Exchn_PointToPoints returnvalue error : %v", rs)
+		return 0, errors.New("USPAU_Exchn_PointToPoints returnvalue error " + strconv.Itoa(int(rs)))
+	}
+
+	return txID, nil
 }

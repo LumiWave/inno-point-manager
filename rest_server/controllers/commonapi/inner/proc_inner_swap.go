@@ -123,11 +123,14 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 	// 4. 전환 정보 검증
 	// 5. point->coin 시 부모지갑에 수수료 전송
 	// 6. coin->point 시 부모지갑에 코인 전송
-	// 6. swap 정보 redis 저장
-	// 00. 부모입금 callback 기다림
+	// 7. coin->coin 시 부모지갑에 수수료 전송 후 부모지갑에 코인 전송
+	// 8. point->point 시에는 콜백 없이 바로 처리한다.
+	// 8. swap 정보 redis 저장
+	// 9. 부모입금 callback 기다림
 
 	// 0. 포인트 누적이 연속적으로 처리 되지 못하도록 한다. P2C, C2P만 해당함
-	if params.TxType == context.EventID_P2C || params.TxType == context.EventID_C2P {
+	if params.TxType == context.EventID_P2C ||
+		params.TxType == context.EventID_C2P {
 		muid := int64(0)
 		if params.TxType == context.EventID_P2C {
 			muid = params.SwapFromPoint.MUID
@@ -145,6 +148,43 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		defer func() {
 			// 1-1. redis unlock
 			if ok, err := mutex.Unlock(); !ok || err != nil {
+				if err != nil {
+					log.Errorf("unlock err : %v", err)
+				}
+			}
+		}()
+	} else if params.TxType == context.EventID_P2P {
+		fromMuid := params.SwapFromPoint.MUID
+
+		fromLockkey := model.MakeMemberPointListLockKey(fromMuid)
+		fromMutex := model.GetDB().RedSync.NewMutex(fromLockkey)
+		if err := fromMutex.Lock(); err != nil {
+			log.Error("redis lock err:%v", err)
+			resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+			return resp
+		}
+
+		defer func() {
+			// 1-1. redis unlock
+			if ok, err := fromMutex.Unlock(); !ok || err != nil {
+				if err != nil {
+					log.Errorf("unlock err : %v", err)
+				}
+			}
+		}()
+
+		toMuid := params.SwapToPoint.MUID
+		toLockkey := model.MakeMemberPointListLockKey(toMuid)
+		toMutex := model.GetDB().RedSync.NewMutex(toLockkey)
+		if err := toMutex.Lock(); err != nil {
+			log.Error("redis lock err:%v", err)
+			resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+			return resp
+		}
+
+		defer func() {
+			// 1-1. redis unlock
+			if ok, err := toMutex.Unlock(); !ok || err != nil {
 				if err != nil {
 					log.Errorf("unlock err : %v", err)
 				}
@@ -259,34 +299,83 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return resp
 		}
-	}
+	} else if params.TxType == context.EventID_P2P {
+		swapBaseInfo := model.GetDB().SwapAbleP2PsMap[params.SwapFromPoint.PointID][params.SwapToPoint.PointID]
 
-	if txID, err := model.GetDB().USPAU_Strt_Exchanges(params); err != nil {
-		resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
-		return resp
-	} else {
-		params.TxID = *txID
-		params.CreateAt = time.Now().UTC().Unix()
-		params.ToWalletAddress = func() string {
-			if params.TxType == context.EventID_P2C || params.TxType == context.EventID_C2C {
-				return config.GetInstance().ParentWalletsMapBySymbol[params.SwapToCoin.BaseCoinSymbol].ParentWalletAddr
-			} else if params.TxType == context.EventID_C2P {
-				// 수수료를 전송하지 않으므로 정보를 담을 필요 없음
+		// 당일 누적 포인트 전환 최대 수량이 넘었는지 체크
+		if accountPoint, err := model.GetDB().GetListAccountPoints(params.AUID); err != nil {
+			log.Errorf("GetListAccountPoints error : %v", err)
+			resp.SetReturn(resultcode.Result_DBError)
+			return resp
+		} else {
+			if val, ok := accountPoint[params.SwapToPoint.PointID]; ok {
+				if val.TodayExchangeAcqQuantity+params.SwapToPoint.AdjustPointQuantity > model.GetDB().AppPointsMap[params.SwapToPoint.AppID].PointsMap[params.SwapToPoint.PointID].DailyLimitExchangeAcqQuantity {
+					// error
+					log.Errorf("Result_Error_Exceed_DailyLimitedSwapPoint auid:%v", params.AUID)
+					resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
+					return resp
+				}
 			}
-			return ""
-		}()
-
-		if params.TxType == context.EventID_C2P || params.TxType == context.EventID_C2C {
-			// from coin 구조체에 부모 지갑 주소를 넣어서 해당 주소로 전송 유도 한다.
-			params.SwapFromCoin.ToWalletAddress = config.GetInstance().ParentWalletsMapBySymbol[params.SwapFromCoin.BaseCoinSymbol].ParentWalletAddr
 		}
 
-		params.TxStatus = context.SWAP_status_init
-
-		if err := model.GetDB().CacheSetSwapWallet(params); err != nil {
-			log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
-			resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
+		// 포인트 보유수량이 전환량 보다 큰지 확인
+		absAdjustPointQuantity := int64(math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)))
+		if params.SwapFromPoint.PreviousPointQuantity <= 0 || // 보유 포인트량이 0일경우
+			params.SwapFromPoint.PreviousPointQuantity < params.SwapFromPoint.AdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
+			swapBaseInfo.MinimumExchangeQuantity > strconv.FormatInt(absAdjustPointQuantity, 10) { // 전환 최소 수량 에러
+			// 전환할 포인트 수량이 없음 에러
+			log.Errorf("lack of minimum point quantity [point_id:%v][PointQuantity:%v]", params.SwapFromPoint.PointID, params.SwapFromPoint.PreviousPointQuantity)
+			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
 			return resp
+		}
+		// 전환 비율 계산 후 타당성 확인
+		exchangePoint := math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)) * swapBaseInfo.ExchangeRatio
+		exchangePoint = toFixed(exchangePoint, 0)
+		if params.SwapToPoint.AdjustPointQuantity != int64(exchangePoint) {
+			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToCoin)
+			return resp
+		}
+	}
+
+	if params.TxType == context.EventID_P2P {
+		// p2p는 여기서 완료하는 프로시저를 따로 호출해준다.
+		if txID, err := model.GetDB().USPAU_Exchn_PointToPoints(params); err != nil {
+			resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
+			return resp
+		} else {
+			params.TxID = txID
+			params.TxStatus = context.SWAP_status_init
+			sendExchangeLog(params)
+		}
+	} else {
+		// p2p가 아닌 작업은 시작을 해두고 콜백이 기다려서 처리해준다.
+		if txID, err := model.GetDB().USPAU_Strt_Exchanges(params); err != nil {
+			resp.SetReturn(resultcode.Result_Error_DB_PostPointCoinSwap)
+			return resp
+		} else {
+			params.TxID = *txID
+			params.CreateAt = time.Now().UTC().Unix()
+			params.ToWalletAddress = func() string {
+				if params.TxType == context.EventID_P2C || params.TxType == context.EventID_C2C {
+					return config.GetInstance().ParentWalletsMapBySymbol[params.SwapToCoin.BaseCoinSymbol].ParentWalletAddr
+				} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_P2P {
+					// 수수료를 전송하지 않으므로 정보를 담을 필요 없음
+				}
+				return ""
+			}()
+
+			if params.TxType == context.EventID_C2P || params.TxType == context.EventID_C2C {
+				// from coin 구조체에 부모 지갑 주소를 넣어서 해당 주소로 전송 유도 한다.
+				params.SwapFromCoin.ToWalletAddress = config.GetInstance().ParentWalletsMapBySymbol[params.SwapFromCoin.BaseCoinSymbol].ParentWalletAddr
+			}
+
+			params.TxStatus = context.SWAP_status_init
+
+			if err := model.GetDB().CacheSetSwapWallet(params); err != nil {
+				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
+				return resp
+			}
 		}
 	}
 
@@ -306,6 +395,9 @@ func toFixed(num float64, precision int) float64 {
 // 있으면 강제로 db에 마지막 정보 업데이트 후 swap 진행 : 게임사에서 포인트 쌓을때 충돌 방지
 func savePoint(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 	if params.TxType == context.EventID_C2C { // coin to coin 스왑은 포인트와 상관없다.
+		return
+	} else if params.TxType == context.EventID_P2P {
+		saveP2P(params, resp)
 		return
 	}
 	swapPoint := &context.SwapPoint{}
@@ -381,6 +473,82 @@ func savePoint(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 		}
 
 		model.GetDB().DelCacheMemberPointList(pointKey)
+	}
+}
+
+func saveP2P(params *context.ReqSwapInfo, resp *base.BaseResponse) {
+	if params.TxType == context.EventID_C2C ||
+		params.TxType == context.EventID_P2C ||
+		params.TxType == context.EventID_C2P {
+		return
+	}
+	swapPoint := [2]*context.SwapPoint{}
+
+	swapPoint[0] = &params.SwapFromPoint
+	swapPoint[0].MUID = params.SwapFromPoint.MUID
+	swapPoint[0].DatabaseID = params.SwapFromPoint.DatabaseID
+
+	swapPoint[1] = &params.SwapToPoint
+	swapPoint[1].MUID = params.SwapToPoint.MUID
+	swapPoint[1].DatabaseID = params.SwapToPoint.DatabaseID
+
+	for _, swapPointItem := range swapPoint {
+		pointKey := model.MakeMemberPointListKey(swapPointItem.MUID)
+		mePointInfo, err := model.GetDB().GetCacheMemberPointList(pointKey)
+		if err != nil {
+			// 2-1. redis에 존재하지 않는다면 db에서 로드
+			if points, err := model.GetDB().GetPointAppList(swapPointItem.MUID, swapPointItem.DatabaseID); err != nil {
+				log.Errorf("GetPointAppList error : %v", err)
+				resp.SetReturn(resultcode.Result_Error_DB_GetPointAppList)
+				return
+			} else {
+				for _, point := range points {
+					if point.PointID == swapPointItem.PointID {
+						swapPointItem.PreviousPointQuantity = point.Quantity
+						swapPointItem.PointQuantity = point.Quantity + swapPointItem.AdjustPointQuantity
+						break
+					}
+				}
+
+			}
+		} else {
+			// redis에 존재 한다면 강제로 db에 먼저 write
+			for _, point := range mePointInfo.Points {
+				var eventID context.EventID_type
+				if point.AdjustQuantity >= 0 {
+					eventID = context.EventID_add
+				} else {
+					eventID = context.EventID_sub
+				}
+
+				if point.AdjustQuantity != 0 {
+					if todayAcqQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
+						point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
+						log.Errorf("UpdateAppPoint error : %v", err)
+						resp.SetReturn(resultcode.Result_Error_DB_UpdateAppPoint)
+						return
+					} else {
+						//현재 일일 누적량, 날짜 업데이트
+						point.TodayQuantity = todayAcqQuantity
+						point.ResetDate = resetDate
+
+						point.AdjustQuantity = 0
+						point.PreQuantity = point.Quantity
+					}
+				} else {
+					point.AdjustQuantity = 0
+					point.PreQuantity = point.Quantity
+				}
+
+				// swap point quantity에 업데이트
+				if swapPointItem.PointID == point.PointID && swapPointItem.MUID == mePointInfo.MUID {
+					swapPointItem.PreviousPointQuantity = point.Quantity
+					swapPointItem.PointQuantity = swapPointItem.PreviousPointQuantity + swapPointItem.AdjustPointQuantity
+				}
+			}
+
+			model.GetDB().DelCacheMemberPointList(pointKey)
+		}
 	}
 }
 

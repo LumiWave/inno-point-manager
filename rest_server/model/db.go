@@ -86,10 +86,12 @@ type DB struct {
 	SwapAbleC2Cs []*context.SwapC2C // coin to coin 전환 정보
 	SwapAbleP2Cs []*context.SwapP2C // point to coin 전환 정보
 	SwapAbleC2Ps []*context.SwapC2P // coin to point 전환 정보
+	SwapAbleP2Ps []*context.SwapP2P // point to point 전환 정보
 
 	SwapAbleC2CsMap map[int64]map[int64]*context.SwapC2C // coin to coin 전환 : key from coin id, key to coin id
 	SwapAbleP2CsMap map[int64]map[int64]*context.SwapP2C // point to coin 전환 : key from coin id, key to point id
 	SwapAbleC2PsMap map[int64]map[int64]*context.SwapC2P // coint to point 전환 : key from point id, key to coin id
+	SwapAbleP2PsMap map[int64]map[int64]*context.SwapP2P // point to point 전환
 
 	RedSync *redsync.Redsync
 }
@@ -203,6 +205,7 @@ func LoadDBPoint() {
 	gDB.USPAU_Scan_ExchangeCoinToCoins()
 	gDB.USPAU_Scan_ExchangePointToCoins()
 	gDB.USPAU_Scan_ExchangeCoinToPoints()
+	gDB.USPAU_Scan_ExchangePointToPoints()
 }
 
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {

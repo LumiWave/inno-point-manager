@@ -482,9 +482,12 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 		}
 		return false
 	}()
+	isP2PComplete := func() bool {
+		return swapInfo.TxType == context.EventID_P2P
+	}()
 
 	// swap이. 종료된 경우에만 최종 로그를 남긴다.
-	if isC2pComplete || isC2CP2CComplete {
+	if isC2pComplete || isC2CP2CComplete || isP2PComplete {
 		apiParams := &api_inno_log.ExchangeLogs{
 			LogDT:   time.Now().Format("2006-01-02 15:04:05.000"),
 			EventID: swapInfo.TxType,
@@ -496,7 +499,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 				} else if swapInfo.TxType == context.EventID_C2P {
 					return swapInfo.SwapToPoint.MUID
 				} else {
-					return 0 // C2C
+					return 0 // C2C, P2P
 				}
 			}(),
 			InnoUID: swapInfo.InnoUID,
@@ -506,7 +509,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 				} else if swapInfo.TxType == context.EventID_C2P {
 					return swapInfo.SwapToPoint.AppID
 				} else {
-					return 0 // C2C
+					return 0 // C2C, P2P
 				}
 			}(),
 			ExchangeFees: func() string {
@@ -520,7 +523,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 			FromWalletID:      swapInfo.SwapFromCoin.WalletID,
 			FromWalletAddress: swapInfo.SwapFromCoin.WalletAddress,
 			FromID: func() int64 {
-				if swapInfo.TxType == context.EventID_P2C {
+				if swapInfo.TxType == context.EventID_P2C || swapInfo.TxType == context.EventID_P2P {
 					return swapInfo.SwapFromPoint.PointID
 				} else if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_C2C {
 					return swapInfo.SwapFromCoin.CoinID
@@ -529,7 +532,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 				}
 			}(),
 			FromAdjQuantity: func() string {
-				if swapInfo.TxType == context.EventID_P2C {
+				if swapInfo.TxType == context.EventID_P2C || swapInfo.TxType == context.EventID_P2P {
 					return strconv.FormatInt(swapInfo.SwapFromPoint.AdjustPointQuantity, 10)
 				} else if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_C2C {
 					return strconv.FormatFloat(swapInfo.SwapFromCoin.AdjustCoinQuantity, 'f', -1, 64)
@@ -541,7 +544,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 			ToWalletID:      swapInfo.SwapToCoin.WalletID,
 			ToWalletAddress: swapInfo.SwapToCoin.WalletAddress,
 			ToID: func() int64 {
-				if swapInfo.TxType == context.EventID_C2P {
+				if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_P2P {
 					return swapInfo.SwapToPoint.PointID
 				} else if swapInfo.TxType == context.EventID_P2C || swapInfo.TxType == context.EventID_C2C {
 					return swapInfo.SwapToCoin.CoinID
@@ -549,7 +552,7 @@ func sendExchangeLog(swapInfo *context.ReqSwapInfo) {
 				return 0
 			}(),
 			ToAdjQuantity: func() string {
-				if swapInfo.TxType == context.EventID_C2P {
+				if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_P2P {
 					return strconv.FormatInt(swapInfo.SwapToPoint.AdjustPointQuantity, 10)
 				} else if swapInfo.TxType == context.EventID_P2C || swapInfo.TxType == context.EventID_C2C {
 					return strconv.FormatFloat(swapInfo.SwapToCoin.AdjustCoinQuantity, 'f', -1, 64)

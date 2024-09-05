@@ -208,4 +208,25 @@ type SwapC2P struct {
 	ExchangeRatio float64 `json:"exchange_ratio"`
 }
 
+// point to point 스왑 정보
+type SwapP2P struct {
+	// FromID는 전환할 재료의 ID입니다.
+	FromID int64 `json:"from_id"`
+
+	// ToID는 받을 포인트의 ID입니다.
+	ToID int64 `json:"to_id"`
+
+	// IsEnabled는 해당 전환이 활성화 되어있는지 여부를 나타냅니다.
+	IsEnabled bool `json:"is_enabled"`
+
+	// 화면에 표출 여부
+	IsVisible bool `json:"is_visible"`
+
+	// MinimumExchangeQuantity는 최소 전환량을 나타냅니다.
+	MinimumExchangeQuantity string `json:"minimum_exchange_quantity"`
+
+	// ExchangeRatio는 받을 전환 비율을 나타냅니다.
+	ExchangeRatio float64 `json:"exchange_ratio"`
+}
+
 ////////////////////////////////////////

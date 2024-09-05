@@ -104,3 +104,10 @@ func (o *DB) CacheDelSwapWallet(walletAddress string) error {
 
 	return o.Cache.HDel(MakeSwapWalletKey(), walletAddress)
 }
+
+func (o *DB) CacheDelAllSwapWallet() error {
+	if !o.Cache.Enable() {
+		log.Warnf("redis disable")
+	}
+	return o.Cache.GetDB().HDelAll(MakeSwapWalletKey())
+}
