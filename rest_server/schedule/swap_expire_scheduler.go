@@ -68,18 +68,29 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 		if value.CreateAt+o.ExpireCycle < time.Now().UTC().Unix() && value.TxStatus < context.SWAP_status_fee_transfer_start {
 			log.Debugf("swap expire addr : fromWallet:%v, toWallet:%v, time:%v", value.SwapFromCoin.WalletAddress, value.SwapToCoin.WalletAddress, time.Unix(value.CreateAt, 0).Format(time.RFC3339))
 
-			if value.TxType == context.EventID_P2C {
+			if value.TxType == context.EventID_P2C ||
+				value.TxType == context.EventID_C2P {
 				// 현재 레디스에 포인트가 쌓이고 있을수 있으니 최종값으로 디비에 저장하고 스왑 포인트 복구 처리 해준다
-				pointKey := model.MakeMemberPointListKey(value.SwapFromPoint.MUID)
+
+				swapPoint := func() context.SwapPoint {
+					if value.TxType == context.EventID_P2C {
+						return value.SwapFromPoint
+					} else if value.TxType == context.EventID_C2P {
+						return value.SwapToPoint
+					}
+					log.Errorf("invalid swap type : %v", value.TxType)
+					return context.SwapPoint{}
+				}()
+				pointKey := model.MakeMemberPointListKey(swapPoint.MUID)
 				mePointInfo, err := model.GetDB().GetCacheMemberPointList(pointKey)
 				if err != nil {
-					if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(value.SwapFromPoint.MUID, value.SwapFromPoint.DatabaseID); err != nil {
+					if _, points, err := model.GetDB().USPPO_GetList_MemberPoints(swapPoint.MUID, swapPoint.DatabaseID); err != nil {
 						log.Errorf("GetPointAppList error : %v", err)
 					} else {
-						if point, ok := points[value.SwapFromPoint.PointID]; ok {
-							value.SwapFromPoint.PreviousPointQuantity = point.Quantity
-							value.SwapFromPoint.AdjustPointQuantity = -value.SwapFromPoint.AdjustPointQuantity
-							value.SwapFromPoint.PointQuantity = value.SwapFromPoint.PreviousPointQuantity + value.SwapFromPoint.AdjustPointQuantity
+						if point, ok := points[swapPoint.PointID]; ok {
+							swapPoint.PreviousPointQuantity = point.Quantity
+							swapPoint.AdjustPointQuantity = -swapPoint.AdjustPointQuantity
+							swapPoint.PointQuantity = swapPoint.PreviousPointQuantity + swapPoint.AdjustPointQuantity
 						}
 					}
 				} else {
@@ -94,7 +105,7 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 
 						if point.AdjustQuantity != 0 {
 							if todayAcqQuantity, resetDate, err := model.GetDB().UpdateAppPoint(mePointInfo.DatabaseID, mePointInfo.MUID, point.PointID,
-								point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_cp, eventID); err != nil {
+								point.PreQuantity, point.AdjustQuantity, point.Quantity, context.LogID_exchange, eventID); err != nil {
 								log.Errorf("UpdateAppPoint error : %v", err)
 							} else {
 								//현재 일일 누적량, 날짜 업데이트
@@ -110,15 +121,19 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 						}
 
 						// swap point quantity에 업데이트
-						if value.SwapFromPoint.PointID == point.PointID && value.SwapFromPoint.MUID == mePointInfo.MUID {
-							value.SwapFromPoint.PreviousPointQuantity = point.Quantity
-							value.SwapFromPoint.AdjustPointQuantity = -value.SwapFromPoint.AdjustPointQuantity
-							value.SwapFromPoint.PointQuantity = value.SwapFromPoint.PreviousPointQuantity + value.SwapFromPoint.AdjustPointQuantity
+						if swapPoint.PointID == point.PointID && swapPoint.MUID == mePointInfo.MUID {
+							swapPoint.PreviousPointQuantity = point.Quantity
+							swapPoint.AdjustPointQuantity = -swapPoint.AdjustPointQuantity
+							swapPoint.PointQuantity = swapPoint.PreviousPointQuantity + swapPoint.AdjustPointQuantity
 						}
 					}
 
 					model.GetDB().DelCacheMemberPointList(pointKey)
 				}
+			} else if value.TxType == context.EventID_C2C { // c2c는 양쪽 모두 그냥 지워주면 끝이다.
+				model.GetDB().CacheDelSwapWallet(value.SwapFromCoin.WalletAddress)
+				model.GetDB().CacheDelSwapWallet(value.SwapToCoin.WalletAddress)
+			} else if value.TxType == context.EventID_P2P { // p2p는 콜백없이 그냥 바로 성공 실패가 정해지기 때문에 레디스에 남지 않아서 따로 처리할게 없다.
 			}
 
 			if err := model.GetDB().USPAU_Cmplt_Exchanges(value, time.Now().Format("2006-01-02 15:04:05.000"), false); err != nil {
