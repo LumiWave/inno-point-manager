@@ -72,7 +72,9 @@ func DeleteDeleteSwapInfo(params *context.DeleteDeleteSwapInfo, ctx *context.Poi
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if err := model.GetDB().CacheDelSwapWallet(params.WalletAddress); err != nil {
+	if len(params.WalletAddress) == 0 {
+		model.GetDB().CacheDelAllSwapWallet()
+	} else if err := model.GetDB().CacheDelSwapWallet(params.WalletAddress); err != nil {
 		log.Errorf("CacheDelSwapWallet err:%v, wallet:%v", err, params.WalletAddress)
 	}
 
