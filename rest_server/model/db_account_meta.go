@@ -129,8 +129,8 @@ func (o *DB) GetCoins() error {
 			&coin.IsRechargeable,
 			&coin.RechargeURL,
 			&coin.ExchangeSortOrder,
-			&coin.CustomProperties,
-			&coin.IsAlarmEnabled); err == nil {
+			&coin.IsAlarmEnabled,
+			&coin.CustomProperties); err == nil {
 			o.Coins[coin.CoinId] = coin
 			o.CoinsBySymbol[coin.CoinSymbol] = coin
 		} else {
