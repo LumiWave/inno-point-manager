@@ -50,8 +50,8 @@ type Coin struct {
 	IsRechargeable                bool    `json:"is_rechargeable"`
 	RechargeURL                   string  `json:"recharge_url"`
 	ExchangeSortOrder             int64   `json:"exchange_sort_order"`
-	CustomProperties              string  `json:"custom_properties"`
 	IsAlarmEnabled                bool    `json:"is_alarm_enabled"`
+	CustomProperties              string  `json:"custom_properties"`
 }
 
 type AppCoin struct {
