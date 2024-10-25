@@ -72,14 +72,14 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 				value.TxType == context.EventID_C2P {
 				// 현재 레디스에 포인트가 쌓이고 있을수 있으니 최종값으로 디비에 저장하고 스왑 포인트 복구 처리 해준다
 
-				swapPoint := func() context.SwapPoint {
+				swapPoint := func() *context.SwapPoint {
 					if value.TxType == context.EventID_P2C {
-						return value.SwapFromPoint
+						return &value.SwapFromPoint
 					} else if value.TxType == context.EventID_C2P {
-						return value.SwapToPoint
+						return &value.SwapToPoint
 					}
 					log.Errorf("invalid swap type : %v", value.TxType)
-					return context.SwapPoint{}
+					return &context.SwapPoint{}
 				}()
 				pointKey := model.MakeMemberPointListKey(swapPoint.MUID)
 				mePointInfo, err := model.GetDB().GetCacheMemberPointList(pointKey)
@@ -91,6 +91,8 @@ func (o *SwapExpireScheduler) ScheduleProcess() {
 							swapPoint.PreviousPointQuantity = point.Quantity
 							swapPoint.AdjustPointQuantity = -swapPoint.AdjustPointQuantity
 							swapPoint.PointQuantity = swapPoint.PreviousPointQuantity + swapPoint.AdjustPointQuantity
+						} else {
+							log.Errorf("not file swap point id : %v, points : %v", swapPoint.PointID, points)
 						}
 					}
 				} else {
