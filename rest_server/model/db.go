@@ -62,6 +62,7 @@ type AppCoin struct {
 type DB struct {
 	MssqlAccountAll  *basedb.Mssql
 	MssqlAccountRead *basedb.Mssql
+	MssqlPreSales    *basedb.Mssql
 	Cache            *basedb.CacheV8
 
 	MssqlPointsAll  map[int64]*basedb.Mssql
@@ -93,6 +94,10 @@ type DB struct {
 	SwapAbleP2CsMap map[int64]map[int64]*context.SwapP2C // point to coin 전환 : key from coin id, key to point id
 	SwapAbleC2PsMap map[int64]map[int64]*context.SwapC2P // coint to point 전환 : key from point id, key to coin id
 	SwapAbleP2PsMap map[int64]map[int64]*context.SwapP2P // point to point 전환
+
+	// presale 용
+	SwapAblePreSales    []*context.PreSalesExchange                   // presale에 사용 가능한 스왑 정보 ( coin to point 전용)
+	SwapAblePreSalesMap map[int64]map[int64]*context.PreSalesExchange // point to point 전환
 
 	RedSync *redsync.Redsync
 }
@@ -168,6 +173,10 @@ func InitDB(conf *config.ServerConfig) (err error) {
 				gDB.MssqlAccountRead = db
 			}
 
+			if db := CheckPingDB(gDB.MssqlPreSales, conf.MssqlDBPreSales, ACCOUNT, nil); db != nil {
+				gDB.MssqlPreSales = db
+			}
+
 			for _, pointDB := range getPointDBs {
 				if db := CheckPingDB(gDB.MssqlPointsAll[pointDB.DatabaseID], conf.MssqlDBPointAll, POINT, pointDB); db != nil {
 					gDB.MssqlPointsAll[pointDB.DatabaseID] = db
@@ -207,6 +216,8 @@ func LoadDBPoint() {
 	gDB.USPAU_Scan_ExchangePointToCoins()
 	gDB.USPAU_Scan_ExchangeCoinToPoints()
 	gDB.USPAU_Scan_ExchangePointToPoints()
+
+	gDB.USPPR_Scan_PreSalesExchangeCoinToPoints()
 }
 
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {
@@ -257,6 +268,12 @@ func ConnectAllDB(conf *config.ServerConfig) error {
 	if err != nil {
 		return err
 	}
+
+	gDB.MssqlPreSales, err = gDB.ConnectDB(&conf.MssqlDBPreSales)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

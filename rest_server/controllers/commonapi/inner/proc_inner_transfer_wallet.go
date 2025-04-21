@@ -300,6 +300,77 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 		}
 		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 
+	} else if swapInfo.TxType == context.EventID_Server_toC2P {
+		// coin -> point 인 경우 토큰 입금 확인이 되면 포인트 DB 처리 해준다.
+		fe := util.ToDecimalEncf(value, int64(decimal))
+
+		basecoinID := model.GetDB().CoinsBySymbol[symbol].BaseCoinID
+		basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
+		swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
+
+		if strings.EqualFold(swapInfo.SwapFromCoin.TokenTxHash, txHash) {
+			// 시퀀스에 맞게 입금 콜백이 온경우
+			swapInfo.TxStatus = context.SWAP_status_token_transfer_deposit_success
+			if err := model.GetDB().USPPR_Mod_TransactPreSalesExchanges_TxStatus(swapInfo.TxID, swapInfo.TxStatus, swapInfo.SwapFromCoin.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err == nil {
+				if err := model.GetDB().USPPR_Cmplt_PreSalesExchanges(
+					swapInfo.TxID,
+					swapInfo.SwapToPoint.PointID,
+					swapInfo.SwapToPoint.PreviousPointQuantity,
+					swapInfo.SwapToPoint.AdjustPointQuantity,
+					swapInfo.SwapToPoint.PointQuantity); err != nil {
+					log.Errorf("USPAU_Cmplt_Exchanges err : %v", err)
+				} else {
+					sendExchangeLog(swapInfo)
+					model.GetDB().CacheDelSwapWallet(fromAddr)
+				}
+			}
+		} else if len(swapInfo.SwapFromCoin.TokenTxHash) == 0 {
+			if swapInfo.TxStatus != context.SWAP_status_init {
+				log.Errorf("invalid status txhash:%v, from:%v", txHash, fromAddr)
+				return resp
+			}
+			// 토큰 전송 유저 정보보다 콜백이 먼저 들어온경우 전송 량을 비교해서 같은지 판단한다.
+			if math.Abs(swapInfo.SwapFromCoin.AdjustCoinQuantity) == fe {
+				swapInfo.TxStatus = context.SWAP_status_token_transfer_deposit_success
+				swapInfo.SwapFromCoin.TokenTxHash = txHash
+				if err := model.GetDB().USPPR_Mod_TransactPreSalesExchanges_Coin(
+					swapInfo.TxID,
+					swapInfo.TxStatus,
+					txHash,
+					swapInfo.SwapFromCoin.BaseCoinID,
+					strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64)); err != nil {
+					log.Errorf("USPAU_Mod_TransactExchanges_Coin err : %v", err)
+				} else {
+					if err := model.GetDB().USPPR_Cmplt_PreSalesExchanges(
+						swapInfo.TxID,
+						swapInfo.SwapToPoint.PointID,
+						swapInfo.SwapToPoint.PreviousPointQuantity,
+						swapInfo.SwapToPoint.AdjustPointQuantity,
+						swapInfo.SwapToPoint.PointQuantity); err != nil {
+						log.Errorf("USPAU_Cmplt_Exchanges err : %v", err)
+					} else {
+						sendExchangeLog(swapInfo)
+						model.GetDB().CacheDelSwapWallet(fromAddr)
+					}
+				}
+			}
+		}
+
+		// 역스왑 토큰 입금 로그 전송
+		apiParams := &api_inno_log.AccountCoinLog{
+			LogDt:         time.Now().Format("2006-01-02 15:04:05.000"),
+			LogID:         int64(context.LogID_exchange),
+			EventID:       int64(context.EventID_sub),
+			TxHash:        txHash,
+			AUID:          swapInfo.AUID,
+			CoinID:        swapInfo.SwapFromCoin.CoinID,
+			BaseCoinID:    swapInfo.SwapFromCoin.BaseCoinID,
+			WalletAddress: swapInfo.SwapFromCoin.WalletAddress,
+			WalletTypeID:  swapInfo.SwapFromCoin.WalletTypeID,
+			AdjQuantity:   strconv.FormatFloat(swapInfo.SwapFromCoin.AdjustCoinQuantity, 'f', -1, 64),
+			WalletID:      swapInfo.SwapFromCoin.WalletID,
+		}
+		go api_inno_log.GetInstance().PostAccountCoins(apiParams)
 	} else if swapInfo.TxType == context.EventID_C2C {
 		// c2c는 수수료를 먼저 입금 받은 후 유저의 토큰을 순차적으로 둘다 입금을 받고나서 swap할 토큰을 전송 해준다.
 		// fromcoin의 txhash와 수수료 전송 txhash값이 모두 존재 할때 코인 전송을 해준다.

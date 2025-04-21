@@ -130,11 +130,12 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 
 	// 0. 포인트 누적이 연속적으로 처리 되지 못하도록 한다. P2C, C2P만 해당함
 	if params.TxType == context.EventID_P2C ||
-		params.TxType == context.EventID_C2P {
+		params.TxType == context.EventID_C2P ||
+		params.TxType == context.EventID_Server_toC2P {
 		muid := int64(0)
 		if params.TxType == context.EventID_P2C {
 			muid = params.SwapFromPoint.MUID
-		} else if params.TxType == context.EventID_C2P {
+		} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_Server_toC2P {
 			muid = params.SwapToPoint.MUID
 		}
 		Lockkey := model.MakeMemberPointListLockKey(muid)
@@ -406,7 +407,7 @@ func savePoint(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 		swapPoint = &params.SwapFromPoint
 		swapPoint.MUID = params.SwapFromPoint.MUID
 		swapPoint.DatabaseID = params.SwapFromPoint.DatabaseID
-	} else if params.TxType == context.EventID_C2P {
+	} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_Server_toC2P {
 		swapPoint = &params.SwapToPoint
 		swapPoint.MUID = params.SwapToPoint.MUID
 		swapPoint.DatabaseID = params.SwapToPoint.DatabaseID
@@ -464,7 +465,7 @@ func savePoint(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 					swapPoint.PreviousPointQuantity = point.Quantity
 					swapPoint.PointQuantity = swapPoint.PreviousPointQuantity + swapPoint.AdjustPointQuantity
 				}
-			} else if params.TxType == context.EventID_C2P {
+			} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_Server_toC2P {
 				if swapPoint.PointID == point.PointID && swapPoint.MUID == mePointInfo.MUID {
 					swapPoint.PreviousPointQuantity = point.Quantity
 					swapPoint.PointQuantity = swapPoint.PreviousPointQuantity + swapPoint.AdjustPointQuantity
@@ -561,7 +562,9 @@ func checkAlreadySwap(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 	checkWallet := ""
 	if params.TxType == context.EventID_P2C {
 		checkWallet = params.SwapToCoin.WalletAddress
-	} else if params.TxType == context.EventID_C2P || params.TxType == context.EventID_C2C {
+	} else if params.TxType == context.EventID_C2P ||
+		params.TxType == context.EventID_C2C ||
+		params.TxType == context.EventID_Server_toC2P {
 		checkWallet = params.SwapFromCoin.WalletAddress
 	}
 	if _, err := model.GetDB().CacheGetSwapWallet(checkWallet); err == nil {

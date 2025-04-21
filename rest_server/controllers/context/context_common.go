@@ -29,6 +29,8 @@ const (
 
 	EventID_add_fee = 24 // 수수료 재화 증가 : swap시 수수료 받았을때
 	EventID_sub_fee = 25 // 수수료 재화 감소 : 수수료 명목으로 서비스 제공할때
+
+	EventID_Server_toC2P = 100000 // 백엔드 서에만 사용 : presales에서 사용되는 코인->포인트 스왑용
 )
 
 type ContextKey struct {

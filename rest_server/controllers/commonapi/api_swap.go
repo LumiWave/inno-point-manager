@@ -17,8 +17,17 @@ func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerCon
 
 	if !model.GetSwapEnable() {
 		resp.SetReturn(resultcode.Result_Error_IsSwapMaintenance)
-	} else if err := inner.SwapWallet(params, ctx.GetValue().InnoUID); err != nil {
-		resp = err
+	} else {
+		if params.TxType == context.EventID_Server_toC2P {
+			// presales 스왑 처리
+			if err := inner.PreSalesSwapWallet(params, ctx.GetValue().InnoUID); err != nil {
+				resp = err
+			}
+		} else {
+			if err := inner.SwapWallet(params, ctx.GetValue().InnoUID); err != nil {
+				resp = err
+			}
+		}
 	}
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)

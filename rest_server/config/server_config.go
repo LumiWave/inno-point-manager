@@ -60,11 +60,13 @@ type Schedule struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager                 PointManager          `yaml:"point_manager"`
-	MssqlDBAccountAll        baseconf.DBAuth       `yaml:"mssql_db_account"`
-	MssqlDBAccountRead       baseconf.DBAuth       `yaml:"mssql_db_account_read"`
-	MssqlDBPointAll          baseconf.DBAuth       `yaml:"mssql_db_point"`
-	MssqlDBPointRead         baseconf.DBAuth       `yaml:"mssql_db_point_read"`
+	PManager           PointManager    `yaml:"point_manager"`
+	MssqlDBAccountAll  baseconf.DBAuth `yaml:"mssql_db_account"`
+	MssqlDBAccountRead baseconf.DBAuth `yaml:"mssql_db_account_read"`
+	MssqlDBPointAll    baseconf.DBAuth `yaml:"mssql_db_point"`
+	MssqlDBPointRead   baseconf.DBAuth `yaml:"mssql_db_point_read"`
+	MssqlDBPreSales    baseconf.DBAuth `yaml:"mssql_db_presales"`
+
 	ParentWallets            []Wallets             `yaml:"parent_wallet_info"`
 	ParentWalletsMap         map[string]Wallets    // key parent_wallet_address
 	ParentWalletsMapBySymbol map[string]Wallets    // key basecoin Symbol

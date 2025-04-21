@@ -31,7 +31,7 @@ func (o *DB) CacheSetSwapWallet(swapInfo *context.ReqSwapInfo) error {
 
 	if swapInfo.TxType == context.EventID_P2C {
 		swapInfos[swapInfo.SwapToCoin.WalletAddress] = swapInfo
-	} else if swapInfo.TxType == context.EventID_C2P {
+	} else if swapInfo.TxType == context.EventID_C2P || swapInfo.TxType == context.EventID_Server_toC2P {
 		swapInfos[swapInfo.SwapFromCoin.WalletAddress] = swapInfo
 	} else if swapInfo.TxType == context.EventID_C2C { // C2C는 from(실제코인 전송 콜백 확인용), to(수수료 콜백 확인용) 둘다 남긴다.
 		swapInfos[swapInfo.SwapToCoin.WalletAddress] = swapInfo
