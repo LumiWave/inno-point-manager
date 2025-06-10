@@ -5,9 +5,10 @@ import "github.com/LumiWave/baseutil/datetime"
 type LogID_type int
 
 const (
-	LogID_cp              = 1 // 고객사
-	LogID_exchange        = 2 // 전환
-	LogID_external_wallet = 3 // 외부지갑
+	LogID_cp                 = 1 // 고객사
+	LogID_exchange           = 2 // 전환
+	LogID_external_wallet    = 3 // 외부지갑
+	LogID_external_inno_game = 9 // inno 게임
 
 	LogID_wallet_sync = 6
 )
@@ -29,6 +30,9 @@ const (
 
 	EventID_add_fee = 24 // 수수료 재화 증가 : swap시 수수료 받았을때
 	EventID_sub_fee = 25 // 수수료 재화 감소 : 수수료 명목으로 서비스 제공할때
+
+	EventID_SSR2SSRM = 34 // ssr 포인트 -> ssrm chip
+	EventID_SSRM2SSR = 35 // ssrm chip -> ssr 포인트
 )
 
 type ContextKey struct {

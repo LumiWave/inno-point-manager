@@ -26,3 +26,35 @@ func (o *ExternalAPI) PostPointCoinSwap(c echo.Context) error {
 
 	return commonapi.PostPointCoinSwap(params, ctx)
 }
+
+func (o *ExternalAPI) GetGameChipSwapInfo(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqGameChipSwapInfo()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(ctx); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.GetGameChipSwapInfo(params, ctx)
+}
+
+func (o *ExternalAPI) PostGameChipSwap(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqGameChipSwap()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(ctx); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PostGameChipSwap(params, ctx)
+}

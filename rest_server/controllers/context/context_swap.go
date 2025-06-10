@@ -230,3 +230,47 @@ type SwapP2P struct {
 }
 
 ////////////////////////////////////////
+
+// //////////////////////////////////////
+// ssr point <-> ssrm chip swap 정보 조회
+type ReqGameChipSwapInfo struct {
+}
+
+func NewReqGameChipSwapInfo() *ReqGameChipSwapInfo {
+	return new(ReqGameChipSwapInfo)
+}
+
+func (o *ReqGameChipSwapInfo) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	return nil
+}
+
+type ResGameChipSwapInfo struct {
+	SSRQuantity   int64 `json:"ssr_quantity"`
+	SSRMQuantity  int64 `json:"ssrm_quantity"`
+	ExchangeRatio int64 `json:"exchange_ratio"`
+	SSRToSSRMID   int64 `json:"ssr_to_ssrm_id"`
+	SSRMToSSRID   int64 `json:"ssrm_to_ssr_id"`
+}
+
+////////////////////////////////////////
+
+// //////////////////////////////////////
+// ssr point <-> ssrm chip swap 요청
+type ReqGameChipSwap struct {
+	SwapType       int64 `json:"swap_type"`
+	SSRAdjustPoint int64 `json:"ssr_adjust_point"`
+	SSRMAdjustChip int64 `json:"ssrm_adjust_chip"`
+}
+
+func NewReqGameChipSwap() *ReqGameChipSwap {
+	return new(ReqGameChipSwap)
+}
+
+func (o *ReqGameChipSwap) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	return nil
+}
+
+type ResReqGameChipSwap struct {
+}
+
+////////////////////////////////////////

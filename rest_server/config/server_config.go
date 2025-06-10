@@ -44,6 +44,12 @@ type ApiInno struct {
 	ExternalVer      string `yaml:"external_ver"`
 }
 
+type GameSwap struct {
+	AppID         int64 `yaml:"app_id"`
+	PointID       int64 `yaml:"point_id"`
+	ExchangeRatio int64 `yaml:"exchange_ratio"`
+}
+
 type Wallets struct {
 	Name             string `yaml:"name"`
 	FeeWalletAddr    string `yaml:"fee_wallet"`
@@ -60,17 +66,22 @@ type Schedule struct {
 type ServerConfig struct {
 	baseconf.Config `yaml:",inline"`
 
-	PManager                 PointManager          `yaml:"point_manager"`
-	MssqlDBAccountAll        baseconf.DBAuth       `yaml:"mssql_db_account"`
-	MssqlDBAccountRead       baseconf.DBAuth       `yaml:"mssql_db_account_read"`
-	MssqlDBPointAll          baseconf.DBAuth       `yaml:"mssql_db_point"`
-	MssqlDBPointRead         baseconf.DBAuth       `yaml:"mssql_db_point_read"`
+	PManager           PointManager    `yaml:"point_manager"`
+	MssqlDBAccountAll  baseconf.DBAuth `yaml:"mssql_db_account"`
+	MssqlDBAccountRead baseconf.DBAuth `yaml:"mssql_db_account_read"`
+	MssqlDBPointAll    baseconf.DBAuth `yaml:"mssql_db_point"`
+	MssqlDBPointRead   baseconf.DBAuth `yaml:"mssql_db_point_read"`
+	MssqlDBGameAll     baseconf.DBAuth `yaml:"mssql_db_game"`
+	MssqlDBGameRead    baseconf.DBAuth `yaml:"mssql_db_game_read"`
+
 	ParentWallets            []Wallets             `yaml:"parent_wallet_info"`
 	ParentWalletsMap         map[string]Wallets    // key parent_wallet_address
 	ParentWalletsMapBySymbol map[string]Wallets    // key basecoin Symbol
 	Auth                     ApiAuth               `yaml:"api_auth"`
 	TokenMgrServer           ApiTokenManagerServer `yaml:"api_token_manager_server"`
 	InnoLog                  ApiInno               `yaml:"inno-log"`
+
+	GameSwap GameSwap `yaml:"game_swap"`
 
 	Schedules   []Schedule `yaml:"schedules"`
 	ScheduleMap map[string]Schedule

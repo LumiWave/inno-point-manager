@@ -126,3 +126,12 @@ type ReqMeAppPoint struct {
 }
 
 ////////////////////////////////////////
+
+// /////// Member
+type Member struct {
+	MUID       int64 `json:"mu_id"`
+	AppID      int64 `json:"app_id"`
+	DatabaseID int64 `json:"database_id"`
+}
+
+////////////////////////////////////////

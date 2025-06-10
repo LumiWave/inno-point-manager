@@ -20,6 +20,7 @@ const (
 
 	USPAU_GetList_AccountWallets           = "[dbo].[USPAU_GetList_AccountWallets]"
 	USPAU_GetList_AccountApplicationPoints = "[dbo].[USPAU_GetList_AccountApplicationPoints]"
+	USPAU_GetList_Members                  = "[dbo].[USPAU_GetList_Members]"
 )
 
 // 계정 일일 포인트량 조회
@@ -263,4 +264,41 @@ func (o *DB) USPAU_GetList_AccountApplicationPoints(auid, muid int64) (*context.
 	}
 
 	return points, nil
+}
+
+// 계정 앱 회원 조회
+func (o *DB) USPAU_GetList_Members(auid int64) ([]*context.Member, map[int64]*context.Member, error) {
+	var returnValue orginMssql.ReturnStatus
+	rows, err := o.MssqlAccountRead.QueryContext(originCtx.Background(), USPAU_GetList_Members,
+		sql.Named("AUID", auid),
+		&returnValue)
+
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	if err != nil {
+		log.Error("USPAU_GetList_Members QueryContext err : %v", err)
+		return nil, nil, err
+	}
+
+	var memberList []*context.Member
+	memberMap := make(map[int64]*context.Member)
+
+	for rows.Next() {
+		member := context.Member{}
+		if err := rows.Scan(&member.MUID, &member.AppID, &member.DatabaseID); err != nil {
+			log.Errorf("USPAU_GetList_Members Scan error : %v", err)
+			return nil, nil, err
+		} else {
+			memberMap[member.AppID] = &member
+			memberList = append(memberList, &member)
+		}
+	}
+
+	if returnValue != 1 {
+		log.Errorf("USPAU_GetList_Members returnvalue error : %v", returnValue)
+		return nil, nil, errors.New("USPAU_GetList_Members returnvalue error " + strconv.Itoa(int(returnValue)))
+	}
+	return memberList, memberMap, nil
 }

@@ -67,6 +67,9 @@ type DB struct {
 	MssqlPointsAll  map[int64]*basedb.Mssql
 	MssqlPointsRead map[int64]*basedb.Mssql
 
+	MssqlGameAll  *basedb.Mssql
+	MssqlGameRead *basedb.Mssql
+
 	PointDoc    map[string]*MemberPointInfo
 	PointDocMtx sync.Mutex
 
@@ -102,6 +105,7 @@ type DBType int
 const (
 	ACCOUNT DBType = iota
 	POINT
+	GAME
 )
 
 var gDB *DB
@@ -175,6 +179,13 @@ func InitDB(conf *config.ServerConfig) (err error) {
 				if db := CheckPingDB(gDB.MssqlPointsRead[pointDB.DatabaseID], conf.MssqlDBPointRead, POINT, pointDB); db != nil {
 					gDB.MssqlPointsRead[pointDB.DatabaseID] = db
 				}
+			}
+
+			if db := CheckPingDB(gDB.MssqlGameAll, conf.MssqlDBGameAll, GAME, nil); db != nil {
+				gDB.MssqlGameAll = db
+			}
+			if db := CheckPingDB(gDB.MssqlGameRead, conf.MssqlDBGameRead, GAME, nil); db != nil {
+				gDB.MssqlGameAll = db
 			}
 		}
 	}()
@@ -254,6 +265,16 @@ func ConnectAllDB(conf *config.ServerConfig) error {
 	}
 
 	gDB.MssqlAccountRead, err = gDB.ConnectDB(&conf.MssqlDBAccountRead)
+	if err != nil {
+		return err
+	}
+
+	gDB.MssqlGameAll, err = gDB.ConnectDB(&conf.MssqlDBGameAll)
+	if err != nil {
+		return err
+	}
+
+	gDB.MssqlGameRead, err = gDB.ConnectDB(&conf.MssqlDBGameRead)
 	if err != nil {
 		return err
 	}
