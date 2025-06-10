@@ -238,10 +238,6 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 						resp.SetReturn(resultcode.Result_Error_NotExistMember)
 						return ctx.EchoContext.JSON(http.StatusOK, resp)
 					}
-					if pointInfo.Points[0].Quantity < absInt64(params.SSRAdjustPoint) { // 보유 ssr 포인트 수량이 부족하면 에러
-						resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
-						return ctx.EchoContext.JSON(http.StatusOK, resp)
-					}
 
 					// 수량 업데이트
 					if err := ProcGameChipSwap(params, pointID, pointInfo.MUID, pointInfo.DatabaseID, ctx.GetValue().InnoUID, pointInfo.Points[0].Quantity); err != nil {
