@@ -245,11 +245,11 @@ func (o *ReqGameChipSwapInfo) CheckValidate(ctx *PointManagerContext) *base.Base
 }
 
 type ResGameChipSwapInfo struct {
-	SSRQuantity   int64 `json:"ssr_quantity"`
-	SSRMQuantity  int64 `json:"ssrm_quantity"`
-	ExchangeRatio int64 `json:"exchange_ratio"`
-	SSRToSSRMID   int64 `json:"ssr_to_ssrm_id"`
-	SSRMToSSRID   int64 `json:"ssrm_to_ssr_id"`
+	SSRQuantity   int64   `json:"ssr_quantity"`
+	SSRMQuantity  int64   `json:"ssrm_quantity"`
+	ExchangeRatio float64 `json:"exchange_ratio"`
+	SSRToSSRMID   int64   `json:"ssr_to_ssrm_id"`
+	SSRMToSSRID   int64   `json:"ssrm_to_ssr_id"`
 }
 
 ////////////////////////////////////////

@@ -45,9 +45,9 @@ type ApiInno struct {
 }
 
 type GameSwap struct {
-	AppID         int64 `yaml:"app_id"`
-	PointID       int64 `yaml:"point_id"`
-	ExchangeRatio int64 `yaml:"exchange_ratio"`
+	AppID         int64   `yaml:"app_id"`
+	PointID       int64   `yaml:"point_id"`
+	ExchangeRatio float64 `yaml:"exchange_ratio"`
 }
 
 type Wallets struct {
