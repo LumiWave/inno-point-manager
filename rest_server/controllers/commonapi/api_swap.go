@@ -11,6 +11,7 @@ import (
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/LumiWave/inno-point-manager/rest_server/model"
+	"github.com/labstack/echo"
 )
 
 func PostPointCoinSwap(params *context.ReqSwapInfo, ctx *context.PointManagerContext) error {
@@ -83,6 +84,21 @@ func DeleteDeleteSwapInfo(params *context.DeleteDeleteSwapInfo, ctx *context.Poi
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
 
+func GetGameChipSwapBaseInfo(c echo.Context) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	res := &context.ResGameChipSwapInfo{
+		ExchangeRatio: config.GetInstance().GameSwap.ExchangeRatio,
+
+		SSRToSSRMID: context.EventID_SSR2SSRM,
+		SSRMToSSRID: context.EventID_SSRM2SSR,
+	}
+	resp.Value = res
+
+	return c.JSON(http.StatusOK, resp)
+}
+
 func GetGameChipSwapInfo(params *context.ReqGameChipSwapInfo, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
@@ -121,16 +137,22 @@ func GetGameChipSwapInfo(params *context.ReqGameChipSwapInfo, ctx *context.Point
 		}
 	}
 	// SSRM chip 조회
-	if isBlocked, chipQuantity, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
+	if isBlocked, chipQuantity, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
 		log.Errorf("not exist ssrm member auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
 		resp.SetReturn(resultcode.Result_Error_NotExistMember)
 		return ctx.EchoContext.JSON(http.StatusOK, resp)
 	} else {
+
 		if isBlocked {
 			log.Errorf("is block memeber auid:%v", ctx.GetValue().AUID)
 			resp.SetReturn(resultcode.Result_Error_NotExistMember)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		} else {
+			if !isJoined {
+				log.Errorf("not join ssrm game auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
+				resp.SetReturn(resultcode.Result_Error_Not_Registered_InnoID_In_SSRM)
+				return ctx.EchoContext.JSON(http.StatusOK, resp)
+			}
 			res.SSRMQuantity = chipQuantity
 		}
 	}
@@ -213,7 +235,7 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		}
 		// 보유량 확인 : SSRM 만 확인 하면 됨
-		if isBlocked, chipQuantity, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
+		if isBlocked, chipQuantity, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
 			log.Errorf("not exist ssrm member auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
 			resp.SetReturn(resultcode.Result_Error_NotExistMember)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
@@ -223,6 +245,12 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 				resp.SetReturn(resultcode.Result_Error_NotExistMember)
 				return ctx.EchoContext.JSON(http.StatusOK, resp)
 			} else {
+				if !isJoined {
+					log.Errorf("not join ssrm game auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
+					resp.SetReturn(resultcode.Result_Error_Not_Registered_InnoID_In_SSRM)
+					return ctx.EchoContext.JSON(http.StatusOK, resp)
+				}
+
 				if chipQuantity < absInt64(params.SSRMAdjustChip) { // 교환 수량 부족
 					log.Errorf("lack chip amount: cur:%v, req:%v", chipQuantity, absInt64(params.SSRMAdjustChip))
 					resp.SetReturn(resultcode.Result_Error_MinPointQuantity)

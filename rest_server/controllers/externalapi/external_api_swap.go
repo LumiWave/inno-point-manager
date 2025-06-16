@@ -27,6 +27,10 @@ func (o *ExternalAPI) PostPointCoinSwap(c echo.Context) error {
 	return commonapi.PostPointCoinSwap(params, ctx)
 }
 
+func (o *ExternalAPI) GetGameChipSwapBaseInfo(c echo.Context) error {
+	return commonapi.GetGameChipSwapBaseInfo(c)
+}
+
 func (o *ExternalAPI) GetGameChipSwapInfo(c echo.Context) error {
 	ctx := base.GetContext(c).(*context.PointManagerContext)
 

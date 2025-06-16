@@ -42,7 +42,7 @@ func (o *DB) USPG_Mod_Users_ChipQuantity(innoUID string, adjChipQuantity int64, 
 	return err
 }
 
-func (o *DB) USPG_Get_Users_By_InnoUID(innoUID string) (bool, int64, error) {
+func (o *DB) USPG_Get_Users_By_InnoUID(innoUID string) (bool, int64, bool, error) {
 	proc := USPG_Get_Users_By_InnoUID
 
 	chipQuantity := int64(0)
@@ -58,20 +58,22 @@ func (o *DB) USPG_Get_Users_By_InnoUID(innoUID string) (bool, int64, error) {
 
 	if err != nil {
 		log.Errorf("%s QueryContext error : %v", proc, err)
-		return isBlocked, chipQuantity, err
+		return isBlocked, chipQuantity, false, err
 	}
 
+	bfind := false
 	for rows.Next() {
 		if err := rows.Scan(&isBlocked, &chipQuantity); err != nil {
 			log.Errorf("USPG_Get_Users_By_InnoUID Scan error : %v", err)
-			return isBlocked, chipQuantity, err
+			return isBlocked, chipQuantity, false, err
 		}
+		bfind = true
 	}
 
 	if returnValue != 1 {
 		log.Errorf("%s returnvalue error : %v", proc, returnValue)
-		return isBlocked, chipQuantity, errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
+		return isBlocked, chipQuantity, false, errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
 	}
 
-	return isBlocked, chipQuantity, err
+	return isBlocked, chipQuantity, bfind, err
 }

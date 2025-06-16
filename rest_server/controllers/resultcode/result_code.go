@@ -68,6 +68,7 @@ const (
 	Result_Error_Db_TransactExchangeGoods_TxStatus     = 18108 // db swap 상태 처리 실패
 	Result_Error_Db_TransactExchangeGoods_TransactedDT = 18109 // db swap 토큰 처리 실패
 	Result_Error_Db_Swap_Complete                      = 18110 // db swap 완료 처리 싶패
+	Result_Error_Not_Registered_InnoID_In_SSRM         = 18111 // ssrm 게임에 inno id가 등록되어 있지 않다.
 
 	Result_DBError         = 19000 // db 에러
 	Result_Invalid_DBID    = 19001 // 유효하지 못한 database index
@@ -134,6 +135,7 @@ var ResultCodeText = map[int]string{
 	Result_Error_Db_GetAccountWallets:             "db get account wallet list error",
 	Result_Error_Db_TransactExchangeGoods_Gasfee:  "db mod transaction exchanagegoods error",
 	Result_Error_Db_Swap_Complete:                 "db swap complete error",
+	Result_Error_Not_Registered_InnoID_In_SSRM:    "Innoid is not registered in SSR mini game",
 
 	Result_DBError:         "Internal DB error",
 	Result_Invalid_DBID:    "Invalid DB ID",
