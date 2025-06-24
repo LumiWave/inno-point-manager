@@ -99,6 +99,30 @@ func GetGameChipSwapBaseInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+func GetGameChipSwapRatio(ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+	res := &context.ResGameChipSwapInfo{
+		ExchangeRatio: config.GetInstance().GameSwap.ExchangeRatio,
+
+		SSRToSSRMID: context.EventID_SSR2SSRM,
+		SSRMToSSRID: context.EventID_SSRM2SSR,
+	}
+	resp.Value = res
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
+func PutGameChipSwapRatio(params *context.ReqGameChipSwapRatio, ctx *context.PointManagerContext) error {
+	resp := new(base.BaseResponse)
+	resp.Success()
+
+	log.Infof("swap ratio %v %v", config.GetInstance().GameSwap.ExchangeRatio, params.ExchangeRatio)
+
+	config.GetInstance().GameSwap.ExchangeRatio = params.ExchangeRatio
+
+	return ctx.EchoContext.JSON(http.StatusOK, resp)
+}
+
 func GetGameChipSwapInfo(params *context.ReqGameChipSwapInfo, ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()

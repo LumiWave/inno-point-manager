@@ -274,3 +274,19 @@ type ResReqGameChipSwap struct {
 }
 
 ////////////////////////////////////////
+
+// //////////////////////////////////////
+// ssr point <-> ssrm chip swap 비율 변경
+type ReqGameChipSwapRatio struct {
+	ExchangeRatio float64 `json:"exchange_ratio"`
+}
+
+func NewReqGameChipSwapRatio() *ReqGameChipSwapRatio {
+	return new(ReqGameChipSwapRatio)
+}
+
+func (o *ReqGameChipSwapRatio) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	return nil
+}
+
+////////////////////////////////////////

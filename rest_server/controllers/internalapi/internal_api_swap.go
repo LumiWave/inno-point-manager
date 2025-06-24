@@ -73,3 +73,24 @@ func (o *InternalAPI) DeleteDeleteSwapInfo(c echo.Context) error {
 
 	return commonapi.DeleteDeleteSwapInfo(params, ctx)
 }
+
+func (o *InternalAPI) GetGameChipSwapRatio(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+	return commonapi.GetGameChipSwapRatio(ctx)
+}
+
+func (o *InternalAPI) PutGameChipSwapRatio(c echo.Context) error {
+	ctx := base.GetContext(c).(*context.PointManagerContext)
+
+	params := context.NewReqGameChipSwapRatio()
+	if err := ctx.EchoContext.Bind(params); err != nil {
+		log.Error(err)
+		return base.BaseJSONInternalServerError(c, err)
+	}
+
+	if err := params.CheckValidate(ctx); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
+
+	return commonapi.PutGameChipSwapRatio(params, ctx)
+}
