@@ -71,8 +71,16 @@ func NewPSPointUpdate() *PSPointUpdate {
 	return new(PSPointUpdate)
 }
 
+type SwapAble struct {
+	SwapAbleP2C any `json:"p2c"`
+	SwapAbleC2P any `json:"c2p"`
+	SwapAbleC2C any `json:"c2c"`
+	SwapAbleP2P any `json:"p2p"`
+}
+
 type Meta struct {
 	PointList interface{} `json:"point_list"`
 	AppCoins  interface{} `json:"app_coins"`
 	Coins     interface{} `json:"coins"`
+	SwapAble  `json:"swapable"`
 }
