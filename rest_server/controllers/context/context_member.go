@@ -135,3 +135,10 @@ type Member struct {
 }
 
 ////////////////////////////////////////
+
+type MyNFTListByNFTPackID struct {
+	BaseCoinID   int64 `json:"base_coin_id"`
+	WalletTypeID int64 `json:"wallet_type_id"`
+	WalletID     int64 `json:"wallet_id"`
+	NFTID        int64 `json:"nft_id"`
+}

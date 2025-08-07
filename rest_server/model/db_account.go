@@ -1,6 +1,7 @@
 package model
 
 import (
+	contextR "context"
 	originCtx "context"
 	"database/sql"
 	"errors"
@@ -18,9 +19,10 @@ const (
 	USPAU_Get_AccountBaseCoins_By_WalletAddress = "[dbo].[USPAU_Get_AccountBaseCoins_By_WalletAddress]"
 	USPAU_Mod_AccountCoins                      = "[dbo].[USPAU_Mod_AccountCoins]"
 
-	USPAU_GetList_AccountWallets           = "[dbo].[USPAU_GetList_AccountWallets]"
-	USPAU_GetList_AccountApplicationPoints = "[dbo].[USPAU_GetList_AccountApplicationPoints]"
-	USPAU_GetList_Members                  = "[dbo].[USPAU_GetList_Members]"
+	USPAU_GetList_AccountWallets            = "[dbo].[USPAU_GetList_AccountWallets]"
+	USPAU_GetList_AccountApplicationPoints  = "[dbo].[USPAU_GetList_AccountApplicationPoints]"
+	USPAU_GetList_Members                   = "[dbo].[USPAU_GetList_Members]"
+	USPAU_GetList_NonFungibleTokens_By_AUID = "[dbo].[USPAU_GetList_NonFungibleTokens_By_AUID]"
 )
 
 // 계정 일일 포인트량 조회
@@ -301,4 +303,38 @@ func (o *DB) USPAU_GetList_Members(auid int64) ([]*context.Member, map[int64]*co
 		return nil, nil, errors.New("USPAU_GetList_Members returnvalue error " + strconv.Itoa(int(returnValue)))
 	}
 	return memberList, memberMap, nil
+}
+
+func (o *DB) USPAU_GetList_NonFungibleTokens_By_AUID(auid, nftPackID int64) ([]*context.MyNFTListByNFTPackID, error) {
+	var returnValue orginMssql.ReturnStatus
+	proc := USPAU_GetList_NonFungibleTokens_By_AUID
+	rows, err := o.MssqlAccountRead.QueryContext(contextR.Background(), proc,
+		sql.Named("AUID", auid),
+		sql.Named("NFTPackID", nftPackID),
+		&returnValue)
+
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	if err != nil {
+		log.Errorf("%s QueryContext error : %v", proc, err)
+		return nil, err
+	}
+
+	nftList := []*context.MyNFTListByNFTPackID{}
+	for rows.Next() {
+		nft := new(context.MyNFTListByNFTPackID)
+		if err := rows.Scan(&nft.BaseCoinID, &nft.WalletTypeID, &nft.WalletID, &nft.NFTID); err != nil {
+			log.Errorf("%s Scan error : %v", proc, err)
+			return nil, err
+		}
+	}
+
+	if returnValue != 1 {
+		log.Errorf("%s returnvalue error : %v", proc, returnValue)
+		return nil, errors.New(proc + " returnvalue error " + strconv.Itoa(int(returnValue)))
+	}
+
+	return nftList, nil
 }

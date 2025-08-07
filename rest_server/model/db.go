@@ -87,6 +87,7 @@ type DB struct {
 	BaseCoinMapBySymbol map[string]*context.BaseCoinInfo // 전체 base coin 정보 : key coin symbol
 	BaseCoins           context.BaseCoinList
 
+	///////// swap 관련
 	SwapAbleC2Cs []*context.SwapC2C // coin to coin 전환 정보
 	SwapAbleP2Cs []*context.SwapP2C // point to coin 전환 정보
 	SwapAbleC2Ps []*context.SwapC2P // coin to point 전환 정보
@@ -96,6 +97,13 @@ type DB struct {
 	SwapAbleP2CsMap map[int64]map[int64]*context.SwapP2C // point to coin 전환 : key from coin id, key to point id
 	SwapAbleC2PsMap map[int64]map[int64]*context.SwapC2P // coint to point 전환 : key from point id, key to coin id
 	SwapAbleP2PsMap map[int64]map[int64]*context.SwapP2P // point to point 전환
+
+	SwapP2CTiers    []*context.SwapP2CTier                    // point to coin 단계별 우대 환율 메타
+	SwapP2CTiersMap map[string]map[int64]*context.SwapP2CTier // point to coin 단계별 우대 환율 메타 map, key1:"from_to", key2:tierID
+
+	SwapP2CTierConditions    []*context.SwapP2CTierCondition                      // point to coin 단계별 우대 조건
+	SwapP2CTierConditionsMap map[string]map[int64][]*context.SwapP2CTierCondition // point to coin 단계별 우대 조건 map, key1:"from_to", key2:tierID
+	/////////
 
 	RedSync *redsync.Redsync
 }
@@ -218,6 +226,9 @@ func LoadDBPoint() {
 	gDB.USPAU_Scan_ExchangePointToCoins()
 	gDB.USPAU_Scan_ExchangeCoinToPoints()
 	gDB.USPAU_Scan_ExchangePointToPoints()
+
+	gDB.USPAU_Scan_ExchangePointToCoinTiers()
+	gDB.USPAU_Scan_ExchangePointToCoinTierConditions()
 }
 
 func MakeDbError(resp *base.BaseResponse, errCode int, err error) {

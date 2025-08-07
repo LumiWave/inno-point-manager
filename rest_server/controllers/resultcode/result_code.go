@@ -141,7 +141,7 @@ var ResultCodeText = map[int]string{
 	Result_Invalid_DBID:    "Invalid DB ID",
 	Result_DBError_Unknown: "Unknown DB error",
 
-	Result_Error_Invalid_data:   "	Invalid data received.",
+	Result_Error_Invalid_data:   "Invalid data received.",
 	Result_Error_duplicate_auid: "The app has duplicate AUIDs.",
 
 	Result_Require_AUID:                "Requires valid 'au_id' information.",

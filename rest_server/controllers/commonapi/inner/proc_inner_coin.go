@@ -1,6 +1,7 @@
 package inner
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/LumiWave/baseapp/base"
@@ -9,6 +10,7 @@ import (
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/token_manager_server"
 	"github.com/LumiWave/inno-point-manager/rest_server/model"
+	"github.com/LumiWave/inno-point-manager/rest_server/util"
 )
 
 // auid에 해당하는 모든 지갑의 balance 정보 수집
@@ -64,4 +66,39 @@ func GetBalanceAll(auid int64) *base.BaseResponse {
 	}
 
 	return resp
+}
+
+func GetBalance(coinSymbol string, walletAddress string, resp *base.BaseResponse) (int64, float64) {
+	coinInfo, ok := model.GetDB().CoinsBySymbol[coinSymbol]
+	if !ok {
+		resp.SetReturn(resultcode.Result_Require_Symbol)
+		return 0, 0
+	}
+	baseCoinInfo := model.GetDB().BaseCoinMapByCoinID[coinInfo.BaseCoinID]
+
+	req := &token_manager_server.ReqBalance{
+		BaseSymbol: baseCoinInfo.BaseCoinSymbol,
+		Contract: func() string {
+			// 코인 타입이면 contract 정보를 를 보내지 않는다.
+			if strings.EqualFold(baseCoinInfo.BaseCoinSymbol, coinInfo.CoinSymbol) {
+				return ""
+			}
+			return coinInfo.ContractAddress
+		}(),
+		Address: walletAddress,
+	}
+
+	res, err := token_manager_server.GetInstance().GetBalance(req)
+	if err != nil {
+		resp.SetReturn(resultcode.ResultInternalServerError)
+		return 0, 0
+	}
+
+	if res.Return != 0 { // token manager 전송 에러
+		resp.SetReturn(resultcode.ResultInternalServerError)
+		return 0, 0
+	}
+
+	balance, _ := strconv.ParseInt(res.Balance, 10, 64)
+	return balance, util.ToDecimalEncf(res.Balance, res.Decimal)
 }

@@ -1,6 +1,7 @@
 package inner
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -208,7 +209,6 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 	// 4. 전환 정보 검증
 	//pointInfo := model.GetDB().AppPointsMap[params.AppID].PointsMap[params.PointID]
 	if params.TxType == context.EventID_P2C {
-		swapBaseInfo := model.GetDB().SwapAbleP2CsMap[params.SwapFromPoint.PointID][params.SwapToCoin.CoinID]
 		// 코인으로 전환시 체크
 		// 당일 누적 코인 전환 수량이 넘었는지 체크
 		if _, coinsMap, err := model.GetDB().GetAccountCoins(params.AUID); err != nil {
@@ -227,18 +227,24 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 				// 내 지갑 코인 정보에 데이터가 없다는것은 최초 스왑인경우 이고 무조건 성공 처리해준다.
 			}
 		}
+		// tier 달성에 따른 최소 전환량, 전환 비율을 가져온다.
+		// tier 달성을 못하거나 달성 조건이 없는 경우 0 tier의 전환량, 비율을 가져온다.
+		minimumExchangeQuantity, ExchangeRatio := GetSwapTierCheck(params.AUID, params.TxType, params.SwapFromPoint.PointID, params.SwapToCoin.CoinID, resp)
+		if resp.Return != 0 { // error
+			return resp
+		}
 		// 포인트 보유수량이 전환량 보다 큰지 확인
 		absAdjustPointQuantity := int64(math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)))
 		if params.SwapFromPoint.PreviousPointQuantity <= 0 || // 보유 포인트량이 0일경우
-			params.SwapFromPoint.PreviousPointQuantity < params.SwapFromPoint.AdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
-			swapBaseInfo.MinimumExchangeQuantity > strconv.FormatInt(absAdjustPointQuantity, 10) { // 전환 최소 수량 에러
+			params.SwapFromPoint.PreviousPointQuantity < absAdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
+			minimumExchangeQuantity > strconv.FormatInt(absAdjustPointQuantity, 10) { // 전환 최소 수량 에러
 			// 전환할 포인트 수량이 없음 에러
 			log.Errorf("lack of minimum point quantity [point_id:%v][PointQuantity:%v]", params.SwapFromPoint.PointID, params.SwapFromPoint.PreviousPointQuantity)
 			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
 			return resp
 		}
 		// 전환 비율 계산 후 타당성 확인
-		exchangeCoin := float64(absAdjustPointQuantity) * swapBaseInfo.ExchangeRatio
+		exchangeCoin := float64(absAdjustPointQuantity) * ExchangeRatio
 		exchangeCoin = toFixed(exchangeCoin, 4)
 		if params.SwapToCoin.AdjustCoinQuantity != exchangeCoin {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
@@ -568,4 +574,158 @@ func checkAlreadySwap(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
 		resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 	}
+}
+
+// 전환 비율, 최소전환량 확인
+func GetSwapTierCheck(auid, eventID, fromID, toID int64, resp *base.BaseResponse) (string, float64) {
+
+	// params valid check
+	switch eventID {
+	case context.EventID_P2C:
+	case context.EventID_C2P, context.EventID_C2C, context.EventID_P2P:
+		// not support yet
+		resp.SetReturn(resultcode.Result_Error_Invalid_data)
+		return "", 0
+	}
+
+	// exist tier condition
+	tierKey := fmt.Sprintf("%v_%v", fromID, toID)
+	tiers, ok := model.GetDB().SwapP2CTiersMap[tierKey]
+	if !ok { // not exist tier
+		return getDefaultSwapInfo(eventID, fromID, toID)
+	}
+
+	tierConditions, ok := model.GetDB().SwapP2CTierConditionsMap[tierKey]
+	if !ok { // not exist tier condition
+		return getDefaultSwapInfo(eventID, fromID, toID)
+	}
+
+	isAchievedCMap := make(map[int64]bool)
+
+	// check condition
+	for tierIndex, conditions := range tierConditions {
+		for _, condition := range conditions {
+			log.Debugf("tier id : %v", condition.TierID)
+			switch condition.ConditionType {
+			case 2: // coin
+				// load coin balance
+				if wallets, _, err := model.GetDB().USPAU_GetList_AccountWallets(auid); err != nil {
+					log.Errorf("USPAU_GetList_AccountWallets err : %v, auid:%v", err, auid)
+					resp.SetReturn(resultcode.Result_Error_Db_GetAccountWallets)
+					return "", 0
+				} else if len(wallets) == 0 {
+					log.Errorf("USPAU_GetList_AccountWallets not exist wallet by auid : %v", auid)
+					resp.SetReturn(resultcode.Result_Error_Db_GetAccountWallets)
+					return "", 0
+				} else {
+					// 수수료로 지불할 지갑이 존재 하는지 찾기
+					conditionCoinSymbol := ""
+					walletAddress := ""
+					for _, wallet := range wallets {
+						// to coin 처리를 위해 정보 수집
+						if eventID == context.EventID_P2C {
+							if wallet.BaseCoinID == model.GetDB().Coins[condition.ConditionID].BaseCoinID && wallet.ConnectionStatus == 1 {
+								conditionCoinSymbol = model.GetDB().Coins[condition.ConditionID].CoinSymbol
+								walletAddress = wallet.WalletAddress
+								break
+							}
+						}
+					}
+					if len(walletAddress) == 0 { // 수수료 지불한 지갑이 존재하지 않다면 에러
+						log.Errorf("Not Find swap fee wallet / auid : %v", auid)
+						resp.SetReturn(resultcode.Result_Error_Db_GetAccountWallets)
+						return "", 0
+					}
+
+					// balance check
+					_, balance := GetBalance(conditionCoinSymbol, walletAddress, resp)
+					if resp.Return != 0 {
+						resp.SetReturn(resultcode.ResultInternalServerError)
+						return "", 0
+					}
+					quantity, _ := strconv.ParseFloat(condition.Quantity, 64)
+					if balance >= quantity {
+						// tier condition success
+						// 비어 있는경우에만 true로 셋팅
+						if _, ok := isAchievedCMap[tierIndex]; !ok {
+							isAchievedCMap[tierIndex] = true
+						}
+					} else {
+						// tier condition fail
+						isAchievedCMap[tierIndex] = false
+					}
+				}
+			case 3: // nft
+				if nftList, err := model.GetDB().USPAU_GetList_NonFungibleTokens_By_AUID(auid, condition.ConditionID); err != nil {
+					log.Errorf("USPAU_GetList_NonFungibleTokens_By_AUID err : %v, audi:%v, nftpackid:%v", err, auid, condition.ConditionID)
+				} else {
+					if len(nftList) != 0 {
+						// tier condition success
+						// 비어 있는경우에만 true로 셋팅
+						if _, ok := isAchievedCMap[tierIndex]; !ok {
+							isAchievedCMap[tierIndex] = true
+						}
+					} else {
+						// tier condition fail
+						isAchievedCMap[tierIndex] = false
+					}
+				}
+			default:
+				log.Warnf("not supprot swap condition type :%v", condition.ConditionType)
+				continue
+			}
+		}
+	}
+
+	// select achieved tier index
+	selectTier := int64(0)
+	hasFailure := false
+	for tierIdx, isSuccess := range isAchievedCMap {
+		if !isSuccess {
+			if !hasFailure || tierIdx < selectTier {
+				selectTier = tierIdx - 1
+				hasFailure = true
+			}
+		}
+	}
+	if !hasFailure {
+		// 실패가 없을 경우, 성공한 tier 중 가장 높은 tier 선택
+		for tierIdx, isSuccess := range isAchievedCMap {
+			if isSuccess && tierIdx > selectTier {
+				selectTier = tierIdx
+			}
+		}
+	}
+
+	minimumExchangeQuantity, exchangeRatio := func(sel int64) (string, float64) {
+		if sel == 0 { // default tier
+			return getDefaultSwapInfo(eventID, fromID, toID)
+		}
+
+		if _, ok := tiers[sel]; !ok {
+			return getDefaultSwapInfo(eventID, fromID, toID)
+		}
+
+		return tiers[sel].MinimumExchangeQuantity, tiers[sel].ExchangeRatio
+	}(selectTier)
+
+	return minimumExchangeQuantity, exchangeRatio
+}
+
+func getDefaultSwapInfo(eventID, fromID, toID int64) (string, float64) {
+	switch eventID {
+	case context.EventID_P2C:
+		swapBaseInfo := model.GetDB().SwapAbleP2CsMap[fromID][toID]
+		return swapBaseInfo.MinimumExchangeQuantity, swapBaseInfo.ExchangeRatio
+	case context.EventID_C2P:
+		swapBaseInfo := model.GetDB().SwapAbleC2PsMap[fromID][toID]
+		return swapBaseInfo.MinimumExchangeQuantity, swapBaseInfo.ExchangeRatio
+	case context.EventID_C2C:
+		swapBaseInfo := model.GetDB().SwapAbleC2CsMap[fromID][toID]
+		return swapBaseInfo.MinimumExchangeQuantity, swapBaseInfo.ExchangeRatio
+	case context.EventID_P2P:
+		swapBaseInfo := model.GetDB().SwapAbleP2PsMap[fromID][toID]
+		return swapBaseInfo.MinimumExchangeQuantity, swapBaseInfo.ExchangeRatio
+	}
+	return "0", 0
 }
