@@ -42,7 +42,8 @@ func (o *DB) USPAU_Scan_ExchangePointToCoinTiers() error {
 			&tier.ToID,
 			&tier.TierID,
 			&tier.MinimumExchangeQuantity,
-			&tier.ExchangeRatio); err != nil {
+			&tier.ExchangeRatio,
+			&tier.BonusMultiplier); err != nil {
 			log.Errorf("USPAU_Scan_ExchangePointToCoinTiers Scan error : %v", err)
 			return err
 		} else {

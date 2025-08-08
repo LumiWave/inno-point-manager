@@ -15,6 +15,8 @@ type SwapP2CTier struct {
 
 	// ExchangeRatio는 받을 전환 비율을 나타냅니다.
 	ExchangeRatio float64 `json:"exchange_ratio"`
+	// 전환율을 배율로 표기를 위한 문자열
+	BonusMultiplier string `json:"bonus_multiplier"`
 }
 
 type SwapP2CTierCondition struct {
