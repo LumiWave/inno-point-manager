@@ -233,11 +233,12 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 		if resp.Return != 0 { // error
 			return resp
 		}
+		iminimumExchangeQuantity, _ := strconv.ParseInt(minimumExchangeQuantity, 10, 64)
 		// 포인트 보유수량이 전환량 보다 큰지 확인
 		absAdjustPointQuantity := int64(math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)))
 		if params.SwapFromPoint.PreviousPointQuantity <= 0 || // 보유 포인트량이 0일경우
 			params.SwapFromPoint.PreviousPointQuantity < absAdjustPointQuantity || // 전환 할 수량보다 보유 수량이 적을 경우
-			minimumExchangeQuantity > strconv.FormatInt(absAdjustPointQuantity, 10) { // 전환 최소 수량 에러
+			iminimumExchangeQuantity > absAdjustPointQuantity { // 전환 최소 수량 에러
 			// 전환할 포인트 수량이 없음 에러
 			log.Errorf("lack of minimum point quantity [point_id:%v][PointQuantity:%v]", params.SwapFromPoint.PointID, params.SwapFromPoint.PreviousPointQuantity)
 			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
