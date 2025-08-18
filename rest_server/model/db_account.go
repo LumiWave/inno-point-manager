@@ -328,6 +328,8 @@ func (o *DB) USPAU_GetList_NonFungibleTokens_By_AUID(auid, nftPackID int64) ([]*
 		if err := rows.Scan(&nft.BaseCoinID, &nft.WalletTypeID, &nft.WalletID, &nft.NFTID); err != nil {
 			log.Errorf("%s Scan error : %v", proc, err)
 			return nil, err
+		} else {
+			nftList = append(nftList, nft)
 		}
 	}
 
