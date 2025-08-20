@@ -12,6 +12,7 @@ import (
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/LumiWave/inno-point-manager/rest_server/model"
+	"github.com/shopspring/decimal"
 )
 
 func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
@@ -245,8 +246,13 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 			return resp
 		}
 		// 전환 비율 계산 후 타당성 확인
-		exchangeCoin := float64(absAdjustPointQuantity) * ExchangeRatio
-		exchangeCoin = toFixed(exchangeCoin, 4)
+		dAbsAdjustPointQuantity := decimal.NewFromInt(absAdjustPointQuantity)
+		dExchangeRatio := decimal.NewFromFloat(ExchangeRatio)
+		tempExchangeCoin := dAbsAdjustPointQuantity.Mul(dExchangeRatio)
+		tempExchangeCoin = tempExchangeCoin.Round(4)
+		exchangeCoin, _ := tempExchangeCoin.Float64()
+		//exchangeCoin := float64(absAdjustPointQuantity) * ExchangeRatio
+		//exchangeCoin = toFixed(exchangeCoin, 4)
 		if params.SwapToCoin.AdjustCoinQuantity != exchangeCoin {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return resp
@@ -271,8 +277,14 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 
 		absAdjustCoinQuantity := math.Abs(params.SwapFromCoin.AdjustCoinQuantity)
 		// 전환 비율 계산 후 타당성 확인
-		exchangePoint := absAdjustCoinQuantity * swapBaseInfo.ExchangeRatio
-		exchangePoint = toFixed(exchangePoint, 0)
+		//exchangePoint := absAdjustCoinQuantity * swapBaseInfo.ExchangeRatio
+		//exchangePoint = toFixed(exchangePoint, 0)
+		dAbsAdjustCoinQuantity := decimal.NewFromFloat(absAdjustCoinQuantity)
+		dExchangeRatio := decimal.NewFromFloat(swapBaseInfo.ExchangeRatio)
+		tempExchangeCoin := dAbsAdjustCoinQuantity.Mul(dExchangeRatio)
+		tempExchangeCoin = tempExchangeCoin.Round(0)
+		exchangePoint, _ := tempExchangeCoin.Float64()
+
 		if params.SwapToPoint.AdjustPointQuantity != int64(exchangePoint) {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToCoin)
 			return resp
@@ -300,8 +312,13 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 
 		// 전환 비율 계산 후 타당성 확인
 		absAdjustCoinQuantity := math.Abs(params.SwapFromCoin.AdjustCoinQuantity)
-		exchangeCoin := absAdjustCoinQuantity * swapBaseInfo.ExchangeRatio
-		exchangeCoin = toFixed(exchangeCoin, 4)
+		// exchangeCoin := absAdjustCoinQuantity * swapBaseInfo.ExchangeRatio
+		// exchangeCoin = toFixed(exchangeCoin, 4)
+		dAbsAdjustCoinQuantity := decimal.NewFromFloat(absAdjustCoinQuantity)
+		dExchangeRatio := decimal.NewFromFloat(swapBaseInfo.ExchangeRatio)
+		tempExchangeCoin := dAbsAdjustCoinQuantity.Mul(dExchangeRatio)
+		tempExchangeCoin = tempExchangeCoin.Round(4)
+		exchangeCoin, _ := tempExchangeCoin.Float64()
 		if params.SwapToCoin.AdjustCoinQuantity != exchangeCoin {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return resp
@@ -336,8 +353,14 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 			return resp
 		}
 		// 전환 비율 계산 후 타당성 확인
-		exchangePoint := math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)) * swapBaseInfo.ExchangeRatio
-		exchangePoint = toFixed(exchangePoint, 0)
+		// exchangePoint := math.Abs(float64(params.SwapFromPoint.AdjustPointQuantity)) * swapBaseInfo.ExchangeRatio
+		// exchangePoint = toFixed(exchangePoint, 0)
+		dAdjustPointQuantity := decimal.NewFromInt(params.SwapFromPoint.AdjustPointQuantity)
+		dExchangeRatio := decimal.NewFromFloat(swapBaseInfo.ExchangeRatio)
+		tempExchangePoint := dAdjustPointQuantity.Mul(dExchangeRatio)
+		tempExchangePoint = tempExchangePoint.Round(0)
+		exchangePoint, _ := tempExchangePoint.Float64()
+
 		if params.SwapToPoint.AdjustPointQuantity != int64(exchangePoint) {
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToCoin)
 			return resp
