@@ -40,6 +40,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.6 // indirect
