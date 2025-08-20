@@ -684,16 +684,20 @@ func GetSwapTierCheck(auid, eventID, fromID, toID int64, resp *base.BaseResponse
 	for tierIdx, isSuccess := range isAchievedCMap {
 		if !isSuccess {
 			if !hasFailure || tierIdx < selectTier {
-				selectTier = tierIdx - 1
-				hasFailure = true
+				selectTier = tierIdx
 			}
+			hasFailure = true
 		}
 	}
-	if !hasFailure {
-		// 실패가 없을 경우, 성공한 tier 중 가장 높은 tier 선택
-		for tierIdx, isSuccess := range isAchievedCMap {
-			if isSuccess && tierIdx > selectTier {
-				selectTier = tierIdx
+	if hasFailure {
+		selectTier = selectTier - 1
+	} else {
+		{
+			// 실패가 없을 경우, 성공한 tier 중 가장 높은 tier 선택
+			for tierIdx, isSuccess := range isAchievedCMap {
+				if isSuccess && tierIdx > selectTier {
+					selectTier = tierIdx
+				}
 			}
 		}
 	}

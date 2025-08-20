@@ -81,6 +81,8 @@ func PostPSMetaRefresh(ctx *context.PointManagerContext) error {
 	model.GetDB().GetApps()
 	model.GetDB().GetAppPoints()
 	model.GetDB().GetBaseCoins()
+	model.GetDB().USPAU_Scan_ExchangePointToCoinTiers()
+	model.GetDB().USPAU_Scan_ExchangePointToCoinTierConditions()
 
 	msg := &model.PSMetaRefresh{
 		PSHeader: model.PSHeader{
@@ -129,6 +131,12 @@ func GetMeta(c echo.Context) error {
 			SwapAbleC2P: model.GetDB().SwapAbleC2PsMap,
 			SwapAbleC2C: model.GetDB().SwapAbleC2CsMap,
 			SwapAbleP2P: model.GetDB().SwapAbleP2PsMap,
+		},
+		SwapTier: context.SwapTier{
+			SwapP2CTier: model.GetDB().SwapP2CTiers,
+		},
+		SwapTierCondition: context.SwapTierCondition{
+			SwapP2CTierCondition: model.GetDB().SwapP2CTierConditions,
 		},
 	}
 
