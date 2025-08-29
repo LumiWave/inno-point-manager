@@ -20,9 +20,17 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 	resp := new(base.BaseResponse)
 	resp.Success()
 
+	retryCache := 0
+RETRY: //
 	tKey := model.MakeCoinTransferKeyByTxID(txHash)
 	txType, err := model.GetDB().GetCacheCoinTransferTx(tKey)
 	if err != nil {
+		if retryCache < 5 {
+			retryCache++
+			time.Sleep(2 * time.Second)
+			log.Debugf("retry GetCacheCoinTransferTx:%v", retryCache)
+			goto RETRY
+		}
 		// 존재 하지 않는 출금 정보 콜백을 받았다.
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Invalid_transfer_txid]+" txid:%v from:%v to:%v amount:%v",
 			txHash, fromAddr, toAddr, value)
@@ -102,7 +110,7 @@ func TransferResultWithdrawalWallet(fromAddr, toAddr, value, fee, symbol, txHash
 		// swap redis 찾아서 완료 처리 하기
 		swapInfo, err := model.GetDB().CacheGetSwapWallet(toAddr)
 		if err != nil {
-			log.Warnf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
+			log.Errorf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
 			return resp
 		}
 
@@ -175,9 +183,17 @@ func TransferResultDepositWallet(fromAddr, toAddr, value, symbol, txHash string,
 	// 2-1. 메인넷 콜백이 더 빨라서 redis에 txHash가 아직 저장되지 않았다면 (TxStatus가 1(초기화) 상태) 경우에만 전송 value가 동일한지 check해서 처리
 
 	// 1. fromAddr redis에서 정보 추출
+	retryCache := 0
+RETRY: //
 	swapInfo, err := model.GetDB().CacheGetSwapWallet(fromAddr)
 	if err != nil {
-		log.Warnf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
+		if retryCache < 5 {
+			retryCache++
+			time.Sleep(2 * time.Second)
+			log.Debugf("retry CacheGetSwapWallet:%v", retryCache)
+			goto RETRY
+		}
+		log.Errorf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
 		return resp
 	}
 
