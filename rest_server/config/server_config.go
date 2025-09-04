@@ -48,6 +48,8 @@ type GameSwap struct {
 	AppID         int64   `yaml:"app_id"`
 	PointID       int64   `yaml:"point_id"`
 	ExchangeRatio float64 `yaml:"exchange_ratio"`
+	DailyMaxAcq   int64   `yaml:"daily_max_qcq"`
+	DailyMaxCnsm  int64   `yaml:"daily_max_cnsm"`
 }
 
 type Wallets struct {

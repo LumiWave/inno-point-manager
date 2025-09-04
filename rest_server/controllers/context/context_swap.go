@@ -245,11 +245,16 @@ func (o *ReqGameChipSwapInfo) CheckValidate(ctx *PointManagerContext) *base.Base
 }
 
 type ResGameChipSwapInfo struct {
-	SSRQuantity   int64   `json:"ssr_quantity"`
-	SSRMQuantity  int64   `json:"ssrm_quantity"`
+	SSRQuantity            int64 `json:"ssr_quantity"`
+	SSRMQuantity           int64 `json:"ssrm_quantity"`
+	DailyExchangeAcqChips  int64 `json:"daily_exchange_acq_chips"`
+	DailyExchangeCnsmChips int64 `json:"daily_exchange_cnsm_chips"`
+
 	ExchangeRatio float64 `json:"exchange_ratio"`
 	SSRToSSRMID   int64   `json:"ssr_to_ssrm_id"`
 	SSRMToSSRID   int64   `json:"ssrm_to_ssr_id"`
+	DailyMaxAcq   *int64  `json:"daily_max_acq,omitempty"`
+	DailyMaxCnsm  *int64  `json:"daily_max_cnsm,omitempty"`
 }
 
 ////////////////////////////////////////
@@ -279,6 +284,8 @@ type ResReqGameChipSwap struct {
 // ssr point <-> ssrm chip swap 비율 변경
 type ReqGameChipSwapRatio struct {
 	ExchangeRatio float64 `json:"exchange_ratio"`
+	DailyMaxAcq   int64   `json:"daily_max_acq"`
+	DailyMaxCnsm  int64   `json:"daily_max_cnsm"`
 }
 
 func NewReqGameChipSwapRatio() *ReqGameChipSwapRatio {

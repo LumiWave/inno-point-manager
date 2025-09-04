@@ -102,11 +102,14 @@ func GetGameChipSwapBaseInfo(c echo.Context) error {
 func GetGameChipSwapRatio(ctx *context.PointManagerContext) error {
 	resp := new(base.BaseResponse)
 	resp.Success()
+
 	res := &context.ResGameChipSwapInfo{
 		ExchangeRatio: config.GetInstance().GameSwap.ExchangeRatio,
 
-		SSRToSSRMID: context.EventID_SSR2SSRM,
-		SSRMToSSRID: context.EventID_SSRM2SSR,
+		SSRToSSRMID:  context.EventID_SSR2SSRM,
+		SSRMToSSRID:  context.EventID_SSRM2SSR,
+		DailyMaxAcq:  &config.GetInstance().GameSwap.DailyMaxAcq,
+		DailyMaxCnsm: &config.GetInstance().GameSwap.DailyMaxCnsm,
 	}
 	resp.Value = res
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
@@ -119,6 +122,8 @@ func PutGameChipSwapRatio(params *context.ReqGameChipSwapRatio, ctx *context.Poi
 	log.Infof("swap ratio %v %v", config.GetInstance().GameSwap.ExchangeRatio, params.ExchangeRatio)
 
 	config.GetInstance().GameSwap.ExchangeRatio = params.ExchangeRatio
+	config.GetInstance().GameSwap.DailyMaxAcq = params.DailyMaxAcq
+	config.GetInstance().GameSwap.DailyMaxCnsm = params.DailyMaxCnsm
 
 	return ctx.EchoContext.JSON(http.StatusOK, resp)
 }
@@ -161,7 +166,7 @@ func GetGameChipSwapInfo(params *context.ReqGameChipSwapInfo, ctx *context.Point
 		}
 	}
 	// SSRM chip 조회
-	if isBlocked, chipQuantity, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
+	if isBlocked, chipQuantity, dailyExchangeAcqChips, dailyExchangeCnsmChips, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
 		log.Errorf("not exist ssrm member auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
 		resp.SetReturn(resultcode.Result_Error_NotExistMember)
 		return ctx.EchoContext.JSON(http.StatusOK, resp)
@@ -178,6 +183,8 @@ func GetGameChipSwapInfo(params *context.ReqGameChipSwapInfo, ctx *context.Point
 				return ctx.EchoContext.JSON(http.StatusOK, resp)
 			}
 			res.SSRMQuantity = chipQuantity
+			res.DailyExchangeAcqChips = dailyExchangeAcqChips
+			res.DailyExchangeCnsmChips = dailyExchangeCnsmChips
 		}
 	}
 
@@ -191,6 +198,28 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 	resp.Success()
 
 	exchangeRate := config.GetInstance().GameSwap.ExchangeRatio
+	dailyMaxAcq := config.GetInstance().GameSwap.DailyMaxAcq   // 일일 최대 칩 획득량
+	dailyMaxCnsm := config.GetInstance().GameSwap.DailyMaxCnsm // 일일 최대 칩 소모량
+
+	// 칩 보유 유져 정보 확인
+	isBlocked, chipQuantity, dailyExchangeAcqChips, dailyExchangeCnsmChips, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID)
+	if err != nil {
+		log.Errorf("not exist ssrm member auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
+		resp.SetReturn(resultcode.Result_Error_NotExistMember)
+		return ctx.EchoContext.JSON(http.StatusOK, resp)
+	} else {
+		if isBlocked {
+			log.Errorf("is block memeber auid:%v", ctx.GetValue().AUID)
+			resp.SetReturn(resultcode.Result_Error_NotExistMember)
+			return ctx.EchoContext.JSON(http.StatusOK, resp)
+		} else {
+			if !isJoined {
+				log.Errorf("not join ssrm game auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
+				resp.SetReturn(resultcode.Result_Error_Not_Registered_InnoID_In_SSRM)
+				return ctx.EchoContext.JSON(http.StatusOK, resp)
+			}
+		}
+	}
 
 	// 수량 검증
 	switch params.SwapType {
@@ -206,7 +235,16 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		}
-		// 보유량 확인 : SSR 보유량만 확인 하면 됨
+
+		// 일일 전환량 체크
+		if dailyMaxAcq < dailyExchangeAcqChips+absInt64(params.SSRMAdjustChip) {
+			// 일일 전환 최대량 초과 에러
+			log.Errorf("Daily consumption exceeded auid:%v, innoid:%v, MaxAcq[%v], UsrAcq[%v], adjust[%v]", ctx.GetValue().AUID, ctx.GetValue().InnoUID, dailyMaxAcq, dailyExchangeAcqChips, absInt64(params.SSRMAdjustChip))
+			resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
+			return ctx.EchoContext.JSON(http.StatusOK, resp)
+		}
+
+		// 보유량 확인 : SSR 보유량 확인
 		_, members, err := model.GetDB().USPAU_GetList_Members(ctx.GetValue().AUID)
 		if err != nil {
 			log.Errorf("USPAU_GetList_Members err: %v", err)
@@ -253,69 +291,59 @@ func PostGameChipSwap(params *context.ReqGameChipSwap, ctx *context.PointManager
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		}
-		if int64(absfloat64(params.SSRMAdjustChip)/exchangeRate) != params.SSRAdjustPoint {
+		if int64(absfloat64(params.SSRMAdjustChip)*exchangeRate) != params.SSRAdjustPoint {
 			log.Errorf("not equal exchange ratio params : cal point:%v, rev point:%v auid:%v, innoid:%v", int64(absfloat64(params.SSRMAdjustChip)*exchangeRate), params.SSRAdjustPoint, ctx.GetValue().AUID, ctx.GetValue().InnoUID)
 			resp.SetReturn(resultcode.Result_Error_Exchangeratio_ToPoint)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		}
-		// 보유량 확인 : SSRM 만 확인 하면 됨
-		if isBlocked, chipQuantity, isJoined, err := model.GetDB().USPG_Get_Users_By_InnoUID(ctx.GetValue().InnoUID); err != nil {
-			log.Errorf("not exist ssrm member auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
+
+		// 일일 전환량 체크
+		if dailyMaxCnsm < absInt64(dailyExchangeCnsmChips)+absInt64(params.SSRMAdjustChip) {
+			// 일일 전환 최대량 초과 에러
+			log.Errorf("Daily consumption exceeded auid:%v, innoid:%v, MaxCnsm[%v], UsrCnsm[%v], adjust[%v]", ctx.GetValue().AUID, ctx.GetValue().InnoUID, dailyMaxCnsm, absInt64(dailyExchangeCnsmChips), absInt64(params.SSRMAdjustChip))
+			resp.SetReturn(resultcode.Result_Error_Exceed_DailyLimitedSwapPoint)
+			return ctx.EchoContext.JSON(http.StatusOK, resp)
+		}
+
+		if chipQuantity < absInt64(params.SSRMAdjustChip) { // 교환 수량 부족
+			log.Errorf("lack chip amount: cur:%v, req:%v", chipQuantity, absInt64(params.SSRMAdjustChip))
+			resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
+			return ctx.EchoContext.JSON(http.StatusOK, resp)
+		}
+
+		_, members, err := model.GetDB().USPAU_GetList_Members(ctx.GetValue().AUID)
+		if err != nil {
+			log.Errorf("USPAU_GetList_Members err: %v", err)
+			resp.SetReturn(resultcode.Result_DBError)
+			return ctx.EchoContext.JSON(http.StatusOK, resp)
+		}
+		appID := config.GetInstance().GameSwap.AppID
+		pointID := config.GetInstance().GameSwap.PointID
+		if member, ok := members[appID]; !ok {
+			log.Errorf("not exist member appid: %v", appID)
 			resp.SetReturn(resultcode.Result_Error_NotExistMember)
 			return ctx.EchoContext.JSON(http.StatusOK, resp)
 		} else {
-			if isBlocked {
-				log.Errorf("is block memeber auid:%v", ctx.GetValue().AUID)
-				resp.SetReturn(resultcode.Result_Error_NotExistMember)
+			if pointInfo, err := inner.LoadPoint(member.MUID, pointID, member.DatabaseID, member.AppID); err != nil {
+				log.Errorf("point info load FAIL! auid:%v, muid:%v, innoid:%v", ctx.GetValue().AUID, member.MUID, ctx.GetValue().InnoUID)
+				resp.SetReturn(resultcode.Result_DBError)
 				return ctx.EchoContext.JSON(http.StatusOK, resp)
 			} else {
-				if !isJoined {
-					log.Errorf("not join ssrm game auid:%v, innoid:%v", ctx.GetValue().AUID, ctx.GetValue().InnoUID)
-					resp.SetReturn(resultcode.Result_Error_Not_Registered_InnoID_In_SSRM)
-					return ctx.EchoContext.JSON(http.StatusOK, resp)
-				}
-
-				if chipQuantity < absInt64(params.SSRMAdjustChip) { // 교환 수량 부족
-					log.Errorf("lack chip amount: cur:%v, req:%v", chipQuantity, absInt64(params.SSRMAdjustChip))
+				if len(pointInfo.Points) == 0 { // 포인트가 존재하지 않는다면 에러
+					log.Errorf("not exist point info! auid:%v, pointid:%v, innoid:%v", ctx.GetValue().AUID, pointID, ctx.GetValue().InnoUID)
 					resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
 					return ctx.EchoContext.JSON(http.StatusOK, resp)
 				}
-			}
+				if pointInfo.Points[0].PointID != pointID { // 포인트가 존재하지 않는다면 에러
+					log.Errorf("not exist equal point info! auid:%v, pointid:%v, innoid:%v", ctx.GetValue().AUID, pointID, ctx.GetValue().InnoUID)
+					resp.SetReturn(resultcode.Result_Error_NotExistMember)
+					return ctx.EchoContext.JSON(http.StatusOK, resp)
+				}
 
-			_, members, err := model.GetDB().USPAU_GetList_Members(ctx.GetValue().AUID)
-			if err != nil {
-				log.Errorf("USPAU_GetList_Members err: %v", err)
-				resp.SetReturn(resultcode.Result_DBError)
-				return ctx.EchoContext.JSON(http.StatusOK, resp)
-			}
-			appID := config.GetInstance().GameSwap.AppID
-			pointID := config.GetInstance().GameSwap.PointID
-			if member, ok := members[appID]; !ok {
-				log.Errorf("not exist member appid: %v", appID)
-				resp.SetReturn(resultcode.Result_Error_NotExistMember)
-				return ctx.EchoContext.JSON(http.StatusOK, resp)
-			} else {
-				if pointInfo, err := inner.LoadPoint(member.MUID, pointID, member.DatabaseID, member.AppID); err != nil {
-					log.Errorf("point info load FAIL! auid:%v, muid:%v, innoid:%v", ctx.GetValue().AUID, member.MUID, ctx.GetValue().InnoUID)
+				// 수량 업데이트
+				if err := ProcGameChipSwap(params, pointID, pointInfo.MUID, pointInfo.DatabaseID, ctx.GetValue().InnoUID, pointInfo.Points[0].Quantity); err != nil {
 					resp.SetReturn(resultcode.Result_DBError)
 					return ctx.EchoContext.JSON(http.StatusOK, resp)
-				} else {
-					if len(pointInfo.Points) == 0 { // 포인트가 존재하지 않는다면 에러
-						log.Errorf("not exist point info! auid:%v, pointid:%v, innoid:%v", ctx.GetValue().AUID, pointID, ctx.GetValue().InnoUID)
-						resp.SetReturn(resultcode.Result_Error_MinPointQuantity)
-						return ctx.EchoContext.JSON(http.StatusOK, resp)
-					}
-					if pointInfo.Points[0].PointID != pointID { // 포인트가 존재하지 않는다면 에러
-						log.Errorf("not exist equal point info! auid:%v, pointid:%v, innoid:%v", ctx.GetValue().AUID, pointID, ctx.GetValue().InnoUID)
-						resp.SetReturn(resultcode.Result_Error_NotExistMember)
-						return ctx.EchoContext.JSON(http.StatusOK, resp)
-					}
-
-					// 수량 업데이트
-					if err := ProcGameChipSwap(params, pointID, pointInfo.MUID, pointInfo.DatabaseID, ctx.GetValue().InnoUID, pointInfo.Points[0].Quantity); err != nil {
-						resp.SetReturn(resultcode.Result_DBError)
-						return ctx.EchoContext.JSON(http.StatusOK, resp)
-					}
 				}
 			}
 		}
