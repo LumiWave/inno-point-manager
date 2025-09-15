@@ -81,7 +81,8 @@ func (o *MemberPointInfo) UpdateRun() {
 			}
 			//5. db update
 			for _, point := range pointInfo.Points {
-				if o.BackUpCurQuantity[point.PointID] != point.Quantity && point.AdjustQuantity != 0 { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
+				//if o.BackUpCurQuantity[point.PointID] != point.Quantity && point.AdjustQuantity != 0 { // 포인트 정보가 변경된 경우에만 db 업데이트 처리
+				if point.AdjustQuantity != 0 {
 					var eventID context.EventID_type
 					if point.AdjustQuantity >= 0 {
 						eventID = context.EventID_add
