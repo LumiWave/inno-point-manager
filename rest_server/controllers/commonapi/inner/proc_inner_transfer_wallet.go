@@ -107,10 +107,17 @@ RETRY: //
 			model.GetDB().DelCacheCoinTransferFromParentWallet(parentKey) // from parent 삭제
 		}
 
+		retryCache = 0
 		// swap redis 찾아서 완료 처리 하기
+	RETRY_1:
 		swapInfo, err := model.GetDB().CacheGetSwapWallet(toAddr)
 		if err != nil {
-			log.Errorf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
+			log.Errorf("not exist fromAddr : %v, toAddr:%v, txHash:%v, retry:%v", fromAddr, toAddr, txHash, retryCache)
+			if retryCache < 3 {
+				time.Sleep(3 * time.Second)
+				retryCache++
+				goto RETRY_1
+			}
 			return resp
 		}
 
@@ -193,7 +200,7 @@ RETRY: //
 			log.Debugf("retry CacheGetSwapWallet:%v", retryCache)
 			goto RETRY
 		}
-		log.Errorf("not exist fromAddr : %v, txHash:%v", fromAddr, txHash)
+		log.Errorf("not exist fromAddr : %v, toAddr :%v, txHash:%v", fromAddr, toAddr, txHash)
 		return resp
 	}
 

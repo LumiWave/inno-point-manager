@@ -318,7 +318,7 @@ func CheckPingDB(db *basedb.Mssql, conf baseconf.DBAuth, dbType DBType, pointDB 
 			if dbType == ACCOUNT {
 				log.Errorf("%v DB Ping err RetryCount(%v)", conf.Database, db.Connection.RetryCount)
 			} else {
-				log.Errorf("%v DB Ping err RetryCount(%v)", pointDB.DatabaseName, db.Connection.RetryCount)
+				log.Errorf("%v DB Ping err RetryCount(%v)", conf.Database, db.Connection.RetryCount)
 			}
 
 			// ping 2회 시도해도 안되면 close
