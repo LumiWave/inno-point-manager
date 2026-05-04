@@ -32,14 +32,15 @@ func (o *ServerApp) Init(configFile string) (err error) {
 	base.AppendReturnCodeText(&resultcode.ResultCodeText)
 	context.AppendRequestParameter()
 
-	if err := o.InitScheduler(); err != nil {
-		return err
-	}
 	auth.InitHttpClient()
 	o.InitTokenManagerServer(o.conf)
 	o.InitLogServer(o.conf)
 
 	if err := o.NewDB(o.conf); err != nil {
+		return err
+	}
+
+	if err := o.InitScheduler(); err != nil {
 		return err
 	}
 

@@ -38,15 +38,15 @@ func PostWalletWebHookSUIDeposit(params *context.SUI_CB_Balance_Changes, ctx *co
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	// 수이 입금은 balance에서 amount가 음수이면 from 정보이고 양수이면 to 정보여서 따로 추출해야한다.
-	fromAddr := ""
+	fromAddr := params.Sender
 	toAddr := ""
 	value := ""
 	symbol := ""
 	for _, balance := range params.Balances {
-		if strings.Contains(balance.Amount, "-") {
-			fromAddr = balance.Owner
-		} else {
+		if strings.EqualFold(balance.Owner, params.Sender) {
+			continue // sender 본인의 변동(차감 토큰 + SUI 가스/리베이트)은 스킵
+		}
+		if !strings.Contains(balance.Amount, "-") {
 			toAddr = balance.Owner
 			value = balance.Amount
 			symbol = balance.Symbol
@@ -69,15 +69,15 @@ func PostWalletWebHookSUIWithdrawal(params *context.SUI_CB_Balance_Changes, ctx 
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	// 수이 입금은 balance에서 amount가 음수이면 from 정보이고 양수이면 to 정보여서 따로 추출해야한다.
-	fromAddr := ""
+	fromAddr := params.Sender
 	toAddr := ""
 	value := ""
 	symbol := ""
 	for _, balance := range params.Balances {
-		if strings.Contains(balance.Amount, "-") {
-			fromAddr = balance.Owner
-		} else {
+		if strings.EqualFold(balance.Owner, params.Sender) {
+			continue // sender 본인의 변동(원본 토큰 차감 + SUI 가스/리베이트)은 스킵
+		}
+		if !strings.Contains(balance.Amount, "-") {
 			toAddr = balance.Owner
 			value = balance.Amount
 			symbol = balance.Symbol
