@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 
 	"github.com/LumiWave/baseutil/log"
 	"github.com/LumiWave/inno-point-manager/rest_server/config"
@@ -11,6 +12,11 @@ import (
 
 func MakeSwapWalletKey() string {
 	return config.GetInstance().DBPrefix + ":SWAP-WALLET"
+}
+
+// 스왑 한 건의 상태 변경과 입금 콜백 처리가 겹치지 않게 잡는 락 키
+func MakeSwapTxLockKey(txID int64) string {
+	return config.GetInstance().DBPrefix + ":SWAP-TX-LOCK:" + strconv.FormatInt(txID, 10)
 }
 
 // swap 정보 저장

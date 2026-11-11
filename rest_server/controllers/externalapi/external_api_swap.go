@@ -20,6 +20,10 @@ func (o *ExternalAPI) PostPointCoinSwap(c echo.Context) error {
 		return base.BaseJSONInternalServerError(c, err)
 	}
 
+	// 외부 요청은 본문의 au_id 대신 토큰의 계정으로 고정하고, 포인트 회원이 그 계정 소속인지 확인한다.
+	if err := commonapi.BindSwapOwner(ctx, params); err != nil {
+		return c.JSON(http.StatusOK, err)
+	}
 	if err := params.CheckValidate(ctx); err != nil {
 		return c.JSON(http.StatusOK, err)
 	}

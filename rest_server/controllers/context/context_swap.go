@@ -78,8 +78,86 @@ func NewReqSwapInfo() *ReqSwapInfo {
 	return new(ReqSwapInfo)
 }
 
+// 대시보드가 프리세일용 코인->포인트 스왑에 쓰는 내부 전용 타입
+const EventID_Server_C2P = 100000
+
 func (o *ReqSwapInfo) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
+	if o.AUID == 0 {
+		return base.MakeBaseResponse(resultcode.Result_Require_AUID)
+	}
+
+	// 내주는 쪽은 줄고(음수) 받는 쪽은 늘어야(양수) 한다.
+	// 부호를 확인하지 않으면 포인트를 늘리면서 코인까지 받아 갈 수 있다.
+	switch o.TxType {
+	case EventID_P2C:
+		if !(o.SwapFromPoint.AdjustPointQuantity < 0 && o.SwapToCoin.AdjustCoinQuantity > 0) {
+			return base.MakeBaseResponse(resultcode.Result_Require_AdjustQuantity)
+		}
+	case EventID_C2P, EventID_Server_C2P:
+		if !(o.SwapFromCoin.AdjustCoinQuantity < 0 && o.SwapToPoint.AdjustPointQuantity > 0) {
+			return base.MakeBaseResponse(resultcode.Result_Require_AdjustQuantity)
+		}
+	case EventID_C2C:
+		if !(o.SwapFromCoin.AdjustCoinQuantity != 0 && o.SwapToCoin.AdjustCoinQuantity > 0) {
+			return base.MakeBaseResponse(resultcode.Result_Require_AdjustQuantity)
+		}
+	case EventID_P2P:
+		if !(o.SwapFromPoint.AdjustPointQuantity != 0 && o.SwapToPoint.AdjustPointQuantity > 0) {
+			return base.MakeBaseResponse(resultcode.Result_Require_AdjustQuantity)
+		}
+	default:
+		return base.MakeBaseResponse(resultcode.Result_Error_Invalid_data)
+	}
+
 	return nil
+}
+
+// CanCancelByUser 는 사용자 쪽 전송 실패 신고로 스왑을 취소(선차감 환불)해도 되는 상태인지 알려준다.
+// 수수료나 코인 입금이 확인되면 지급이 시작되므로, 그 뒤에는 취소할 수 없다.
+func (o *ReqSwapInfo) CanCancelByUser() bool {
+	switch o.TxType {
+	case EventID_P2C:
+		if o.IsFeeComplete || len(o.SwapToCoin.TokenTxHash) != 0 {
+			return false
+		}
+		return o.TxStatus == SWAP_status_init || o.TxStatus == SWAP_status_fee_transfer_start
+	case EventID_C2P:
+		return o.TxStatus == SWAP_status_init || o.TxStatus == SWAP_status_token_transfer_deposit_start
+	case EventID_C2C:
+		if (o.IsFeeComplete && o.SwapFromCoin.IsComplete) || len(o.SwapToCoin.TokenTxHash) != 0 {
+			return false
+		}
+		return o.TxStatus == SWAP_status_init ||
+			o.TxStatus == SWAP_status_fee_transfer_start ||
+			o.TxStatus == SWAP_status_fee_transfer_success ||
+			o.TxStatus == SWAP_status_token_transfer_deposit_start
+	}
+	return false
+}
+
+// CanReportDeposit 은 사용자가 "코인 전송을 시작했다"고 알려도 되는 상태인지 알려준다.
+// 코인을 받는 스왑(코인->포인트, 코인->코인)에서 입금이 확인되기 전에만 받는다.
+func (o *ReqSwapInfo) CanReportDeposit() bool {
+	if o.TxType != EventID_C2P && o.TxType != EventID_C2C {
+		return false
+	}
+	return o.CanCancelByUser()
+}
+
+// CanPayout 은 수수료 입금 확인 뒤 법인 지갑에서 코인을 내보내도 되는 상태인지 알려준다.
+// 이미 출금을 시작했거나 끝난 스왑에 같은 입금 콜백이 다시 오면 두 번 지급하지 않는다.
+func (o *ReqSwapInfo) CanPayout() bool {
+	if o.TxType != EventID_P2C && o.TxType != EventID_C2C {
+		return false
+	}
+	if len(o.SwapToCoin.TokenTxHash) != 0 {
+		return false
+	}
+	return o.TxStatus == SWAP_status_init ||
+		o.TxStatus == SWAP_status_fee_transfer_start ||
+		o.TxStatus == SWAP_status_fee_transfer_success ||
+		o.TxStatus == SWAP_status_token_transfer_deposit_start ||
+		o.TxStatus == SWAP_status_token_transfer_deposit_success
 }
 
 ////////////////////////////////////////
@@ -90,6 +168,9 @@ type ReqSwapStatus struct {
 	TxStatus          int64  `json:"tx_status"`
 	TxHash            string `json:"tx_hash"`
 	FromWalletAddress string `json:"from_wallet_address"`
+	// 요청한 회원의 계정. 대시보드가 토큰의 계정을 넣어 보내면 스왑의 주인인지 확인한다.
+	// 값이 없으면(0) 예전처럼 확인하지 않는다.
+	AUID int64 `json:"au_id"`
 }
 
 func NewReqSwapStatus() *ReqSwapStatus {
@@ -97,7 +178,11 @@ func NewReqSwapStatus() *ReqSwapStatus {
 }
 
 func (o *ReqSwapStatus) CheckValidate(ctx *PointManagerContext) *base.BaseResponse {
-	if o.TxStatus < SWAP_status_fee_transfer_start && o.TxStatus > SWAP_status_fee_transfer_fail {
+	// 사용자 쪽에서 알릴 수 있는 상태만 받는다. 출금 관련 상태(5~7, 9)는 서버만 바꾼다.
+	switch o.TxStatus {
+	case SWAP_status_fee_transfer_start, SWAP_status_fee_transfer_success, SWAP_status_fee_transfer_fail,
+		SWAP_status_token_transfer_deposit_start, SWAP_status_token_transfer_deposit_fail:
+	default:
 		return base.MakeBaseResponse(resultcode.Result_Invalid_TxStatus)
 	}
 	if len(o.FromWalletAddress) == 0 {

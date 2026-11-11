@@ -51,6 +51,15 @@ func PreCheck(c echo.Context) base.PreCheckResponse {
 			}
 		}
 
+		// "Bearer " 뒤에 토큰이 없으면 잘라낼 때 panic 이 나므로 길이를 먼저 확인한다.
+		if len(author) == 0 || len(author[0]) <= 7 {
+			res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
+			return base.PreCheckResponse{
+				IsSucceed: false,
+				Response:  res,
+			}
+		}
+
 		if value, returnValue, err := auth.CheckAuthToken(author[0][7:]); err != nil {
 			res := base.MakeBaseResponse(resultcode.Result_Auth_InvalidJwt)
 			return base.PreCheckResponse{

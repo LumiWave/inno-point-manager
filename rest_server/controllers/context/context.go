@@ -33,3 +33,26 @@ func (o *PointManagerContext) SetVerifyAuthToken(value *auth.VerifyAuthToken) {
 func (o *PointManagerContext) GetValue() *auth.VerifyAuthToken {
 	return o.VerifyValue
 }
+
+// 인증 서버(inno-auth)가 내려주는 로그인 종류
+const (
+	AuthLoginType_App        = 2 // 앱(게임 서버) 로그인
+	AuthLoginType_AppAccount = 3 // 앱 회원 로그인
+	AuthLoginType_WebAccount = 4 // 웹 회원 로그인
+)
+
+// IsAppToken 은 앱(게임 서버) 로그인 토큰인지 알려준다.
+// 앱 회원 토큰에도 AppID 가 들어 있으므로 로그인 종류까지 확인한다.
+func (o *PointManagerContext) IsAppToken() bool {
+	v := o.VerifyValue
+	return v != nil && v.LoginType == AuthLoginType_App && v.AppID != 0
+}
+
+// IsMemberToken 은 회원(앱 회원, 웹 회원) 로그인 토큰인지 알려준다.
+func (o *PointManagerContext) IsMemberToken() bool {
+	v := o.VerifyValue
+	if v == nil || v.AUID == 0 {
+		return false
+	}
+	return v.LoginType == AuthLoginType_AppAccount || v.LoginType == AuthLoginType_WebAccount
+}

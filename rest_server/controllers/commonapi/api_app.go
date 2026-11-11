@@ -23,6 +23,9 @@ func GetPointAppList(req *context.ReqGetPointApp, ctx *context.PointManagerConte
 	// 포인트 정보 조회
 	if pointInfo, err := inner.LoadPointList(req.MUID, req.DatabaseID, ctx.GetValue().AppID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else if deny := CheckPointOwnerApp(ctx, pointInfo); deny != nil {
+		// 앱 토큰으로 다른 앱 회원의 포인트를 조회한 경우
+		resp = deny
 	} else {
 		pointInfos := context.ResPointMemberRegister{
 			PointInfo: *pointInfo,
@@ -41,6 +44,9 @@ func GetPointApp(req *context.ReqGetPointApp, ctx *context.PointManagerContext) 
 	// 포인트 정보 조회
 	if pointInfo, err := inner.LoadPoint(req.MUID, req.PointID, req.DatabaseID, ctx.GetValue().AppID); err != nil {
 		model.MakeDbError(resp, resultcode.Result_DBError, err)
+	} else if deny := CheckPointOwnerApp(ctx, pointInfo); deny != nil {
+		// 앱 토큰으로 다른 앱 회원의 포인트를 조회한 경우
+		resp = deny
 	} else {
 		pointInfos := context.ResPointMemberRegister{
 			PointInfo: *pointInfo,

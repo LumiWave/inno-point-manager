@@ -204,8 +204,28 @@ RETRY: //
 		return resp
 	}
 
+	// 같은 입금 콜백이 겹쳐 오거나 상태 변경 요청과 동시에 처리되면 두 번 지급하거나
+	// 지급 뒤에 환불될 수 있으므로, 스왑 단위로 락을 잡고 최신 상태로 다시 읽어서 처리한다.
+	var unlock func()
+	swapInfo, unlock, err = lockSwap(fromAddr)
+	if err != nil {
+		log.Errorf("swap lock fail fromAddr : %v, txHash:%v, err:%v", fromAddr, txHash, err)
+		return resp
+	}
+	defer unlock()
+
 	// 1-1. point->coin, coin->point 분기
 	if swapInfo.TxType == context.EventID_P2C {
+		// 수수료로 정한 코인이 아닌 입금은 수수료로 인정하지 않는다. (숫자만 같은 다른 코인 차단)
+		if len(swapInfo.SwapFeeCoinSymbol) != 0 && !strings.EqualFold(swapInfo.SwapFeeCoinSymbol, symbol) {
+			log.Warnf("not swap fee coin => fee coin:%v, rev:%v, from:%v, txhash:%v", swapInfo.SwapFeeCoinSymbol, symbol, fromAddr, txHash)
+			return resp
+		}
+		// 이미 출금을 시작한 스왑에 같은 입금 콜백이 다시 오면 두 번 지급하지 않는다.
+		if !swapInfo.CanPayout() {
+			log.Warnf("swap payout already started => txid:%v, status:%v, from:%v, txhash:%v", swapInfo.TxID, swapInfo.TxStatus, fromAddr, txHash)
+			return resp
+		}
 		// 2. txHash로 동일 한지 확인
 		if len(swapInfo.TxHash) != 0 && !strings.EqualFold(swapInfo.TxHash, txHash) {
 			log.Warnf("not equal txhash => redis:%v, rev:%v, from:%v", swapInfo.TxHash, txHash, fromAddr)
@@ -273,6 +293,17 @@ RETRY: //
 		basecoinID := model.GetDB().CoinsBySymbol[symbol].BaseCoinID
 		basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
 		swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
+
+		// 스왑에 등록한 코인이 맞고 금액이 같을 때만 입금으로 인정한다.
+		// tx 해시만 미리 등록해 두고 적은 금액이나 다른 코인을 보내는 것을 막는다.
+		if len(swapInfo.SwapFromCoin.CoinSymbol) != 0 && !strings.EqualFold(swapInfo.SwapFromCoin.CoinSymbol, symbol) {
+			log.Warnf("not swap coin => swap coin:%v, rev:%v, from:%v, txhash:%v", swapInfo.SwapFromCoin.CoinSymbol, symbol, fromAddr, txHash)
+			return resp
+		}
+		if math.Abs(swapInfo.SwapFromCoin.AdjustCoinQuantity) != fe {
+			log.Errorf("not equal swap coin quantity redis:%v, rev:%v, txid:%v", swapInfo.SwapFromCoin.AdjustCoinQuantity, fe, swapInfo.TxID)
+			return resp
+		}
 
 		if strings.EqualFold(swapInfo.SwapFromCoin.TokenTxHash, txHash) {
 			// 시퀀스에 맞게 입금 콜백이 온경우
@@ -387,8 +418,8 @@ RETRY: //
 			basecoinSymbol := model.GetDB().BaseCoinMapByCoinID[basecoinID].BaseCoinSymbol
 			swapInfo.TxGasFee = util.ToDecimalEncf(strconv.FormatInt(gasFee, 10), model.GetDB().CoinsBySymbol[basecoinSymbol].Decimal)
 
-			if strings.EqualFold(swapInfo.SwapFromCoin.TokenTxHash, txHash) {
-				// 시퀀스에 맞게 입금 콜백이 온경우
+			if strings.EqualFold(swapInfo.SwapFromCoin.TokenTxHash, txHash) && math.Abs(swapInfo.SwapFromCoin.AdjustCoinQuantity) == fe {
+				// 시퀀스에 맞게 입금 콜백이 온경우 (해시가 맞아도 금액이 같아야 인정한다)
 				swapInfo.TxStatus = context.SWAP_status_token_transfer_deposit_success
 				if err := model.GetDB().USPAU_Mod_TransactExchanges_TxStatus(swapInfo.SwapFromCoin.BaseCoinID, strconv.FormatFloat(swapInfo.TxGasFee, 'f', -1, 64), swapInfo); err == nil {
 					swapInfo.SwapFromCoin.IsComplete = true
@@ -407,8 +438,8 @@ RETRY: //
 			}
 		}
 
-		// 둘다 입금 처리 되었다면 코인 전송을 시작한다.
-		if swapInfo.SwapFromCoin.IsComplete && swapInfo.IsFeeComplete {
+		// 둘다 입금 처리 되었다면 코인 전송을 시작한다. 이미 출금을 시작했으면 다시 보내지 않는다.
+		if swapInfo.SwapFromCoin.IsComplete && swapInfo.IsFeeComplete && swapInfo.CanPayout() {
 			SwapTokenTransfer(swapInfo)
 			// 캐시 삭제는 출금 완료 콜백 받는 부분에서 처리한다.
 		}
@@ -481,12 +512,15 @@ func SwapTokenTransfer(swapInfo *context.ReqSwapInfo) *base.BaseResponse {
 	swapInfo.TxStatus = context.SWAP_status_token_transfer_withdrawal_start
 	swapCoin.TokenTxHash = reqFromParent.TransactionId
 
+	// 출금을 시작했다는 사실을 캐시에 먼저 남긴다.
+	// DB 기록이 실패했다고 캐시를 그대로 두면 같은 입금 콜백이 다시 왔을 때 한 번 더 지급하게 된다.
+	if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
+		log.Errorf("CacheSetSwapWallet err :%v, txid:%v", err, swapInfo.TxID)
+	}
+
 	// swap 토큰 전송 시작 기록
-	if err := model.GetDB().USPAU_Mod_TransactExchanges_Coin(swapInfo.TxID, swapInfo.TxStatus, swapCoin.TokenTxHash, time.Now().Format("2006-01-02 15:04:05.000"), 0, ""); err == nil {
-		if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
-			log.Errorf("CacheSetSwapWallet err :%v", err)
-			return resp
-		}
+	if err := model.GetDB().USPAU_Mod_TransactExchanges_Coin(swapInfo.TxID, swapInfo.TxStatus, swapCoin.TokenTxHash, time.Now().Format("2006-01-02 15:04:05.000"), 0, ""); err != nil {
+		log.Errorf("USPAU_Mod_TransactExchanges_Coin err :%v, txid:%v", err, swapInfo.TxID)
 	}
 
 	return resp

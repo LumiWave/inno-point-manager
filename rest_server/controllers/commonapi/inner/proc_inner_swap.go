@@ -1,6 +1,7 @@
 package inner
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -12,17 +13,70 @@ import (
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/context"
 	"github.com/LumiWave/inno-point-manager/rest_server/controllers/resultcode"
 	"github.com/LumiWave/inno-point-manager/rest_server/model"
+	"github.com/go-redsync/redsync/v4"
 	"github.com/shopspring/decimal"
 )
+
+// 스왑 락을 잡고 있을 수 있는 최대 시간. 법인 지갑 출금 요청까지 끝날 만큼 넉넉하게 둔다.
+const swapLockExpiry = 60 * time.Second
+
+var errSwapLock = errors.New("swap lock fail")
+
+// lockSwap 은 같은 스왑을 상태 변경 요청과 입금 콜백이 동시에 처리하지 못하게 락을 잡고,
+// 락을 잡은 뒤의 최신 스왑 정보를 돌려준다. 다 쓰면 unlock 을 불러야 한다.
+func lockSwap(walletAddress string) (*context.ReqSwapInfo, func(), error) {
+	swapInfo, err := model.GetDB().CacheGetSwapWallet(walletAddress)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mutex := model.GetDB().RedSync.NewMutex(model.MakeSwapTxLockKey(swapInfo.TxID), redsync.WithExpiry(swapLockExpiry))
+	if err := mutex.Lock(); err != nil {
+		log.Errorf("swap lock err : %v, txid:%v", err, swapInfo.TxID)
+		return nil, nil, errSwapLock
+	}
+	unlock := func() {
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			if err != nil {
+				log.Errorf("swap unlock err : %v", err)
+			}
+		}
+	}
+
+	// 락을 기다리는 동안 다른 처리가 상태를 바꿨을 수 있으니 다시 읽는다.
+	latest, err := model.GetDB().CacheGetSwapWallet(walletAddress)
+	if err != nil || latest.TxID != swapInfo.TxID {
+		unlock()
+		if err == nil {
+			err = errors.New("swap changed")
+		}
+		return nil, nil, err
+	}
+	return latest, unlock, nil
+}
 
 func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 	resp := new(base.BaseResponse)
 	resp.Success()
 
-	if swapInfo, err := model.GetDB().CacheGetSwapWallet(params.FromWalletAddress); err != nil {
+	swapInfo, unlock, err := lockSwap(params.FromWalletAddress)
+	if err == errSwapLock {
+		resp.SetReturn(resultcode.Result_RedisError_Lock_fail)
+		return resp
+	}
+	if err != nil {
 		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_GetSwapInfo])
 		resp.SetReturn(resultcode.Result_RedisError_GetSwapInfo)
 	} else {
+		defer unlock()
+
+		// 남의 지갑 주소를 넣어 다른 회원의 스왑 상태를 바꾸지 못하게 한다.
+		if params.AUID != 0 && swapInfo.AUID != params.AUID {
+			log.Errorf("swap status refused : not owner txid:%v, swap auid:%v, req auid:%v", swapInfo.TxID, swapInfo.AUID, params.AUID)
+			resp.SetReturn(resultcode.Result_Invalid_WalletAddress_Error)
+			return resp
+		}
+
 		switch params.TxStatus {
 		case context.SWAP_status_fee_transfer_start, context.SWAP_status_fee_transfer_success: // swap 수수료 전송 시작
 			// 콜백이 먼저 들어와서 상태가 진행 된 경우는 버린다.
@@ -44,6 +98,12 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 				log.Warnf("swap not equal status redis:%v, rev:%v", swapInfo.TxStatus, params.TxStatus)
 			}
 		case context.SWAP_status_token_transfer_deposit_start: // swap용 토큰 전송 시작 ( coin->point, coin->coin swap)
+			// 출금이 시작된 스왑이나 포인트->코인 스왑의 상태를 사용자가 되돌리지 못하게 한다.
+			if !swapInfo.CanReportDeposit() {
+				log.Errorf("swap deposit report refused txid:%v, type:%v, status:%v", swapInfo.TxID, swapInfo.TxType, swapInfo.TxStatus)
+				resp.SetReturn(resultcode.Result_Invalid_TxStatus)
+				return resp
+			}
 			swapInfo.TxStatus = params.TxStatus
 			swapInfo.SwapFromCoin.TokenTxHash = params.TxHash
 			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
@@ -59,11 +119,14 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 			}
 		case context.SWAP_status_fee_transfer_fail, context.SWAP_status_token_transfer_deposit_fail:
 			// 유져 지갑을 통해 전송 시도가 실패한 경우를 수신 받았을때 포인트 원복을 해줘야 함
-			swapInfo, err := model.GetDB().CacheGetSwapWallet(params.FromWalletAddress)
-			if err != nil {
-				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
-				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
-			} else {
+			// 수수료나 코인 입금이 이미 확인된 스왑은 지급이 진행 중이므로 실패 신고로 환불하지 않는다.
+			// (지급을 받은 뒤 실패로 바꿔 포인트까지 돌려받는 것을 막는다)
+			if !swapInfo.CanCancelByUser() {
+				log.Errorf("swap cancel refused txid:%v, type:%v, status:%v, rev:%v", swapInfo.TxID, swapInfo.TxType, swapInfo.TxStatus, params.TxStatus)
+				resp.SetReturn(resultcode.Result_Invalid_TxStatus)
+				return resp
+			}
+			{
 				if err := model.GetDB().CacheDelSwapWallet(params.FromWalletAddress); err != nil { // swap 수수료 전송 실패
 					log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 					resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
