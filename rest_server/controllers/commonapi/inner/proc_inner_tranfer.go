@@ -100,7 +100,7 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 		_, err := model.GetDB().GetCacheCoinTransferFromParentWallet(key)
 		if err == nil {
 			// 전송중인 기존 정보가 있다면 에러를 리턴한다.
-			log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
+			log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
 			resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 			return resp
 		}
@@ -154,7 +154,7 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 	//3. redis에 전송 정보 저장
 	key := model.MakeCoinTransferFromParentWalletKey(params.AUID)
 	if err := model.GetDB().SetCacheCoinTransferFromParentWallet(key, params); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer)
 		return resp
 	}
@@ -167,7 +167,7 @@ func TransferFromParentWallet(params *context.ReqCoinTransferFromParentWallet, i
 		CoinID: params.CoinID,
 	}
 	if err := model.GetDB().SetCacheCoinTransferTx(tKey, txType); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
 		return resp
 	}
@@ -211,7 +211,7 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 		_, err := model.GetDB().GetCacheCoinTransferFromUserWallet(key)
 		if err == nil {
 			// 전송중인 기존 정보가 있다면 에러를 리턴한다.
-			log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
+			log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
 			resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 			return resp
 		}
@@ -268,7 +268,7 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 	//3. redis에 전송 정보 저장
 	key := model.MakeCoinTransferFromUserWalletKey(params.AUID)
 	if err := model.GetDB().SetCacheCoinTransferFromUserWallet(key, params); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer)
 		return resp
 	}
@@ -281,7 +281,7 @@ func TransferFromUserWallet(params *context.ReqCoinTransferFromUserWallet, isLoc
 		CoinID: params.CoinID,
 	}
 	if err := model.GetDB().SetCacheCoinTransferTx(tKey, txType); err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetTransfer_Tx])
 		resp.SetReturn(resultcode.Result_RedisError_SetTransfer_Tx)
 		return resp
 	}

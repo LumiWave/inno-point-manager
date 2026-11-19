@@ -65,7 +65,7 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 		return resp
 	}
 	if err != nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_GetSwapInfo])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_GetSwapInfo])
 		resp.SetReturn(resultcode.Result_RedisError_GetSwapInfo)
 	} else {
 		defer unlock()
@@ -84,7 +84,7 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 				swapInfo.TxStatus = params.TxStatus
 				swapInfo.TxHash = params.TxHash
 				if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
-					log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+					log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 					resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 				} else {
 					if err := model.GetDB().USPAU_Mod_TransactExchanges_ExchangeFees(swapInfo.TxID,
@@ -107,7 +107,7 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 			swapInfo.TxStatus = params.TxStatus
 			swapInfo.SwapFromCoin.TokenTxHash = params.TxHash
 			if err := model.GetDB().CacheSetSwapWallet(swapInfo); err != nil {
-				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+				log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 			} else {
 				if err := model.GetDB().USPAU_Mod_TransactExchanges_Coin(swapInfo.TxID,
@@ -128,7 +128,7 @@ func PutSwapStatus(params *context.ReqSwapStatus) *base.BaseResponse {
 			}
 			{
 				if err := model.GetDB().CacheDelSwapWallet(params.FromWalletAddress); err != nil { // swap 수수료 전송 실패
-					log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+					log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 					resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 				} else {
 					// 포인트 누적이 연속적으로 처리 되지 못하도록 한다. lock
@@ -465,7 +465,7 @@ func SwapWallet(params *context.ReqSwapInfo, innoUID string) *base.BaseResponse 
 			params.TxStatus = context.SWAP_status_init
 
 			if err := model.GetDB().CacheSetSwapWallet(params); err != nil {
-				log.Errorf(resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
+				log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_RedisError_SetSwapInfo])
 				resp.SetReturn(resultcode.Result_RedisError_SetSwapInfo)
 				return resp
 			}
@@ -658,7 +658,7 @@ func checkAlreadySwap(params *context.ReqSwapInfo, resp *base.BaseResponse) {
 		checkWallet = params.SwapFromCoin.WalletAddress
 	}
 	if _, err := model.GetDB().CacheGetSwapWallet(checkWallet); err == nil {
-		log.Errorf(resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
+		log.Errorf("%s", resultcode.ResultCodeText[resultcode.Result_Error_Transfer_Inprogress])
 		resp.SetReturn(resultcode.Result_Error_Transfer_Inprogress)
 	}
 }
